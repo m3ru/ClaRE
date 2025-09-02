@@ -1,12 +1,14 @@
 # ClaRE - Classification of Harmful and Benign Prompts
 
+<img width="1536" height="1024" alt="ChatGPT Image Sep 2, 2025, 04_53_23 PM" src="https://github.com/user-attachments/assets/dcd9969f-e5e2-4ffd-864b-432afa8e3724" />
+
 This project compiles and processes datasets containing harmful and benign prompts for AI safety research.
 
-## 🎯 Project Overview
+## Project Overview
 
 ClaRE (Classification of Harmful and Benign Prompts) is a comprehensive system for compiling, processing, and analyzing datasets containing harmful and benign prompts. The system compiles multiple datasets from Hugging Face, automatically separating prompts into harmful and benign categories for AI safety research.
 
-## ✨ Features
+## Features
 
 - **Multi-Dataset Compilation**: Downloads and processes 6+ major datasets from Hugging Face
 - **Intelligent Classification**: Separates prompts into harmful and benign categories using response analysis
@@ -16,7 +18,7 @@ ClaRE (Classification of Harmful and Benign Prompts) is a comprehensive system f
 - **Modular Design**: Easy to extend with additional datasets
 - **Open Source Model Ready**: Formatted for testing with various AI models
 
-## 📊 Comprehensive Dataset Statistics
+## Comprehensive Dataset Statistics
 
 The compiled dataset contains:
 - **Total Prompts**: 618,966
@@ -25,7 +27,7 @@ The compiled dataset contains:
 - **Average Prompt Length**: 763 characters
 - **Sources**: 6 major datasets from Hugging Face
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -55,7 +57,7 @@ python3 scripts/analyze_dataset.py
 jupyter notebook notebooks/dataset_analysis.ipynb
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ClaRE/
@@ -90,7 +92,7 @@ ClaRE/
 └── requirements.txt             # Dependencies
 ```
 
-## 📊 Compiled Datasets
+## Compiled Datasets
 
 ### Harmful Prompt Datasets
 
@@ -111,7 +113,7 @@ ClaRE/
 | **Guychuk Classification** | `guychuk/benign-malicious-prompt-classification` | 228,739 | Large-scale benign prompt classification | `prompt`, `label` (0=benign, 1=harmful) |
 | **Anthropic HH** | `Anthropic/hh-rlhf` | 58,161 | Human preference data with helpful responses | `prompt`, `response`, `label` |
 
-## 🔍 Classification Methodology
+## Classification Methodology
 
 The system classifies prompts as harmful or benign based on:
 
@@ -127,7 +129,7 @@ The system classifies prompts as harmful or benign based on:
 - Responses that provide useful information without harm
 - Normal conversational and instructional content
 
-## 📈 Output Files
+## Output Files
 
 The system generates multiple output formats:
 
@@ -136,7 +138,7 @@ The system generates multiple output formats:
 - **Train/Val/Test Splits**: Ready for machine learning experiments
 - **Statistics**: Comprehensive dataset metrics and quality scores
 
-## 🔧 Data Variables & Structure
+## Data Variables & Structure
 
 ### Standard Variables (All Datasets)
 - **`prompt`**: The actual prompt text (primary variable for testing)
@@ -153,7 +155,7 @@ The system generates multiple output formats:
 - **`instruction`**: Instruction text (for instruction-following datasets)
 - **`role`**: Conversation role (for conversational datasets)
 
-## 🤖 Testing with Open Source Models
+## Testing with Open Source Models
 
 ### Quick Data Access
 
@@ -336,7 +338,7 @@ results = batch_test_model(
 )
 ```
 
-## 🛠️ Usage Examples
+## Usage Examples
 
 ### Comprehensive Compilation
 
@@ -408,7 +410,7 @@ print(f"Violence prompts: {len(violence_prompts)}")
 print(f"Hate speech prompts: {len(hate_speech_prompts)}")
 ```
 
-## 🔬 Research Applications
+## Research Applications
 
 This comprehensive dataset can be used for:
 
@@ -429,7 +431,7 @@ This comprehensive dataset can be used for:
 - **Text Generation Safety**: Train safer text generation models
 - **Adversarial Training**: Improve model robustness against harmful prompts
 
-## 📊 Dataset Summary by Source
+## Dataset Summary by Source
 
 | Source | Total | Harmful | Benign | Type | Key Features |
 |--------|-------|---------|--------|------|--------------|
@@ -442,7 +444,7 @@ This comprehensive dataset can be used for:
 | **OnepaneAI** | 200 | 200 | 0 | Harmful | Adversarial, designed to elicit harm |
 | **TOTAL** | **618,966** | **236,358** | **382,608** | **Both** | **Comprehensive coverage** |
 
-## 🎯 Key Features
+## Key Features
 
 - **Scale**: 618,966 total prompts for robust analysis
 - **Diversity**: 6 different dataset sources with varied content types
@@ -451,7 +453,7 @@ This comprehensive dataset can be used for:
 - **Formats**: Multiple output formats (JSONL, CSV, splits)
 - **Quality**: Validated, deduplicated, and ready for ML
 
-## ⚠️ Important Notes
+## Important Notes
 
 - **Content Warning**: The dataset contains potentially offensive, harmful, or upsetting content
 - **Research Purpose**: Intended for AI safety research to make systems safer
@@ -464,24 +466,3 @@ This comprehensive dataset can be used for:
 This project is for research purposes. Please refer to the original dataset licenses for usage terms:
 - Anthropic HH: Research use only
 - Other datasets: Check individual Hugging Face dataset pages for specific licenses
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit:
-- Issues and bug reports
-- Feature requests for additional datasets
-- Pull requests for improvements
-- Research results using this dataset
-
-## 📚 Citation
-
-If you use this dataset in your research, please cite the original datasets and this compilation:
-
-```bibtex
-@misc{clare_dataset_2024,
-  title={ClaRE: Classification of Harmful and Benign Prompts - A Comprehensive Dataset},
-  author={ClaRE Team},
-  year={2024},
-  url={https://github.com/sarveshtiku/ClaRE}
-}
-```
