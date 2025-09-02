@@ -1,5 +1,7 @@
 # ClaRE - Classification of Harmful and Benign Prompts
 
+<img width="1536" height="1024" alt="ChatGPT Image Sep 2, 2025, 04_53_23 PM" src="https://github.com/user-attachments/assets/dcd9969f-e5e2-4ffd-864b-432afa8e3724" />
+
 This project compiles and processes datasets containing harmful and benign prompts for AI safety research.
 
 ## Project Overview
