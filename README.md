@@ -8,16 +8,6 @@ This project compiles and processes datasets containing harmful and benign promp
 
 ClaRE (Classification of Harmful and Benign Prompts) is a comprehensive system for compiling, processing, and analyzing datasets containing harmful and benign prompts. The system compiles multiple datasets from Hugging Face, automatically separating prompts into harmful and benign categories for AI safety research.
 
-## Features
-
-- **Multi-Dataset Compilation**: Downloads and processes 6+ major datasets from Hugging Face
-- **Intelligent Classification**: Separates prompts into harmful and benign categories using response analysis
-- **Data Validation**: Comprehensive quality checks and deduplication
-- **Multiple Output Formats**: JSONL, CSV, and train/validation/test splits
-- **Interactive Analysis**: Jupyter notebooks for data exploration
-- **Modular Design**: Easy to extend with additional datasets
-- **Open Source Model Ready**: Formatted for testing with various AI models
-
 ## Comprehensive Dataset Statistics
 
 The compiled dataset contains:
@@ -410,27 +400,6 @@ print(f"Violence prompts: {len(violence_prompts)}")
 print(f"Hate speech prompts: {len(hate_speech_prompts)}")
 ```
 
-## Research Applications
-
-This comprehensive dataset can be used for:
-
-### AI Safety Research
-- **Harmful Content Detection**: Train classifiers to identify harmful prompts
-- **Model Alignment Studies**: Analyze how different models respond to harmful vs benign prompts
-- **Safety Benchmarking**: Evaluate model safety across diverse prompt types
-- **Refusal Pattern Analysis**: Study how models refuse harmful requests
-
-### Content Moderation
-- **Automated Moderation Systems**: Train content filters using the large-scale dataset
-- **Bias Detection**: Analyze harmful content patterns across different categories
-- **Prompt Engineering**: Understand effective vs harmful prompt construction
-
-### Machine Learning
-- **Binary Classification**: Harmful vs benign prompt classification
-- **Multi-class Classification**: Category-based harmful content classification
-- **Text Generation Safety**: Train safer text generation models
-- **Adversarial Training**: Improve model robustness against harmful prompts
-
 ## Dataset Summary by Source
 
 | Source | Total | Harmful | Benign | Type | Key Features |
@@ -453,16 +422,20 @@ This comprehensive dataset can be used for:
 - **Formats**: Multiple output formats (JSONL, CSV, splits)
 - **Quality**: Validated, deduplicated, and ready for ML
 
-## Important Notes
-
-- **Content Warning**: The dataset contains potentially offensive, harmful, or upsetting content
-- **Research Purpose**: Intended for AI safety research to make systems safer
-- **Ethical Use**: Handle the data responsibly and in accordance with ethical guidelines
-- **No Harmful Training**: Do not use this data to train models that could generate harmful content
-- **Authentication**: Some datasets (like HEx-PHI) require Hugging Face authentication
-
 ## 📄 License
 
 This project is for research purposes. Please refer to the original dataset licenses for usage terms:
-- Anthropic HH: Research use only
-- Other datasets: Check individual Hugging Face dataset pages for specific licenses
+
+- **Anthropic HH (Anthropic/hh-rlhf)**: MIT License (Research use only; see dataset card for details)
+- **OpenAssistant (OpenAssistant/oasst1)**: Apache 2.0 License
+- **Stanford Alpaca (tatsu-lab/alpaca)**: CC BY-NC 4.0 (Non-commercial use only)
+- **Databricks Dolly (databricks/databricks-dolly-15k)**: CC BY-SA 3.0
+- **Guychuk Benign–Malicious Classification (guychuk/benign-malicious-prompt-classification)**: Apache 2.0 License
+- **NASK-PIB Harmful Prompts (NASK-PIB/harmful_prompts_sample)**: CC BY-SA 4.0
+- **OnepaneAI Adversarial Prompts (onepaneai/harmful-prompts)**: *License not specified on Hugging Face — please check the dataset card directly*
+
+⚠️ **Important Notes**  
+- Some datasets (e.g., Stanford Alpaca) are licensed for **non-commercial research only**.  
+- Ensure compliance with each dataset’s license terms before use.  
+- This compilation is intended for **AI safety research** and must not be used to train models that generate harmful content.
+
