@@ -26,7 +26,6 @@ set -euo pipefail
 # ============================================================================
 
 # ---- Fill in your HF token ----
-export HUGGING_FACE_HUB_TOKEN=
 
 export HF_HOME="${HOME}/scratch/hf_cache"
 mkdir -p "${HF_HOME}"
@@ -37,9 +36,33 @@ module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 
 ENVNAME=llama8b-env
+
+# Clean corrupted conda cache if needed (common on shared filesystems)
 if ! conda env list | awk '{print $1}' | grep -qx "${ENVNAME}"; then
-  conda create -y -n "${ENVNAME}" python=3.10
+  echo "Creating new conda environment: ${ENVNAME}"
+
+  # Try to clean conda cache first to avoid corruption issues
+  conda clean -y --all 2>/dev/null || true
+
+  # Attempt to create environment
+  if ! conda create -y -n "${ENVNAME}" python=3.10 2>&1; then
+    echo "First attempt failed, cleaning cache and retrying..."
+    # Force remove corrupted packages
+    rm -rf "${HOME}/.conda/pkgs/ncurses-"* 2>/dev/null || true
+    rm -rf "${HOME}/.conda/pkgs/openssl-"* 2>/dev/null || true
+    rm -rf "${HOME}/.conda/pkgs/python-"* 2>/dev/null || true
+    rm -rf "${HOME}/.conda/pkgs/pip-"* 2>/dev/null || true
+    rm -rf "${HOME}/.conda/pkgs/setuptools-"* 2>/dev/null || true
+    rm -rf "${HOME}/.conda/pkgs/tk-"* 2>/dev/null || true
+
+    # Clean conda cache again
+    conda clean -y --all 2>/dev/null || true
+
+    # Retry environment creation
+    conda create -y -n "${ENVNAME}" python=3.10
+  fi
 fi
+
 conda activate "${ENVNAME}"
 
 # Ensure dependencies
