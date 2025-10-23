@@ -176,14 +176,15 @@ echo ""
 # Run PEZ Optimization
 # ============================================================================
 
-# Determine script location (same directory as this SLURM script)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PEZ_SCRIPT="${SCRIPT_DIR}/pez_refusal_optimization.py"
+# Use SLURM_SUBMIT_DIR (directory where sbatch was called)
+# This is more reliable than BASH_SOURCE in SLURM environment
+PEZ_SCRIPT="${SLURM_SUBMIT_DIR}/pez_refusal_optimization.py"
 
 # Verify script exists
 if [[ ! -f "${PEZ_SCRIPT}" ]]; then
   echo "ERROR: PEZ script not found at: ${PEZ_SCRIPT}"
-  echo "Please ensure pez_refusal_optimization.py is in the same directory as this SLURM script"
+  echo "SLURM_SUBMIT_DIR: ${SLURM_SUBMIT_DIR}"
+  echo "Please ensure pez_refusal_optimization.py is in the directory where you run sbatch"
   exit 1
 fi
 
