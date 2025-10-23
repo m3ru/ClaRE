@@ -176,8 +176,22 @@ echo ""
 # Run PEZ Optimization
 # ============================================================================
 
+# Determine script location (same directory as this SLURM script)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PEZ_SCRIPT="${SCRIPT_DIR}/pez_refusal_optimization.py"
+
+# Verify script exists
+if [[ ! -f "${PEZ_SCRIPT}" ]]; then
+  echo "ERROR: PEZ script not found at: ${PEZ_SCRIPT}"
+  echo "Please ensure pez_refusal_optimization.py is in the same directory as this SLURM script"
+  exit 1
+fi
+
+echo "Using PEZ script: ${PEZ_SCRIPT}"
+echo ""
+
 # Build command with all parameters
-CMD="${PY} -u \"${HOME}/pez_refusal_optimization.py\" \
+CMD="${PY} -u \"${PEZ_SCRIPT}\" \
   --model \"${MODEL}\" \
   --dtype \"${DTYPE}\" \
   --refusal_vector \"${REFUSAL_VECTOR}\" \
