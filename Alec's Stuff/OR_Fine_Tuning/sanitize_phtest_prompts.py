@@ -106,7 +106,7 @@ def main():
     parser.add_argument(
         "--prompt_column",
         type=str,
-        default="prompt",
+        default="requests",
         help="Name of the column in the CSV that contains the over-refusal prompts.",
     )
     parser.add_argument(
