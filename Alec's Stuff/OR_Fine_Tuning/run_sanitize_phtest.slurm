@@ -57,7 +57,7 @@ echo "[env] Using Python: $(python --version)"
 # script directly in $HOME, so point to it there.
 SCRIPT_PATH="${HOME}/scratch/ClaRE/Alec's Stuff/OR_Fine_Tuning/sanitize_phtest_prompts.py"
 OUTPUT_PATH="${HOME}/scratch/phtest_PHTest_train_sanitized.csv"
-PROMPT_COLUMN="prompt"   # adjust if PHTest uses a different field name
+PROMPT_COLUMN="Request"   # adjust if PHTest uses a different field name
 HF_SPLIT="train"         # adjust to the desired split
 DEVICE_MAP="auto"        # 'auto' lets transformers spread across available GPU/CPU
 MAX_NEW=256
