@@ -41,21 +41,25 @@ def load_pipeline(device_map: str = "auto"):
 
     This assumes you have enough GPU memory or suitable hardware to host the model.
     """
-    from transformers import AutoTokenizer
+    from transformers import AutoTokenizer, AutoModelForCausalLM
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     tokenizer.padding_side = "left"
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    text_gen = pipeline(
-        "text-generation",
-        model=MODEL_ID,
-        tokenizer=tokenizer,
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID,
         torch_dtype="auto",
         device_map=device_map,
     )
-    return text_gen
+
+    text_gen = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+    )
+    return text_gen, tokenizer
 
 
 def load_prompts_from_hf(split: str, prompt_column: str) -> Dataset:
@@ -187,7 +191,7 @@ def main():
             base, ext = os.path.splitext(args.input_path)
             args.output_path = base + "_sanitized" + (ext or ".csv")
 
-    text_gen = load_pipeline(device_map=args.device_map)
+    text_gen, tokenizer = load_pipeline(device_map=args.device_map)
 
     # Convert to DataFrame for simpler processing
     df = ds.to_pandas()
@@ -212,8 +216,22 @@ def main():
     for idx in tqdm(range(start_idx, len(df)), desc="Sanitizing prompts"):
         original_prompt = str(df.loc[idx, args.prompt_column])
         messages = build_sanitization_prompt(original_prompt)
-        outputs = text_gen(messages, max_new_tokens=args.max_new_tokens)
-        sanitized = extract_response(outputs)
+
+        # Apply chat template to get properly formatted prompt
+        prompt_text = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+
+        outputs = text_gen(
+            prompt_text,
+            max_new_tokens=args.max_new_tokens,
+            return_full_text=False,  # Only return the generated text, not the prompt
+        )
+
+        # Extract the generated text
+        sanitized = outputs[0]["generated_text"].strip()
         df.loc[idx, args.sanitized_column] = sanitized
 
         # Periodic checkpoint saving
