@@ -41,25 +41,13 @@ def load_pipeline(device_map: str = "auto"):
 
     This assumes you have enough GPU memory or suitable hardware to host the model.
     """
-    from transformers import AutoTokenizer, AutoModelForCausalLM
-
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    tokenizer.padding_side = "left"
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID,
+    text_gen = pipeline(
+        "text-generation",
+        model=MODEL_ID,
         torch_dtype="auto",
         device_map=device_map,
     )
-
-    text_gen = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-    )
-    return text_gen, tokenizer
+    return text_gen
 
 
 def load_prompts_from_hf(split: str, prompt_column: str) -> Dataset:
@@ -85,16 +73,6 @@ def load_prompts_from_csv(input_path: str, prompt_column: str) -> Dataset:
             f"Available columns: {list(df.columns)}"
         )
     return Dataset.from_pandas(df)
-
-
-def extract_response(output) -> str:
-    """Extract the assistant's response from pipeline output."""
-    try:
-        last_message = output[0]["generated_text"][-1]
-        content = last_message.get("content", "").strip()
-        return content
-    except Exception:
-        return str(output)
 
 
 def main():
@@ -162,12 +140,6 @@ def main():
         help="Which split of the Hugging Face PHTest dataset to use (e.g. 'train').",
     )
     parser.add_argument(
-        "--batch_size",
-        type=int,
-        default=1,
-        help="Batch size for pipeline inference.",
-    )
-    parser.add_argument(
         "--save_every",
         type=int,
         default=50,
@@ -191,7 +163,7 @@ def main():
             base, ext = os.path.splitext(args.input_path)
             args.output_path = base + "_sanitized" + (ext or ".csv")
 
-    text_gen, tokenizer = load_pipeline(device_map=args.device_map)
+    text_gen = load_pipeline(device_map=args.device_map)
 
     # Convert to DataFrame for simpler processing
     df = ds.to_pandas()
@@ -217,21 +189,13 @@ def main():
         original_prompt = str(df.loc[idx, args.prompt_column])
         messages = build_sanitization_prompt(original_prompt)
 
-        # Apply chat template to get properly formatted prompt
-        prompt_text = tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-        )
+        # Pass messages directly - pipeline handles harmony format automatically
+        outputs = text_gen(messages, max_new_tokens=args.max_new_tokens)
 
-        outputs = text_gen(
-            prompt_text,
-            max_new_tokens=args.max_new_tokens,
-            return_full_text=False,  # Only return the generated text, not the prompt
-        )
-
-        # Extract the generated text
-        sanitized = outputs[0]["generated_text"].strip()
+        # Extract the final assistant response (filters out analysis/thinking tokens)
+        # outputs[0]["generated_text"] is a list of message dicts; take the last one
+        last_message = outputs[0]["generated_text"][-1]
+        sanitized = last_message.get("content", "").strip()
         df.loc[idx, args.sanitized_column] = sanitized
 
         # Periodic checkpoint saving
