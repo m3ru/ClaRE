@@ -3,8 +3,9 @@ import os
 from typing import List
 
 import pandas as pd
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 from transformers import pipeline
+from tqdm import tqdm
 
 
 MODEL_ID = "openai/gpt-oss-120b"
@@ -49,32 +50,39 @@ def load_pipeline(device_map: str = "auto"):
     return text_gen
 
 
-def load_prompts_from_hf(split: str, prompt_column: str) -> pd.DataFrame:
-    """Load PHTest prompts directly from Hugging Face as a DataFrame."""
+def load_prompts_from_hf(split: str, prompt_column: str) -> Dataset:
+    """Load PHTest prompts directly from Hugging Face as a Dataset."""
     ds = load_dataset(HF_DATASET_ID, split=split)
-    df = ds.to_pandas()
-    if prompt_column not in df.columns:
+    if prompt_column not in ds.column_names:
         raise ValueError(
             f"Column '{prompt_column}' not found in HF dataset '{HF_DATASET_ID}' "
-            f"split '{split}'. Available columns: {list(df.columns)}"
+            f"split '{split}'. Available columns: {ds.column_names}"
         )
-    return df
+    return ds
 
 
-def sanitize_prompt(text_gen, prompt: str, max_new_tokens: int = 256) -> str:
-    messages = build_sanitization_prompt(prompt)
-    outputs = text_gen(messages, max_new_tokens=max_new_tokens)
+def load_prompts_from_csv(input_path: str, prompt_column: str) -> Dataset:
+    """Load prompts from a local CSV file as a Dataset."""
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input CSV not found: {input_path}")
 
-    # According to the gpt-oss-120b HF examples, the pipeline returns a list
-    # where each element has a "generated_text" key containing a list of
-    # message dicts; we take the last message's content.
+    df = pd.read_csv(input_path)
+    if prompt_column not in df.columns:
+        raise ValueError(
+            f"Column '{prompt_column}' not found in input CSV. "
+            f"Available columns: {list(df.columns)}"
+        )
+    return Dataset.from_pandas(df)
+
+
+def extract_response(output) -> str:
+    """Extract the assistant's response from pipeline output."""
     try:
-        last_message = outputs[0]["generated_text"][-1]
+        last_message = output[0]["generated_text"][-1]
         content = last_message.get("content", "").strip()
         return content
     except Exception:
-        # Fallback: best-effort string conversion
-        return str(outputs)
+        return str(output)
 
 
 def main():
@@ -141,27 +149,31 @@ def main():
         default="train",
         help="Which split of the Hugging Face PHTest dataset to use (e.g. 'train').",
     )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=8,
+        help="Batch size for pipeline inference.",
+    )
+    parser.add_argument(
+        "--save_every",
+        type=int,
+        default=50,
+        help="Save checkpoint every N prompts to avoid losing progress.",
+    )
 
     args = parser.parse_args()
 
     if args.use_hf:
         # Load directly from Hugging Face
-        df = load_prompts_from_hf(args.hf_split, args.prompt_column)
+        ds = load_prompts_from_hf(args.hf_split, args.prompt_column)
         if args.output_path is None:
             args.output_path = f"PHTest_{args.hf_split}_sanitized.csv"
     else:
         if not args.input_path:
             parser.error("Either --input_path must be provided or --use_hf must be set.")
 
-        if not os.path.exists(args.input_path):
-            raise FileNotFoundError(f"Input CSV not found: {args.input_path}")
-
-        df = pd.read_csv(args.input_path)
-        if args.prompt_column not in df.columns:
-            raise ValueError(
-                f"Column '{args.prompt_column}' not found in input CSV. "
-                f"Available columns: {list(df.columns)}"
-            )
+        ds = load_prompts_from_csv(args.input_path, args.prompt_column)
 
         if args.output_path is None:
             base, ext = os.path.splitext(args.input_path)
@@ -169,16 +181,64 @@ def main():
 
     text_gen = load_pipeline(device_map=args.device_map)
 
-    sanitized_values: List[str] = []
-    for idx, original_prompt in enumerate(df[args.prompt_column].astype(str).tolist()):
-        sanitized = sanitize_prompt(text_gen, original_prompt, max_new_tokens=args.max_new_tokens)
-        sanitized_values.append(sanitized)
-        if (idx + 1) % 10 == 0:
-            print(f"Processed {idx + 1} prompts...", flush=True)
+    # Prepare chat-formatted prompts for the dataset
+    def prepare_messages(example):
+        return {"messages": build_sanitization_prompt(str(example[args.prompt_column]))}
 
-    df[args.sanitized_column] = sanitized_values
-    df.to_csv(args.output_path, index=False)
+    ds = ds.map(prepare_messages)
+
+    # Use the pipeline with the dataset for efficient batched inference
+    print(f"Processing {len(ds)} prompts with batch_size={args.batch_size}...")
+
+    # Check for existing checkpoint to resume from
+    checkpoint_path = args.output_path.replace(".csv", "_checkpoint.csv")
+    start_idx = 0
+    sanitized_values = []
+
+    if os.path.exists(checkpoint_path):
+        checkpoint_df = pd.read_csv(checkpoint_path)
+        if args.sanitized_column in checkpoint_df.columns:
+            # Count non-null sanitized values to determine resume point
+            existing = checkpoint_df[args.sanitized_column].dropna().tolist()
+            start_idx = len(existing)
+            sanitized_values = existing
+            print(f"Resuming from checkpoint at index {start_idx}...")
+
+    if start_idx < len(ds):
+        # Only process remaining prompts
+        remaining_messages = ds["messages"][start_idx:]
+
+        for idx, output in enumerate(tqdm(
+            text_gen(
+                remaining_messages,
+                max_new_tokens=args.max_new_tokens,
+                batch_size=args.batch_size,
+            ),
+            total=len(remaining_messages),
+            desc="Sanitizing prompts",
+            initial=0,
+        )):
+            sanitized_values.append(extract_response([output]))
+
+            # Periodic checkpoint saving
+            if (start_idx + idx + 1) % args.save_every == 0:
+                # Save partial results
+                partial_ds = ds.select(range(len(sanitized_values)))
+                partial_ds = partial_ds.add_column(args.sanitized_column, sanitized_values)
+                partial_ds = partial_ds.remove_columns(["messages"])
+                partial_ds.to_csv(checkpoint_path)
+                print(f"\nCheckpoint saved at {len(sanitized_values)} prompts -> {checkpoint_path}")
+
+    # Add results back to dataset and save final output
+    ds = ds.add_column(args.sanitized_column, sanitized_values)
+    ds = ds.remove_columns(["messages"])  # Remove intermediate column
+    ds.to_csv(args.output_path)
     print(f"Wrote sanitized prompts to: {args.output_path}")
+
+    # Clean up checkpoint file if we completed successfully
+    if os.path.exists(checkpoint_path):
+        os.remove(checkpoint_path)
+        print(f"Removed checkpoint file: {checkpoint_path}")
 
 
 if __name__ == "__main__":
