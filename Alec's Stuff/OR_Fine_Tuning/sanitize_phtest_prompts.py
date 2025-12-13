@@ -160,7 +160,7 @@ def main():
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=8,
+        default=1,
         help="Batch size for pipeline inference.",
     )
     parser.add_argument(
