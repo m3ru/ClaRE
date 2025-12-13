@@ -41,9 +41,17 @@ def load_pipeline(device_map: str = "auto"):
 
     This assumes you have enough GPU memory or suitable hardware to host the model.
     """
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
     text_gen = pipeline(
         "text-generation",
         model=MODEL_ID,
+        tokenizer=tokenizer,
         torch_dtype="auto",
         device_map=device_map,
     )
