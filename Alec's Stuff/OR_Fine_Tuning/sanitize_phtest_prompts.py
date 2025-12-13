@@ -189,58 +189,40 @@ def main():
 
     text_gen = load_pipeline(device_map=args.device_map)
 
-    # Prepare chat-formatted prompts for the dataset
-    def prepare_messages(example):
-        return {"messages": build_sanitization_prompt(str(example[args.prompt_column]))}
-
-    ds = ds.map(prepare_messages)
-
-    # Use the pipeline with the dataset for efficient batched inference
-    print(f"Processing {len(ds)} prompts with batch_size={args.batch_size}...")
+    # Convert to DataFrame for simpler processing
+    df = ds.to_pandas()
 
     # Check for existing checkpoint to resume from
     checkpoint_path = args.output_path.replace(".csv", "_checkpoint.csv")
     start_idx = 0
-    sanitized_values = []
 
     if os.path.exists(checkpoint_path):
         checkpoint_df = pd.read_csv(checkpoint_path)
         if args.sanitized_column in checkpoint_df.columns:
             # Count non-null sanitized values to determine resume point
-            existing = checkpoint_df[args.sanitized_column].dropna().tolist()
-            start_idx = len(existing)
-            sanitized_values = existing
+            start_idx = checkpoint_df[args.sanitized_column].notna().sum()
+            df = checkpoint_df
             print(f"Resuming from checkpoint at index {start_idx}...")
 
-    if start_idx < len(ds):
-        # Only process remaining prompts
-        remaining_messages = ds["messages"][start_idx:]
+    if args.sanitized_column not in df.columns:
+        df[args.sanitized_column] = None
 
-        for idx, output in enumerate(tqdm(
-            text_gen(
-                remaining_messages,
-                max_new_tokens=args.max_new_tokens,
-                batch_size=args.batch_size,
-            ),
-            total=len(remaining_messages),
-            desc="Sanitizing prompts",
-            initial=0,
-        )):
-            sanitized_values.append(extract_response([output]))
+    print(f"Processing {len(df)} prompts (starting from {start_idx})...")
 
-            # Periodic checkpoint saving
-            if (start_idx + idx + 1) % args.save_every == 0:
-                # Save partial results
-                partial_ds = ds.select(range(len(sanitized_values)))
-                partial_ds = partial_ds.add_column(args.sanitized_column, sanitized_values)
-                partial_ds = partial_ds.remove_columns(["messages"])
-                partial_ds.to_csv(checkpoint_path)
-                print(f"\nCheckpoint saved at {len(sanitized_values)} prompts -> {checkpoint_path}")
+    for idx in tqdm(range(start_idx, len(df)), desc="Sanitizing prompts"):
+        original_prompt = str(df.loc[idx, args.prompt_column])
+        messages = build_sanitization_prompt(original_prompt)
+        outputs = text_gen(messages, max_new_tokens=args.max_new_tokens)
+        sanitized = extract_response(outputs)
+        df.loc[idx, args.sanitized_column] = sanitized
 
-    # Add results back to dataset and save final output
-    ds = ds.add_column(args.sanitized_column, sanitized_values)
-    ds = ds.remove_columns(["messages"])  # Remove intermediate column
-    ds.to_csv(args.output_path)
+        # Periodic checkpoint saving
+        if (idx + 1) % args.save_every == 0:
+            df.to_csv(checkpoint_path, index=False)
+            print(f"\nCheckpoint saved at {idx + 1} prompts -> {checkpoint_path}")
+
+    # Save final output
+    df.to_csv(args.output_path, index=False)
     print(f"Wrote sanitized prompts to: {args.output_path}")
 
     # Clean up checkpoint file if we completed successfully
