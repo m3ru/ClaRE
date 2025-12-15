@@ -128,25 +128,19 @@ echo "Date: $(date)"
 echo "GPU:"; nvidia-smi || true
 
 # ---- Paths / knobs ----
-# You can override these when submitting:
-#   DATA_DIR=$HOME/scratch/clare_ppo sbatch run_ppo_refusal_training_pace.slurm
-DATA_DIR="${DATA_DIR:-${HOME}/scratch/clare_ppo}"
+# Use paths relative to this script's location (the repo)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
-# Required files in DATA_DIR:
-# - config.py, data.py, reward_model.py, train_ppo.py (the PPO training scripts)
-# - prompts.jsonl (or your data file)
-# - refusal_vector.npz (the pre-computed refusal direction)
-# - (optional) lora_checkpoint/ (pre-trained LoRA from SFT)
-
-SCRIPT_DIR="${DATA_DIR}"
 TRAIN_SCRIPT="${SCRIPT_DIR}/train_ppo.py"
 
-# Data paths
-DATA_PATH="${DATA_PATH:-${DATA_DIR}/prompts.jsonl}"
-REFUSAL_VECTOR_PATH="${REFUSAL_VECTOR_PATH:-${DATA_DIR}/refusal_vector.npz}"
+# Data paths - override with env vars if needed
+DATA_PATH="${DATA_PATH:-${SCRIPT_DIR}/example_prompts.jsonl}"
+REFUSAL_VECTOR_PATH="${REFUSAL_VECTOR_PATH:-}"  # Must be set by user
 LORA_CHECKPOINT="${LORA_CHECKPOINT:-}"  # Leave empty if starting fresh
 
-echo "[paths] DATA_DIR=${DATA_DIR}"
+echo "[paths] SCRIPT_DIR=${SCRIPT_DIR}"
+echo "[paths] REPO_ROOT=${REPO_ROOT}"
 echo "[paths] TRAIN_SCRIPT=${TRAIN_SCRIPT}"
 echo "[paths] DATA_PATH=${DATA_PATH}"
 echo "[paths] REFUSAL_VECTOR_PATH=${REFUSAL_VECTOR_PATH}"
@@ -155,19 +149,18 @@ echo "[paths] LORA_CHECKPOINT=${LORA_CHECKPOINT}"
 # Check required files
 if [ ! -f "${TRAIN_SCRIPT}" ]; then
   echo "[error] Training script not found: ${TRAIN_SCRIPT}" >&2
-  echo "Copy train_ppo.py (and other PPO scripts) into ${DATA_DIR}." >&2
   exit 2
 fi
 
 if [ ! -f "${DATA_PATH}" ]; then
   echo "[error] Data file not found: ${DATA_PATH}" >&2
-  echo "Create a JSONL file with prompts or set DATA_PATH." >&2
+  echo "Set DATA_PATH to your prompts file (JSONL/CSV/TXT)." >&2
   exit 2
 fi
 
-if [ ! -f "${REFUSAL_VECTOR_PATH}" ]; then
-  echo "[error] Refusal vector not found: ${REFUSAL_VECTOR_PATH}" >&2
-  echo "Compute the refusal vector first or set REFUSAL_VECTOR_PATH." >&2
+if [ -z "${REFUSAL_VECTOR_PATH}" ] || [ ! -f "${REFUSAL_VECTOR_PATH}" ]; then
+  echo "[error] Refusal vector not found or not set: ${REFUSAL_VECTOR_PATH}" >&2
+  echo "Set REFUSAL_VECTOR_PATH to your refusal_vector.npz file." >&2
   exit 2
 fi
 
