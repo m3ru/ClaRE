@@ -6,7 +6,7 @@
 #SBATCH --gres=gpu:h200:1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=96G
-#SBATCH -t 24:00:00
+#SBATCH -t 12:00:00
 #SBATCH --output=slurm-%j.out
 #SBATCH --error=slurm-%j.err
 
