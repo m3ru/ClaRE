@@ -130,13 +130,13 @@ echo "GPU:"; nvidia-smi || true
 # ---- Paths / knobs ----
 # Absolute path to repo root on PACE (override with REPO_ROOT env var if needed)
 REPO_ROOT="${REPO_ROOT:-${HOME}/ClaRE}"
-SCRIPT_DIR="${REPO_ROOT}/Alec's Stuff/OR_Fine_Tuning/ppo_refusal"
+SCRIPT_DIR="${REPO_ROOT}/Alec'"'"'s Stuff/OR_Fine_Tuning/ppo_refusal"
 
 TRAIN_SCRIPT="${SCRIPT_DIR}/train_ppo.py"
 
 # Data paths - override with env vars if needed
 DATA_PATH="${DATA_PATH:-${SCRIPT_DIR}/example_prompts.jsonl}"
-REFUSAL_VECTOR_PATH="${REFUSAL_VECTOR_PATH:-${REPO_ROOT}/Alec's Stuff/Getting_Refusal_Vector/Vector_Extraction/refusal_vector.npz}"
+REFUSAL_VECTOR_PATH="${REFUSAL_VECTOR_PATH:-${REPO_ROOT}/Alec'"'"'s Stuff/Getting_Refusal_Vector/Vector_Extraction/refusal_vector.npz}"
 LORA_CHECKPOINT="${LORA_CHECKPOINT:-}"  # Leave empty if starting fresh
 
 echo "[paths] REPO_ROOT=${REPO_ROOT}"
