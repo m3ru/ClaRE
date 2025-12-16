@@ -172,7 +172,7 @@ if [ ! -f "${REFUSAL_VECTOR_PATH}" ]; then
 fi
 
 # ---- Training configuration ----
-MODEL_ID="${MODEL_ID:-meta-llama/Meta-Llama-3.1-8B-Instruct}"
+MODEL_ID="${MODEL_ID:-meta-llama/Meta-Llama-3-8B-Instruct}"
 MODE="${MODE:-increase_refusal}"  # or decrease_refusal
 NUM_STEPS="${NUM_STEPS:-1000}"
 BATCH_SIZE="${BATCH_SIZE:-4}"

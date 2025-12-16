@@ -18,7 +18,7 @@ class ModelConfig:
     """Model paths and loading configuration."""
 
     # Base model (Llama-3.1-8B-Instruct)
-    base_model_id: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    base_model_id: str = "meta-llama/Meta-Llama-3-8B-Instruct"
 
     # Path to pre-trained LoRA checkpoint (from SFT phase)
     lora_checkpoint_path: Optional[str] = None

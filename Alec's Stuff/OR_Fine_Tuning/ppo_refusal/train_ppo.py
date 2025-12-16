@@ -694,7 +694,7 @@ def main():
     parser.add_argument(
         "--base_model",
         type=str,
-        default="meta-llama/Meta-Llama-3.1-8B-Instruct",
+        default="meta-llama/Meta-Llama-3-8B-Instruct",
         help="Base model ID",
     )
     parser.add_argument(
