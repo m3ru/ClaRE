@@ -30,7 +30,7 @@ class ModelConfig:
     activation_layer: int = 16
 
     # Use 'max' to auto-select layer with highest L2 norm
-    select_layer_strategy: str = "16"  # Can be 'max' or an integer
+    select_layer_strategy: str = "15"  # 0-based index (layer 16 in 1-based)
 
     # Data type for models
     torch_dtype: str = "bfloat16"

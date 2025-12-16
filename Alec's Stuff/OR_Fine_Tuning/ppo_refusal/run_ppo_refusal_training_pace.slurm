@@ -195,23 +195,23 @@ echo "[config] BATCH_SIZE=${BATCH_SIZE}"
 echo "[config] OUTDIR=${OUTDIR}"
 
 # ---- Build command ----
-CMD="python -u ${TRAIN_SCRIPT} \
-  --base_model ${MODEL_ID} \
-  --data_path ${DATA_PATH} \
-  --refusal_vector_path ${REFUSAL_VECTOR_PATH} \
-  --output_dir ${OUTDIR} \
-  --mode ${MODE} \
-  --num_steps ${NUM_STEPS} \
-  --batch_size ${BATCH_SIZE} \
-  --learning_rate ${LEARNING_RATE} \
-  --similarity_weight ${SIMILARITY_WEIGHT} \
-  --similarity_threshold ${SIMILARITY_THRESHOLD} \
-  --activation_layer ${ACTIVATION_LAYER} \
+CMD="python -u \"${TRAIN_SCRIPT}\" \\
+  --base_model \"${MODEL_ID}\" \\
+  --data_path \"${DATA_PATH}\" \\
+  --refusal_vector_path \"${REFUSAL_VECTOR_PATH}\" \\
+  --output_dir \"${OUTDIR}\" \\
+  --mode ${MODE} \\
+  --num_steps ${NUM_STEPS} \\
+  --batch_size ${BATCH_SIZE} \\
+  --learning_rate ${LEARNING_RATE} \\
+  --similarity_weight ${SIMILARITY_WEIGHT} \\
+  --similarity_threshold ${SIMILARITY_THRESHOLD} \\
+  --activation_layer ${ACTIVATION_LAYER} \\
   --seed ${SEED}"
 
 # Add LoRA checkpoint if specified
 if [ -n "${LORA_CHECKPOINT}" ] && [ -d "${LORA_CHECKPOINT}" ]; then
-  CMD="${CMD} --lora_checkpoint ${LORA_CHECKPOINT}"
+  CMD="${CMD} --lora_checkpoint \"${LORA_CHECKPOINT}\""
 fi
 
 # Add wandb if enabled
