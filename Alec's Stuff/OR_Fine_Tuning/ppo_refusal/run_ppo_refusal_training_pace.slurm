@@ -129,7 +129,7 @@ echo "GPU:"; nvidia-smi || true
 
 # ---- Paths / knobs ----
 # Absolute path to repo root on PACE (override with REPO_ROOT env var if needed)
-REPO_ROOT="${REPO_ROOT:-${HOME}/ClaRE}"
+REPO_ROOT="${REPO_ROOT:-${HOME}/scratch/ClaRE}"
 
 # Paths with apostrophes - use simple assignment (works reliably in bash)
 SCRIPT_DIR="${REPO_ROOT}/Alec's Stuff/OR_Fine_Tuning/ppo_refusal"
