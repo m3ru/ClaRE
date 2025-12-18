@@ -103,12 +103,20 @@ def load_policy_model(
     from transformers import AutoTokenizer, BitsAndBytesConfig
     from peft import LoraConfig as PeftLoraConfig, get_peft_model, PeftModel
     from trl import AutoModelForCausalLMWithValueHead
+    from huggingface_hub import login
 
     print("[model] Loading policy model...")
 
     hf_token = model_config.hf_token or os.environ.get(
         "HUGGING_FACE_HUB_TOKEN"
     ) or os.environ.get("HF_TOKEN")
+
+    # Login first to authenticate all subsequent HF API calls
+    if hf_token:
+        login(token=hf_token)
+        print(f"[model] Authenticated with HuggingFace (token: {hf_token[:10]}...)")
+    else:
+        print("[model] WARNING: No HF token found! Gated models will fail to load.")
 
     # Tokenizer
     tokenizer = AutoTokenizer.from_pretrained(

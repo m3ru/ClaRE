@@ -17,9 +17,24 @@ echo "[stage] job start"
 # If anything fails, print the line number (helps debug fast)
 trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 
-# ---- Hugging Face token (PASTE YOUR TOKEN TO THE RIGHT OF =) ----
-# IMPORTANT: Do NOT hardcode tokens in this script.
-export HUGGING_FACE_HUB_TOKEN=
+# ---- Hugging Face token ----
+# Option 1: Set token directly here (not recommended for shared scripts)
+# export HUGGING_FACE_HUB_TOKEN="hf_xxx"
+# Option 2: Set in ~/.bashrc or use huggingface-cli login
+
+# Fallback: try to read from huggingface-cli cache if not set
+if [ -z "${HUGGING_FACE_HUB_TOKEN:-}" ] && [ -f "${HOME}/.cache/huggingface/token" ]; then
+  export HUGGING_FACE_HUB_TOKEN="$(cat "${HOME}/.cache/huggingface/token")"
+  echo "[auth] Loaded HF token from ~/.cache/huggingface/token"
+fi
+
+# Debug: verify token is available
+if [ -n "${HUGGING_FACE_HUB_TOKEN:-}" ]; then
+  echo "[auth] HF_TOKEN is set: yes (starts with: ${HUGGING_FACE_HUB_TOKEN:0:10}...)"
+else
+  echo "[auth] WARNING: No HF token found! Gated models will fail."
+  echo "[auth] Run 'huggingface-cli login' on an interactive node first."
+fi
 
 # ---- Put conda/pip caches + envs in SCRATCH (avoid HOME quota) ----
 export SCRATCH_BASE="${HOME}/scratch"
