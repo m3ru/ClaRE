@@ -93,13 +93,17 @@ torch_index = os.environ.get("TORCH_INDEX_URL")
 extra = ["--index-url", torch_index] if torch_index else None
 ensure("torch", "torch", extra=extra)
 
+# Force install correct TRL version (0.12+ has breaking API changes)
+# This ensures we get the old PPOTrainer API even if a newer version is installed
+subprocess.check_call([sys.executable, "-m", "pip", "install", "--force-reinstall", "trl>=0.9.0,<0.12.0"])
+
 # Core stack for PPO training
 for imp, pip in [
     ("transformers", "transformers>=4.45"),
     ("accelerate", "accelerate>=0.34"),
     ("datasets", "datasets>=2.20"),
     ("peft", "peft>=0.12"),
-    ("trl", "trl>=0.11"),
+    ("trl", "trl>=0.9.0,<0.12.0"),  # Pin to old API (0.12+ has breaking changes)
     ("sentencepiece", "sentencepiece"),
     ("pandas", "pandas"),
     ("bitsandbytes", "bitsandbytes"),
