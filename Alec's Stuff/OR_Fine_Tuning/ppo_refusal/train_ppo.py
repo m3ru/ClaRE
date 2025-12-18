@@ -292,28 +292,47 @@ def create_ppo_trainer(
 
     print("[trainer] Creating PPO trainer...")
 
-    config = TRLPPOConfig(
-        learning_rate=ppo_config.learning_rate,
-        batch_size=ppo_config.batch_size,
-        mini_batch_size=ppo_config.mini_batch_size,
-        gradient_accumulation_steps=ppo_config.gradient_accumulation_steps,
-        ppo_epochs=ppo_config.ppo_epochs,
-        target_kl=ppo_config.target_kl,
-        init_kl_coef=ppo_config.init_kl_coef,
-        adap_kl_ctrl=ppo_config.adap_kl_ctrl,
-        cliprange=ppo_config.cliprange,
-        cliprange_value=ppo_config.cliprange_value,
-        vf_coef=ppo_config.vf_coef,
-        gamma=ppo_config.gamma,
-        lam=ppo_config.lam,
-        whiten_rewards=ppo_config.whiten_rewards,
-        use_score_scaling=ppo_config.use_score_scaling,
-        use_score_norm=ppo_config.use_score_norm,
-        max_grad_norm=ppo_config.max_grad_norm,
-        seed=training_config.seed,
-        log_with="wandb" if training_config.use_wandb else None,
-        project_kwargs={"project_name": training_config.wandb_project} if training_config.use_wandb else None,
-    )
+    # Build config with only supported parameters for newer TRL versions
+    # The API changed significantly - some params were renamed/removed
+    config_kwargs = {
+        "learning_rate": ppo_config.learning_rate,
+        "batch_size": ppo_config.batch_size,
+        "mini_batch_size": ppo_config.mini_batch_size,
+        "gradient_accumulation_steps": ppo_config.gradient_accumulation_steps,
+        "seed": training_config.seed,
+    }
+
+    # Try to add optional parameters that may or may not exist in this TRL version
+    optional_params = {
+        "ppo_epochs": ppo_config.ppo_epochs,  # Older TRL
+        "num_ppo_epochs": ppo_config.ppo_epochs,  # Newer TRL
+        "target_kl": ppo_config.target_kl,
+        "init_kl_coef": ppo_config.init_kl_coef,
+        "cliprange": ppo_config.cliprange,
+        "cliprange_value": ppo_config.cliprange_value,
+        "vf_coef": ppo_config.vf_coef,
+        "gamma": ppo_config.gamma,
+        "lam": ppo_config.lam,
+        "max_grad_norm": ppo_config.max_grad_norm,
+    }
+
+    # Inspect PPOConfig to see which parameters it accepts
+    import inspect
+    try:
+        sig = inspect.signature(TRLPPOConfig.__init__)
+        valid_params = set(sig.parameters.keys())
+        for param, value in optional_params.items():
+            if param in valid_params:
+                config_kwargs[param] = value
+    except Exception:
+        # Fallback: just try the new API parameter names
+        config_kwargs["num_ppo_epochs"] = ppo_config.ppo_epochs
+
+    # Add wandb logging if enabled
+    if training_config.use_wandb:
+        config_kwargs["log_with"] = "wandb"
+
+    config = TRLPPOConfig(**config_kwargs)
 
     trainer = PPOTrainer(
         config=config,
