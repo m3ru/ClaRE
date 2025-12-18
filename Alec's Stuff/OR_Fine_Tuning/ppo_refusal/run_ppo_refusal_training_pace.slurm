@@ -109,6 +109,7 @@ for imp, pip in [
     ("bitsandbytes", "bitsandbytes"),
     ("sentence_transformers", "sentence-transformers"),
     ("safetensors", "safetensors"),
+    ("rich", "rich"),  # Required by TRL
 ]:
     ensure(imp, pip)
 
