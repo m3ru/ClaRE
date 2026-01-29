@@ -12,6 +12,12 @@ data/processed/test.csv
 data/processed/*.jsonl
 data/raw/*/
 
+# Model checkpoints and weights (too large for GitHub)
+*.safetensors
+*.bin
+**/checkpoint-*/
+**/checkpoints/
+
 # Python cache
 __pycache__/
 *.pyc
