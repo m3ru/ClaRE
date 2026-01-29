@@ -1,0 +1,65 @@
+# SFT Scoring Pipeline Configuration
+# ===================================
+
+# Input/Output Paths
+# ------------------
+candidates_path: "data/candidates.csv"  # CSV with columns: original_prompt, transformed_prompt
+output_dir: "output"
+
+# Refusal vector path (relative to SFT_Scoring directory or absolute)
+refusal_vector_path: "../Alec's Stuff/Getting_Refusal_Vector/Vector_Extraction/refusal_vector.layer032.npz"
+
+# Model Settings
+# --------------
+# Llama 8B for semantic similarity and refusal activation extraction
+llama_model: "meta-llama/Llama-3.1-8B-Instruct"
+
+# Llama Guard for harmfulness classification
+llama_guard_model: "meta-llama/Llama-Guard-3-8B"
+
+# HuggingFace token (leave null to use HF_TOKEN environment variable)
+hf_token: null
+
+# Model precision: "bfloat16", "float16", or "float32"
+dtype: "bfloat16"
+
+# Scoring Configuration
+# ---------------------
+# Layer for semantic similarity embeddings (0-indexed, middle layer recommended)
+# Llama 8B has 32 layers, so layer 16 is the middle
+embedding_layer: 16
+
+# Layer for refusal activation extraction
+# Set to null to use the layer specified in the refusal vector file (recommended)
+refusal_layer: null
+
+# Normalization method for refusal activation scores: "minmax" or "zscore_sigmoid"
+normalization: "minmax"
+
+# Filtering Thresholds
+# --------------------
+# Candidates with harmfulness >= this threshold are rejected
+# Lower values are more strict (fewer candidates pass)
+harmfulness_threshold: 0.3
+
+# Candidates with semantic_similarity <= this threshold are rejected
+# Higher values are more strict (fewer candidates pass)
+semantic_similarity_threshold: 0.5
+
+# Percentage of top candidates to select after filtering (by refusal_activation)
+top_k_percent: 5
+
+# Processing Settings
+# -------------------
+# Batch size for Llama 8B inference (semantic similarity + refusal activation)
+# Adjust based on GPU memory - H200 can handle larger batches
+batch_size: 8
+
+# Batch size for Llama Guard inference (typically needs smaller batches)
+batch_size_guard: 4
+
+# Enable checkpointing to allow resuming interrupted runs
+use_checkpoints: true
+
+# Whether to resume from existing checkpoint if found
+resume_from_checkpoint: true

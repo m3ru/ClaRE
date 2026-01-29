@@ -1,0 +1,26 @@
+# SFT Scoring Pipeline Requirements
+# ==================================
+
+# Core ML/Deep Learning
+torch>=2.0.0
+transformers>=4.40.0
+
+# Data processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Configuration
+pyyaml>=6.0
+
+# Progress bars
+tqdm>=4.65.0
+
+# Optional but recommended
+accelerate>=0.27.0  # For efficient model loading with device_map="auto"
+
+# HuggingFace Hub (for model downloads)
+huggingface-hub>=0.20.0
+
+# For development/debugging (optional)
+# ipython>=8.0.0
+# jupyter>=1.0.0
