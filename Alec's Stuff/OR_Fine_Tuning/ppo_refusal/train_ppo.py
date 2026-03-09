@@ -39,12 +39,81 @@ from config import (
     RewardConfig,
     TrainingConfig,
     PROMPT_TEMPLATES,
+    SFT_SYSTEM_PROMPT,
     get_default_config,
     load_config_from_json,
     save_config_to_json,
 )
 from data import create_dataloaders, format_prompts_for_model
 from reward_model import RefusalSteeringReward
+
+
+SANITY_PROMPTS = [
+    "Explain how photosynthesis works.",
+    "What are common causes of headaches and when should someone see a doctor?",
+    "How do I write a polite email asking for an extension on a deadline?",
+]
+
+# Default LoRA checkpoint (SFT adapter) to initialize PPO from.
+# Put this folder on PACE inside a single scratch bundle directory:
+#   ~/scratch/clare_ppo/OR_LoRA_Fine-Tuning_Results
+# so PPO starts from your SFT prompt-rewriter behavior without needing the full repo.
+DEFAULT_LORA_CHECKPOINT = os.path.expanduser(
+    "~/scratch/clare_ppo/OR_LoRA_Fine-Tuning_Results"
+)
+
+
+def _build_peft_lora_config(
+    lora_config: "LoRAConfig",
+    lora_checkpoint_path: Optional[str] = None,
+):
+    """Create a PEFT LoRA config.
+
+    If a LoRA checkpoint is provided and contains adapter_config.json, we derive
+    LoRA hyperparameters from it (rank/alpha/dropout/target_modules) to avoid
+    shape mismatches when loading adapter weights.
+    """
+    from peft import LoraConfig as PeftLoraConfig
+
+    # Defaults from our config dataclass
+    r = lora_config.r
+    lora_alpha = lora_config.lora_alpha
+    lora_dropout = lora_config.lora_dropout
+    bias = lora_config.bias
+    task_type = lora_config.task_type
+    target_modules = lora_config.target_modules
+
+    if lora_checkpoint_path:
+        adapter_cfg_path = os.path.join(lora_checkpoint_path, "adapter_config.json")
+        if os.path.exists(adapter_cfg_path):
+            try:
+                with open(adapter_cfg_path, "r", encoding="utf-8") as f:
+                    adapter_cfg = json.load(f)
+                # These keys are present in PEFT's saved adapter config
+                r = int(adapter_cfg.get("r", r))
+                lora_alpha = int(adapter_cfg.get("lora_alpha", lora_alpha))
+                lora_dropout = float(adapter_cfg.get("lora_dropout", lora_dropout))
+                bias = str(adapter_cfg.get("bias", bias))
+                task_type = str(adapter_cfg.get("task_type", task_type))
+                tm = adapter_cfg.get("target_modules", target_modules)
+                if isinstance(tm, list) and tm:
+                    target_modules = tm
+                print(
+                    f"[model] Using LoRA config from checkpoint adapter_config.json "
+                    f"(r={r}, alpha={lora_alpha}, dropout={lora_dropout})",
+                    flush=True,
+                )
+            except Exception as e:
+                print(f"[model] Warning: could not parse {adapter_cfg_path}: {e}", flush=True)
+
+    return PeftLoraConfig(
+        r=r,
+        lora_alpha=lora_alpha,
+        lora_dropout=lora_dropout,
+        bias=bias,
+        task_type=task_type,
+        target_modules=target_modules,
+    )
 
 
 def clear_cuda_cache():
@@ -101,7 +170,7 @@ def load_policy_model(
         Tuple of (model, tokenizer, peft_config)
     """
     from transformers import AutoTokenizer, BitsAndBytesConfig
-    from peft import LoraConfig as PeftLoraConfig, get_peft_model, PeftModel
+    from peft import get_peft_model, PeftModel
     from trl import AutoModelForCausalLMWithValueHead
     from huggingface_hub import login
 
@@ -136,14 +205,10 @@ def load_policy_model(
     else:
         torch_dtype = torch.float32
 
-    # Create PEFT config
-    peft_config = PeftLoraConfig(
-        r=lora_config.r,
-        lora_alpha=lora_config.lora_alpha,
-        lora_dropout=lora_config.lora_dropout,
-        bias=lora_config.bias,
-        task_type=lora_config.task_type,
-        target_modules=lora_config.target_modules,
+    # Create PEFT config (derive from checkpoint if provided to avoid rank mismatches)
+    peft_config = _build_peft_lora_config(
+        lora_config=lora_config,
+        lora_checkpoint_path=model_config.lora_checkpoint_path,
     )
 
     # Check if we have an existing LoRA checkpoint to load
@@ -151,11 +216,12 @@ def load_policy_model(
         print(f"[model] Loading from existing LoRA checkpoint: {model_config.lora_checkpoint_path}")
 
         # Load base model with value head, then load LoRA weights
+        # Use device_map={"": 0} to force everything onto GPU 0 (required for value head)
         model = AutoModelForCausalLMWithValueHead.from_pretrained(
             model_config.base_model_id,
             token=hf_token,
             torch_dtype=torch_dtype,
-            device_map="auto",
+            device_map={"": 0},
             peft_config=peft_config,
         )
 
@@ -189,7 +255,7 @@ def load_policy_model(
             model_config.base_model_id,
             token=hf_token,
             torch_dtype=torch_dtype,
-            device_map="auto",
+            device_map={"": 0},
             peft_config=peft_config,
         )
 
@@ -234,11 +300,23 @@ def create_reference_model(
     else:
         torch_dtype = torch.float32
 
+    # If we have a LoRA checkpoint, ensure the reference model uses the same adapter shape
+    # (important when the checkpoint rank differs from our config defaults).
+    try:
+        from config import LoRAConfig as _LoRAConfig
+        peft_config = _build_peft_lora_config(
+            lora_config=_LoRAConfig(),
+            lora_checkpoint_path=model_config.lora_checkpoint_path,
+        )
+    except Exception:
+        # keep provided peft_config
+        pass
+
     ref_model = AutoModelForCausalLMWithValueHead.from_pretrained(
         model_config.base_model_id,
         token=hf_token,
         torch_dtype=torch_dtype,
-        device_map="auto",
+        device_map={"": 0},
         peft_config=peft_config,
     )
 
@@ -345,6 +423,65 @@ def create_ppo_trainer(
     return trainer
 
 
+def log_sanity_rewrites(
+    model,
+    tokenizer,
+    output_dir: str,
+    step: int,
+    mode: str,
+    prompts: Optional[List[str]] = None,
+):
+    """Generate and append rewrites for a fixed set of prompts.
+
+    Writes to: <output_dir>/sanity_rewrites.csv
+    Columns: step, mode, prompt, rewrite
+    """
+    import csv
+    import os
+
+    prompts = prompts or SANITY_PROMPTS
+
+    # Build a tiny batch compatible with format_prompts_for_model
+    batch = [{"prompt": p, "mode": mode} for p in prompts]
+    formatted = format_prompts_for_model(
+        batch,
+        tokenizer,
+        system_prompt=SFT_SYSTEM_PROMPT if mode == "increase_refusal" else None,
+    )
+
+    # Deterministic generation for easier diffing
+    from config import GenerationConfig
+
+    gen_cfg = GenerationConfig(
+        temperature=0.0,
+        top_p=1.0,
+        max_new_tokens=128,
+        min_new_tokens=1,
+        do_sample=False,
+        top_k=0,
+        repetition_penalty=1.0,
+    )
+
+    was_training = model.training
+    model.eval()
+    try:
+        rewrites = generate_responses(model, tokenizer, formatted, gen_cfg)
+    finally:
+        if was_training:
+            model.train()
+
+    out_path = os.path.join(output_dir, "sanity_rewrites.csv")
+    is_new = not os.path.exists(out_path)
+    with open(out_path, "a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        if is_new:
+            w.writerow(["step", "mode", "prompt", "rewrite"])
+        for p, r in zip(prompts, rewrites):
+            w.writerow([step, mode, p, r])
+
+    print(f"[sanity] wrote {len(prompts)} rewrites to {out_path} (step={step})")
+
+
 def generate_responses(
     model,
     tokenizer,
@@ -437,15 +574,20 @@ def evaluate(
         # Get original prompts and modes
         original_prompts = [item["prompt"] for item in batch]
         modes = [item["mode"] for item in batch]
+        # Decide the mode for this batch early (needed for prompt formatting)
+        mode = modes[0] if modes else training_config.mode
 
         # Format prompts
-        formatted = format_prompts_for_model(batch, tokenizer)
+        formatted = format_prompts_for_model(
+            batch,
+            tokenizer,
+            system_prompt=SFT_SYSTEM_PROMPT if mode == "increase_refusal" else None,
+        )
 
         # Generate rewrites
         rewrites = generate_responses(model, tokenizer, formatted, generation_config)
 
         # Compute rewards (using first mode in batch for simplicity)
-        mode = modes[0] if modes else training_config.mode
         results = reward_model.compute_rewards(original_prompts, rewrites, mode)
 
         all_rewards.extend(results["rewards"].cpu().tolist())
@@ -550,6 +692,18 @@ def train(config: FullConfig):
         model, ref_model, tokenizer, config.ppo, config.training
     )
 
+    # Log sanity rewrites before any PPO updates (should reflect the SFT LoRA init)
+    try:
+        log_sanity_rewrites(
+            model=model,
+            tokenizer=tokenizer,
+            output_dir=config.training.output_dir,
+            step=0,
+            mode=config.training.mode,
+        )
+    except Exception as e:
+        print(f"[sanity] warning: failed to log pre-train rewrites: {e}")
+
     # Training loop
     print("\n[train] Starting training...")
     print(f"[train] Mode: {config.training.mode}")
@@ -570,7 +724,11 @@ def train(config: FullConfig):
                 mode = modes[0] if modes else config.training.mode
 
                 # Format prompts for model input
-                formatted_prompts = format_prompts_for_model(batch, tokenizer)
+                formatted_prompts = format_prompts_for_model(
+                    batch,
+                    tokenizer,
+                    system_prompt=SFT_SYSTEM_PROMPT if mode == "increase_refusal" else None,
+                )
 
                 # Tokenize queries
                 query_tensors = []
@@ -591,6 +749,8 @@ def train(config: FullConfig):
                             do_sample=config.generation.do_sample,
                             temperature=max(1e-6, config.generation.temperature),
                             top_p=config.generation.top_p,
+                            top_k=config.generation.top_k if config.generation.top_k > 0 else None,
+                            repetition_penalty=config.generation.repetition_penalty,
                             pad_token_id=tokenizer.pad_token_id,
                             eos_token_id=tokenizer.eos_token_id,
                         )
@@ -652,6 +812,18 @@ def train(config: FullConfig):
                         config.training,
                     )
 
+                    # Log sanity rewrites alongside eval checkpoints
+                    try:
+                        log_sanity_rewrites(
+                            model=model,
+                            tokenizer=tokenizer,
+                            output_dir=config.training.output_dir,
+                            step=global_step,
+                            mode=config.training.mode,
+                        )
+                    except Exception as e:
+                        print(f"[sanity] warning: failed to log rewrites at step {global_step}: {e}")
+
                     print(
                         f"[eval] "
                         f"reward={eval_metrics['eval_reward']:.4f} "
@@ -678,6 +850,18 @@ def train(config: FullConfig):
                         model, tokenizer, global_step,
                         config.training.output_dir, config,
                     )
+
+                    # Also log sanity rewrites at save points (useful if eval_every is large)
+                    try:
+                        log_sanity_rewrites(
+                            model=model,
+                            tokenizer=tokenizer,
+                            output_dir=config.training.output_dir,
+                            step=global_step,
+                            mode=config.training.mode,
+                        )
+                    except Exception as e:
+                        print(f"[sanity] warning: failed to log rewrites at save step {global_step}: {e}")
 
                 # Clear cache periodically
                 if global_step % 50 == 0:
@@ -727,7 +911,7 @@ def main():
     parser.add_argument(
         "--lora_checkpoint",
         type=str,
-        default="",
+        default=DEFAULT_LORA_CHECKPOINT,
         help="Path to existing LoRA checkpoint",
     )
     parser.add_argument(
@@ -816,6 +1000,13 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.lora_checkpoint:
+        exists = os.path.exists(args.lora_checkpoint)
+        print(
+            f"[config] lora_checkpoint={args.lora_checkpoint} exists={exists}",
+            flush=True,
+        )
 
     # Load or create config
     if args.config:

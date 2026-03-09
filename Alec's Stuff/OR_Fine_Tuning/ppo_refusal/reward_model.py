@@ -236,9 +236,10 @@ class RefusalSteeringReward:
             self.model_config.select_layer_strategy,
         )
 
-        # Normalize the vector
-        vec = vec / (vec.norm() + 1e-9)
+        # Keep vector unnormalized to preserve magnitude information
+        # The raw dot product will give larger, more meaningful reward signals
         self._refusal_vector = vec.to(self.device)
+        print(f"[reward_model] Refusal vector L2 norm: {vec.norm().item():.4f}")
 
         print(f"[reward_model] Refusal vector loaded from layer {self._refusal_layer}")
 
@@ -301,13 +302,19 @@ class RefusalSteeringReward:
         if activations is None:
             raise RuntimeError("No activations captured from hook")
 
-        # Project onto refusal vector (cosine similarity)
+        # Project onto refusal vector
         activations = activations.float()
-        activations_norm = F.normalize(activations, dim=-1)
         refusal_vec = self._refusal_vector.to(activations.device).float()
 
-        # Dot product with normalized vectors = cosine similarity
-        refusal_scores = torch.matmul(activations_norm, refusal_vec)
+        # Raw dot product (not cosine similarity) to preserve magnitude
+        # This gives larger reward signals, especially at later layers
+        raw_scores = torch.matmul(activations, refusal_vec)
+        
+        # Scale down by refusal vector norm to keep scores in reasonable range
+        # but still proportional to magnitude (unlike cosine similarity which
+        # completely removes magnitude information)
+        refusal_vec_norm = refusal_vec.norm()
+        refusal_scores = raw_scores / (refusal_vec_norm + 1e-9)
 
         self._activation_hook.clear()
         return refusal_scores
@@ -392,21 +399,30 @@ class RefusalSteeringReward:
             self.reward_config.refusal_delta_clamp,
         )
 
-        # Compute similarity
-        similarities = self._compute_similarity(original_prompts, rewritten_prompts)
+        # ============================================================
+        # TEMPORARILY COMMENTED OUT: Similarity and penalty constraints
+        # Uncomment to re-enable semantic similarity in reward signal
+        # ============================================================
+        # # Compute similarity
+        # similarities = self._compute_similarity(original_prompts, rewritten_prompts)
+        #
+        # # Compute threshold penalties
+        # penalties = torch.zeros_like(similarities)
+        # below_threshold = similarities < self.reward_config.similarity_threshold
+        # penalties[below_threshold] = self.reward_config.threshold_penalty
+        #
+        # # Composite reward
+        # sim_weight = self.reward_config.similarity_weight
+        # rewards = (
+        #     (1 - sim_weight) * refusal_delta
+        #     + sim_weight * similarities
+        #     + penalties
+        # )
 
-        # Compute threshold penalties
-        penalties = torch.zeros_like(similarities)
-        below_threshold = similarities < self.reward_config.similarity_threshold
-        penalties[below_threshold] = self.reward_config.threshold_penalty
-
-        # Composite reward
-        sim_weight = self.reward_config.similarity_weight
-        rewards = (
-            (1 - sim_weight) * refusal_delta
-            + sim_weight * similarities
-            + penalties
-        )
+        # REFUSAL-ONLY REWARD: Just the refusal delta, no similarity constraint
+        rewards = refusal_delta
+        similarities = torch.zeros_like(refusal_delta)  # placeholder
+        penalties = torch.zeros_like(refusal_delta)      # placeholder
 
         return {
             "rewards": rewards,

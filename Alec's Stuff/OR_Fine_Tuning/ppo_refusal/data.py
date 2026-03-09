@@ -131,6 +131,13 @@ def load_jsonl(path: str) -> List[Dict[str, str]]:
     Returns:
         List of dicts with 'prompt' and optionally 'mode' keys
 
+    Supported JSONL formats:
+    - {"prompt": "...", "mode": "increase_refusal"|"decrease_refusal"}  (native format)
+    - Databricks Dolly style: {"instruction": "...", "context": "...", ...}
+        In this case we treat:
+          prompt := instruction (+ optional context appended)
+        and ignore other fields like "response"/"category".
+
     Raises:
         FileNotFoundError: If file doesn't exist
         ValueError: If file format is invalid
@@ -156,13 +163,25 @@ def load_jsonl(path: str) -> List[Dict[str, str]]:
                 # Plain string in JSON
                 data.append({"prompt": item})
             elif isinstance(item, dict):
+                # Accept alternate schemas (e.g. Dolly) by mapping to our canonical 'prompt' key
                 if "prompt" not in item:
-                    raise ValueError(
-                        f"Line {line_num}: Missing 'prompt' key in JSON object"
-                    )
+                    if "instruction" in item:
+                        instr = str(item.get("instruction") or "").strip()
+                        ctx = str(item.get("context") or "").strip()
+                        if not instr:
+                            raise ValueError(f"Line {line_num}: Empty 'instruction' value")
+                        prompt = instr if not ctx else f"{instr}\n\nContext:\n{ctx}"
+                        item = {"prompt": prompt, "mode": item.get("mode", None)}
+                    else:
+                        raise ValueError(
+                            f"Line {line_num}: Missing 'prompt' key in JSON object"
+                        )
                 # Validate mode if present
                 if "mode" in item:
-                    if item["mode"] not in ("increase_refusal", "decrease_refusal"):
+                    if item["mode"] is None or item["mode"] == "":
+                        # allow missing/empty mode; downstream uses default_mode
+                        item.pop("mode", None)
+                    elif item["mode"] not in ("increase_refusal", "decrease_refusal"):
                         raise ValueError(
                             f"Line {line_num}: Invalid mode '{item['mode']}'. "
                             f"Must be 'increase_refusal' or 'decrease_refusal'"
