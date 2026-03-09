@@ -12,6 +12,12 @@ data/processed/test.csv
 data/processed/*.jsonl
 data/raw/*/
 
+# Model checkpoints and weights (too large for GitHub)
+*.safetensors
+*.bin
+**/checkpoint-*/
+**/checkpoints/
+
 # Python cache
 __pycache__/
 *.pyc
@@ -40,3 +46,24 @@ Thumbs.db
 
 # Logs
 *.log
+
+# PACE helper scripts and temp files
+.pace/
+
+# Cursor IDE project settings
+.cursor/
+
+# Model checkpoints and LoRA weights (too large for GitHub)
+**/checkpoint-*/
+**/OR_LoRA_Fine-Tuning_Results/
+**/ppo_or_checkpoints/
+
+# Large data files
+**/databricks-dolly-15k.jsonl
+
+# SLURM output/error logs
+slurm-*.out
+slurm-*.err
+
+# Numpy/model artifacts
+*.npz
