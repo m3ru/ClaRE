@@ -165,7 +165,7 @@ For smaller GPUs (e.g., A100 40GB):
 
 The pipeline uses a pre-computed refusal vector located at:
 ```
-../Alec's Stuff/Getting_Refusal_Vector/Vector_Extraction/refusal_vector.layer032.npz
+../research/refusal_vector/Vector_Extraction/refusal_vector.layer032.npz
 ```
 
 This vector represents the "refusal direction" in the model's activation space. Prompts with high similarity to this direction are more likely to trigger refusal behavior.

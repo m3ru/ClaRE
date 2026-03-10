@@ -4,6 +4,21 @@
 
 This project compiles and processes datasets containing harmful and benign prompts for AI safety research.
 
+## Branches and current structure
+
+- **Organized branch:** `ClaRE` — this branch has the repo reorganized under **research/** with descriptive folder names. **sample-data** has the same content with the old names (Alec's Stuff, Andrew Refusal Classification).
+- **Layout (ClaRE branch):**
+  - **research/** — all research modules:
+    - **refusal_classification** — M3 refusal classifier, regex refusals (formerly Andrew Refusal Classification)
+    - **refusal_vector** — refusal vector extraction, PEZ, steering demo
+    - **prompt_generations** — LLaMA/Reddit prompt generation, refusal filter
+    - **epo_dreams** — EPO refusal “dream” optimization
+    - **overrefusal_finetuning** — PPO overrefusal, prompt rewriter, sanitization
+    - **overrefusal_sampling** — rejection sampling for (benign, over-refusal) pairs
+  - **SFT_Scoring/** — scoring pipeline for SFT candidates
+  - **scripts/**, **src/**, **assets/**
+- For branch comparison and the original reorganization plan, see **[REPO_ORGANIZATION.md](REPO_ORGANIZATION.md)**.
+
 ## Project Overview
 
 ClaRE (Classification of Harmful and Benign Prompts) is a comprehensive system for compiling, processing, and analyzing datasets containing harmful and benign prompts. The system compiles multiple datasets from Hugging Face, automatically separating prompts into harmful and benign categories for AI safety research.
