@@ -4,7 +4,8 @@ ClaRE (Classification of Harmful and Benign Prompts) is a research codebase for 
 
 The project focuses on building practical tooling for safety evaluation pipelines while also exploring whether simple linear features in representation space can capture meaningful safety-related behavior.
 
-<img width="1536" height="1024" alt="ClaRE" src="https://github.com/user-attachments/assets/dcd9969f-e5e2-4ffd-864b-432afa8e3724" />
+<img width="1536" height="1024" alt="ChatGPT Image Mar 9, 2026, 08_47_00 PM" src="https://github.com/user-attachments/assets/340dda5a-be84-4180-a753-ff9361b5319d" />
+
 
 ## Overview
 
