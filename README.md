@@ -1,456 +1,97 @@
-# ClaRE - Classification of Harmful and Benign Prompts
+# ClaRE
 
-<img width="1536" height="1024" alt="ChatGPT Image Sep 2, 2025, 04_53_23 PM" src="https://github.com/user-attachments/assets/dcd9969f-e5e2-4ffd-864b-432afa8e3724" />
+ClaRE (Classification of Harmful and Benign Prompts) is a research codebase for white-box automated red-teaming of large language models. The core idea is to use internal model representations, especially a learned refusal direction, to systematically surface jailbreaks and over-refusals and to study how safety behavior shows up in model activations.
 
-This project compiles and processes datasets containing harmful and benign prompts for AI safety research.
+The project focuses on building practical tooling for safety evaluation pipelines while also exploring whether simple linear features in representation space can capture meaningful safety-related behavior.
 
-## Branches and current structure
+<img width="1536" height="1024" alt="ChatGPT Image Mar 9, 2026, 08_47_00 PM" src="https://github.com/user-attachments/assets/340dda5a-be84-4180-a753-ff9361b5319d" />
 
-- **Organized branch:** `ClaRE` — this branch has the repo reorganized under **research/** with descriptive folder names. **sample-data** has the same content with the old names (Alec's Stuff, Andrew Refusal Classification).
-- **Layout (ClaRE branch):**
-  - **research/** — all research modules:
-    - **refusal_classification** — M3 refusal classifier, regex refusals (formerly Andrew Refusal Classification)
-    - **refusal_vector** — refusal vector extraction, PEZ, steering demo
-    - **prompt_generations** — LLaMA/Reddit prompt generation, refusal filter
-    - **epo_dreams** — EPO refusal “dream” optimization
-    - **overrefusal_finetuning** — PPO overrefusal, prompt rewriter, sanitization
-    - **overrefusal_sampling** — rejection sampling for (benign, over-refusal) pairs
-  - **SFT_Scoring/** — scoring pipeline for SFT candidates
-  - **scripts/**, **src/**, **assets/**
-- For branch comparison and the original reorganization plan, see **[REPO_ORGANIZATION.md](REPO_ORGANIZATION.md)**.
 
-## Project Overview
+## Overview
 
-ClaRE (Classification of Harmful and Benign Prompts) is a comprehensive system for compiling, processing, and analyzing datasets containing harmful and benign prompts. The system compiles multiple datasets from Hugging Face, automatically separating prompts into harmful and benign categories for AI safety research.
+This project is developed in collaboration with Dr. Goyal.
 
-## Comprehensive Dataset Statistics
+The central goal is to study two common failure modes in language models. Jailbreaks are prompts that cause the model to comply with harmful requests that it should refuse. Over-refusals are prompts that cause the model to reject harmless requests that should normally be answered.
 
-The compiled dataset contains:
-- **Total Prompts**: 618,966
-- **Harmful Prompts**: 236,358 (38.2%)
-- **Benign Prompts**: 382,608 (61.8%)
-- **Average Prompt Length**: 763 characters
-- **Sources**: 6 major datasets from Hugging Face
+Instead of treating the model as a black box, this work uses a white-box approach. Internal activations are collected from the model and used to extract a linear refusal direction. This direction acts as a signal for how strongly a prompt pushes the model toward refusing or complying. The refusal signal can then be used inside a broader automated red-teaming pipeline.
 
-## Quick Start
+## Refusal Vector
 
-### Installation
+The refusal vector is computed using a simple difference-of-means procedure.
 
-```bash
-pip install -r requirements.txt
+First, the model is run on two sets of prompts. One set reliably produces refusal responses and the other produces normal compliant answers. Activations are collected at a chosen layer for both groups. The refusal vector is then computed as the difference between the average activation of the refusal prompts and the average activation of the non-refusal prompts.
+
+```
+refusal_vector = mean(refusal activations) - mean(non-refusal activations)
 ```
 
-### Run Comprehensive Data Compilation
+This produces a single direction in representation space that correlates with refusal behavior.
 
-```bash
-# Compile ALL datasets (recommended)
-python3 scripts/run_comprehensive_compilation.py
+Once extracted, the vector can be used in several ways. It can score new prompts by measuring how strongly their activations align with the refusal direction. It can also be used for steering experiments where the model's activations are shifted along the refusal direction to influence behavior.
 
-# Or compile only Anthropic HH dataset
-python3 scripts/run_compilation.py
-```
+Implementation and experiments live in research/refusal_vector. That module also contains PEZ-style optimization experiments and steering demos.
 
-### Analyze Dataset
+## Current Pipeline
 
-```bash
-python3 scripts/analyze_dataset.py
-```
+The current system is structured around three main steps.
 
-### Interactive Analysis
+Prompt adaptation: an attack language model takes benign seed prompts and generates candidate prompts that may trigger jailbreaks or over-refusals.
 
-```bash
-jupyter notebook notebooks/dataset_analysis.ipynb
-```
+Dual scoring: each candidate is evaluated using two signals. The first is a refusal score from the alignment between the prompt's activations and the refusal vector. The second is semantic similarity, typically from a sentence embedding model like MiniLM, so generated prompts stay close to the meaning of the original seed.
 
-## Project Structure
+Reinforcement learning: these signals are combined into a reward function and the attack model is trained with PPO so it gradually learns to generate prompts that are more effective at revealing safety failures.
+
+One extension under exploration is seed filtering. Instead of passing seeds directly to the attack model, a larger model first paraphrases them. The paraphrases are scored with the refusal vector and only the most promising seeds are kept. That reduces compute by focusing the attack process on seeds more likely to produce interesting failures.
+
+## Goals
+
+The project aims to build tools for scalable automated discovery of model vulnerabilities and safety failure modes. Another goal is to explore whether simple white-box signals, such as a single linear refusal direction, can be useful primitives for red-teaming. Longer term the work is intended to contribute to open evaluation infrastructure and potentially lead to research publications in AI safety.
+
+## Repository Layout
+
+The default branch is main.
 
 ```
 ClaRE/
-├── src/                           # Source code
-│   ├── data_compiler.py          # Anthropic HH compilation logic
-│   ├── multi_dataset_compiler.py # Multi-dataset compilation logic
-│   ├── config.py                 # Configuration settings
-│   └── utils.py                  # Utility functions
-├── data/                         # Processed datasets
-│   ├── raw/                     # Raw downloaded data from all sources
-│   │   ├── anthropic_hh/        # Anthropic HH dataset
-│   │   ├── allenai_harmful/     # AllenAI toxicity prompts
-│   │   ├── onepaneai_harmful/   # OnepaneAI adversarial prompts
-│   │   ├── nask_harmful/        # NASK-PIB harmful prompts
-│   │   ├── guychuk_harmful/     # Guychuk classification dataset
-│   │   ├── openassistant_benign/# OpenAssistant conversations
-│   │   ├── alpaca_benign/       # Stanford Alpaca dataset
-│   │   └── dolly_benign/        # Databricks Dolly dataset
-│   ├── harmful/                 # All harmful prompts
-│   │   ├── all_harmful_prompts.jsonl
-│   │   └── all_harmful_prompts.csv
-│   ├── benign/                  # All benign prompts
-│   │   ├── all_benign_prompts.jsonl
-│   │   └── all_benign_prompts.csv
-│   └── processed/               # Combined datasets and splits
-│       ├── all_combined_dataset.csv
-│       ├── all_train.jsonl      # Training split (80%)
-│       ├── all_val.jsonl        # Validation split (10%)
-│       └── all_test.jsonl       # Test split (10%)
-├── notebooks/                   # Analysis notebooks
-├── scripts/                     # Utility scripts
-└── requirements.txt             # Dependencies
+├── research/
+│   ├── refusal_classification/   # classify outputs as refusal vs non-refusal
+│   ├── refusal_vector/           # refusal vector extraction, PEZ experiments, steering demo
+│   ├── prompt_generations/       # prompt generation and filtering
+│   ├── epo_dreams/               # EPO-style refusal optimization experiments
+│   ├── overrefusal_finetuning/   # PPO training for over-refusal and prompt rewriting
+│   └── overrefusal_sampling/     # sampling benign and over-refusal pairs for SFT
+├── SFT_Scoring/                  # scoring pipeline for SFT candidates
+├── scripts/                      # helper scripts
+├── src/                          # shared utilities and configuration
+└── assets/
 ```
 
-## Compiled Datasets
+Most submodules inside research/ and SFT_Scoring/ have their own README and dependency list. Dependencies are installed per module; there is no single top-level requirements.txt.
 
-### Harmful Prompt Datasets
+## Getting Started
 
-| Dataset | Source | Size | Description | Variables |
-|---------|--------|------|-------------|-----------|
-| **OnepaneAI Adversarial** | `onepaneai/harmful-prompts` | 200 | Adversarial prompts designed to elicit harmful behavior | `prompt`, `is_harmful`, `category` |
-| **NASK-PIB Harmful** | `NASK-PIB/harmful_prompts_sample` | 428 | Manually reviewed harmful prompts with categories | `prompt`, `category`, `subcategory` |
-| **Guychuk Classification** | `guychuk/benign-malicious-prompt-classification` | 235,730 | Large-scale harmful prompt classification | `prompt`, `label` (0=benign, 1=harmful) |
-| **Anthropic HH** | `Anthropic/hh-rlhf` | 8,786 | Human preference data with harmful responses | `prompt`, `response`, `label` |
+Each research component can be run on its own.
 
-### Benign Prompt Datasets
+To extract or experiment with the refusal vector, start with research/refusal_vector.
 
-| Dataset | Source | Size | Description | Variables |
-|---------|--------|------|-------------|-----------|
-| **OpenAssistant** | `OpenAssistant/oasst1` | 86,856 | Human-generated assistant conversations | `prompt`, `text`, `role` |
-| **Stanford Alpaca** | `tatsu-lab/alpaca` | 52,002 | Instruction-following prompts for fine-tuning | `prompt`, `instruction` |
-| **Databricks Dolly** | `databricks/databricks-dolly-15k` | 15,011 | Human-generated instruction-response pairs | `prompt`, `instruction`, `category` |
-| **Guychuk Classification** | `guychuk/benign-malicious-prompt-classification` | 228,739 | Large-scale benign prompt classification | `prompt`, `label` (0=benign, 1=harmful) |
-| **Anthropic HH** | `Anthropic/hh-rlhf` | 58,161 | Human preference data with helpful responses | `prompt`, `response`, `label` |
+To run the scoring pipeline used for SFT data filtering, see SFT_Scoring.
 
-## Classification Methodology
+To generate benign and over-refusal training pairs, look at research/overrefusal_sampling.
 
-The system classifies prompts as harmful or benign based on:
+To train prompt rewriting or over-refusal models with PPO, see research/overrefusal_finetuning.
 
-### Harmful Indicators
-- Responses containing refusal patterns ("I can't help with that", "I cannot assist")
-- Content related to illegal, dangerous, or inappropriate activities
-- Responses that indicate the AI is refusing to provide harmful information
-- Explicit harmful content categories (violence, hate speech, etc.)
+To classify model outputs as refusals or non-refusals, use research/refusal_classification.
 
-### Benign Indicators
-- Helpful and constructive responses
-- Educational content
-- Responses that provide useful information without harm
-- Normal conversational and instructional content
+Example setup:
 
-## Output Files
+```bash
+cd research/refusal_classification
+pip install -r requirements.txt
 
-The system generates multiple output formats:
-
-- **JSONL Files**: `all_harmful_prompts.jsonl`, `all_benign_prompts.jsonl`
-- **CSV Files**: For easy analysis in spreadsheet applications
-- **Train/Val/Test Splits**: Ready for machine learning experiments
-- **Statistics**: Comprehensive dataset metrics and quality scores
-
-## Data Variables & Structure
-
-### Standard Variables (All Datasets)
-- **`prompt`**: The actual prompt text (primary variable for testing)
-- **`label`**: Classification label (`'harmful'` or `'benign'`)
-- **`source`**: Dataset source identifier
-- **`id`**: Unique identifier for each prompt
-- **`split`**: Original dataset split (train/test/val)
-
-### Additional Variables (Dataset-Specific)
-- **`category`**: Content category (violence, hate speech, etc.)
-- **`subcategory`**: More specific content classification
-- **`toxicity_score`**: Toxicity rating (0-1) where available
-- **`response`**: AI response text (for Anthropic HH dataset)
-- **`instruction`**: Instruction text (for instruction-following datasets)
-- **`role`**: Conversation role (for conversational datasets)
-
-## Testing with Open Source Models
-
-### Quick Data Access
-
-```python
-import pandas as pd
-import json
-
-# Load all harmful prompts
-harmful_df = pd.read_csv('data/harmful/all_harmful_prompts.csv')
-print(f"Loaded {len(harmful_df)} harmful prompts")
-
-# Load all benign prompts
-benign_df = pd.read_csv('data/benign/all_benign_prompts.csv')
-print(f"Loaded {len(benign_df)} benign prompts")
-
-# Load combined dataset
-combined_df = pd.read_csv('data/processed/all_combined_dataset.csv')
-print(f"Total dataset: {len(combined_df)} prompts")
+cd ../../SFT_Scoring
+pip install -r requirements.txt
 ```
 
-### Testing with Hugging Face Models
+## License
 
-```python
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
-import pandas as pd
-
-# Load dataset
-df = pd.read_csv('data/processed/all_combined_dataset.csv')
-
-# Test with a text classification model
-classifier = pipeline("text-classification", 
-                     model="microsoft/DialoGPT-medium")
-
-# Test with a causal language model
-tokenizer = AutoTokenizer.from_pretrained("gpt2")
-model = AutoModelForCausalLM.from_pretrained("gpt2")
-
-# Sample testing function
-def test_prompts(model, tokenizer, prompts, max_samples=100):
-    results = []
-    for i, prompt in enumerate(prompts[:max_samples]):
-        inputs = tokenizer.encode(prompt, return_tensors="pt")
-        with torch.no_grad():
-            outputs = model.generate(inputs, max_length=100, num_return_sequences=1)
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        results.append({
-            'prompt': prompt,
-            'response': response,
-            'label': df.iloc[i]['label']
-        })
-    return results
-
-# Test harmful prompts
-harmful_prompts = df[df['label'] == 'harmful']['prompt'].tolist()
-harmful_results = test_prompts(model, tokenizer, harmful_prompts)
-
-# Test benign prompts
-benign_prompts = df[df['label'] == 'benign']['prompt'].tolist()
-benign_results = test_prompts(model, tokenizer, benign_prompts)
-```
-
-### Testing with OpenAI-Compatible Models
-
-```python
-import openai
-import pandas as pd
-
-# Load dataset
-df = pd.read_csv('data/processed/all_combined_dataset.csv')
-
-# Test with local models (Ollama, LM Studio, etc.)
-def test_with_openai_api(prompts, model_name="gpt-3.5-turbo", max_samples=100):
-    results = []
-    for prompt in prompts[:max_samples]:
-        try:
-            response = openai.ChatCompletion.create(
-                model=model_name,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=150
-            )
-            results.append({
-                'prompt': prompt,
-                'response': response.choices[0].message.content,
-                'model': model_name
-            })
-        except Exception as e:
-            results.append({
-                'prompt': prompt,
-                'response': f"Error: {str(e)}",
-                'model': model_name
-            })
-    return results
-
-# Test sample prompts
-sample_prompts = df.sample(100)['prompt'].tolist()
-test_results = test_with_openai_api(sample_prompts)
-```
-
-### Testing with Local Models (Ollama)
-
-```python
-import requests
-import pandas as pd
-
-def test_with_ollama(prompts, model_name="llama2", max_samples=100):
-    results = []
-    for prompt in prompts[:max_samples]:
-        try:
-            response = requests.post('http://localhost:11434/api/generate',
-                                   json={
-                                       'model': model_name,
-                                       'prompt': prompt,
-                                       'stream': False
-                                   })
-            if response.status_code == 200:
-                result = response.json()
-                results.append({
-                    'prompt': prompt,
-                    'response': result['response'],
-                    'model': model_name
-                })
-            else:
-                results.append({
-                    'prompt': prompt,
-                    'response': f"Error: {response.status_code}",
-                    'model': model_name
-                })
-        except Exception as e:
-            results.append({
-                'prompt': prompt,
-                'response': f"Error: {str(e)}",
-                'model': model_name
-            })
-    return results
-
-# Load and test
-df = pd.read_csv('data/processed/all_combined_dataset.csv')
-harmful_prompts = df[df['label'] == 'harmful']['prompt'].tolist()
-results = test_with_ollama(harmful_prompts, model_name="llama2")
-```
-
-### Batch Testing Script
-
-```python
-import pandas as pd
-import json
-from tqdm import tqdm
-
-def batch_test_model(dataset_path, model_function, output_path, batch_size=100):
-    """
-    Test a model on the entire dataset in batches
-    """
-    df = pd.read_csv(dataset_path)
-    results = []
-    
-    for i in tqdm(range(0, len(df), batch_size)):
-        batch = df.iloc[i:i+batch_size]
-        batch_prompts = batch['prompt'].tolist()
-        batch_results = model_function(batch_prompts)
-        
-        # Add metadata
-        for j, result in enumerate(batch_results):
-            result['original_label'] = batch.iloc[j]['label']
-            result['source'] = batch.iloc[j]['source']
-            result['batch_id'] = i // batch_size
-        
-        results.extend(batch_results)
-    
-    # Save results
-    with open(output_path, 'w') as f:
-        json.dump(results, f, indent=2)
-    
-    return results
-
-# Example usage
-results = batch_test_model(
-    'data/processed/all_combined_dataset.csv',
-    test_with_ollama,
-    'model_test_results.json'
-)
-```
-
-## Usage Examples
-
-### Comprehensive Compilation
-
-```python
-from src.multi_dataset_compiler import MultiDatasetCompiler
-
-# Compile all datasets
-compiler = MultiDatasetCompiler()
-harmful_prompts, benign_prompts = compiler.compile_all_datasets(exclude_anthropic=True)
-compiler.save_compiled_datasets(harmful_prompts, benign_prompts)
-compiler.generate_comprehensive_statistics(harmful_prompts, benign_prompts)
-```
-
-### Basic Compilation (Anthropic Only)
-
-```python
-from src.data_compiler import DatasetCompiler
-
-compiler = DatasetCompiler()
-raw_path = compiler.download_anthropic_hh_dataset()
-harmful_prompts, benign_prompts = compiler.process_anthropic_hh_dataset(raw_path)
-compiler.save_datasets(harmful_prompts, benign_prompts)
-```
-
-### Load Processed Data
-
-```python
-import pandas as pd
-
-# Load all harmful prompts
-harmful_df = pd.read_csv('data/harmful/all_harmful_prompts.csv')
-print(f"Loaded {len(harmful_df)} harmful prompts")
-
-# Load all benign prompts  
-benign_df = pd.read_csv('data/benign/all_benign_prompts.csv')
-print(f"Loaded {len(benign_df)} benign prompts")
-
-# Load combined dataset
-combined_df = pd.read_csv('data/processed/all_combined_dataset.csv')
-print(f"Total dataset: {len(combined_df)} prompts")
-
-# Load train/val/test splits
-train_df = pd.read_csv('data/processed/all_train.csv')
-val_df = pd.read_csv('data/processed/all_val.csv')
-test_df = pd.read_csv('data/processed/all_test.csv')
-```
-
-### Filter by Dataset Source
-
-```python
-# Filter by specific dataset source
-anthropic_harmful = harmful_df[harmful_df['source'] == 'anthropic_hh']
-guychuk_harmful = harmful_df[harmful_df['source'] == 'guychuk_harmful']
-nask_harmful = harmful_df[harmful_df['source'] == 'nask_harmful']
-
-print(f"Anthropic harmful: {len(anthropic_harmful)}")
-print(f"Guychuk harmful: {len(guychuk_harmful)}")
-print(f"NASK harmful: {len(nask_harmful)}")
-```
-
-### Filter by Category
-
-```python
-# Filter harmful prompts by category
-violence_prompts = harmful_df[harmful_df['category'] == 'violence']
-hate_speech_prompts = harmful_df[harmful_df['category'] == 'hate_speech']
-
-print(f"Violence prompts: {len(violence_prompts)}")
-print(f"Hate speech prompts: {len(hate_speech_prompts)}")
-```
-
-## Dataset Summary by Source
-
-| Source | Total | Harmful | Benign | Type | Key Features |
-|--------|-------|---------|--------|------|--------------|
-| **Guychuk** | 464,469 | 235,730 | 228,739 | Both | Largest dataset, binary classification |
-| **OpenAssistant** | 86,856 | 0 | 86,856 | Benign | Conversational, multi-language |
-| **Anthropic HH** | 66,947 | 8,786 | 58,161 | Both | Human preferences, refusal patterns |
-| **Alpaca** | 52,002 | 0 | 52,002 | Benign | Instruction-following, educational |
-| **Dolly** | 15,011 | 0 | 15,011 | Benign | Human-generated, categorized |
-| **NASK-PIB** | 428 | 428 | 0 | Harmful | Manually reviewed, categorized |
-| **OnepaneAI** | 200 | 200 | 0 | Harmful | Adversarial, designed to elicit harm |
-| **TOTAL** | **618,966** | **236,358** | **382,608** | **Both** | **Comprehensive coverage** |
-
-## Key Features
-
-- **Scale**: 618,966 total prompts for robust analysis
-- **Diversity**: 6 different dataset sources with varied content types
-- **Balance**: 38.2% harmful, 61.8% benign for realistic testing
-- **Categories**: Detailed categorization of harmful content types
-- **Formats**: Multiple output formats (JSONL, CSV, splits)
-- **Quality**: Validated, deduplicated, and ready for ML
-
-## 📄 License
-
-This project is for research purposes. Please refer to the original dataset licenses for usage terms:
-
-- **Anthropic HH (Anthropic/hh-rlhf)**: MIT License (Research use only; see dataset card for details)
-- **OpenAssistant (OpenAssistant/oasst1)**: Apache 2.0 License
-- **Stanford Alpaca (tatsu-lab/alpaca)**: CC BY-NC 4.0 (Non-commercial use only)
-- **Databricks Dolly (databricks/databricks-dolly-15k)**: CC BY-SA 3.0
-- **Guychuk Benign–Malicious Classification (guychuk/benign-malicious-prompt-classification)**: Apache 2.0 License
-- **NASK-PIB Harmful Prompts (NASK-PIB/harmful_prompts_sample)**: CC BY-SA 4.0
-- **OnepaneAI Adversarial Prompts (onepaneai/harmful-prompts)**: *License not specified on Hugging Face — please check the dataset card directly*
-
-⚠️ **Important Notes**  
-- Some datasets (e.g., Stanford Alpaca) are licensed for **non-commercial research only**.  
-- Ensure compliance with each dataset’s license terms before use.  
-- This compilation is intended for **AI safety research** and must not be used to train models that generate harmful content.
-
+This repository is for research use. Respect the licenses of any datasets or models you use with the codebase. The project is intended for AI safety research and should not be used to develop or deploy systems that increase harmful model behavior.
