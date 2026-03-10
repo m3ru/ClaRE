@@ -46,7 +46,7 @@ def get_default_config() -> Dict[str, Any]:
         # Paths
         "candidates_path": "data/candidates.csv",
         "output_dir": "output",
-        "refusal_vector_path": "../Alec's Stuff/Getting_Refusal_Vector/Vector_Extraction/refusal_vector.layer032.npz",
+        "refusal_vector_path": "../research/refusal_vector/Vector_Extraction/refusal_vector.layer032.npz",
 
         # Model settings
         "llama_model": "meta-llama/Llama-3.1-8B-Instruct",
