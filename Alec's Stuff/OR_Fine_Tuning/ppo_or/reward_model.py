@@ -3,7 +3,7 @@
 
 Computes the OR score for a (original, rewrite) prompt pair:
 
-    OR = e^(9.2 * (similarity - 0.5)) * (rewrite_refusal - original_refusal) / 100
+    OR = e^(18.4 * (similarity - 0.75)) * (rewrite_refusal - original_refusal) / 100
 
 Higher OR → the rewrite sounds scarier (triggers more refusal) while remaining
 semantically close to the benign original.
@@ -22,7 +22,7 @@ from config import ModelConfig, RewardConfig
 
 
 class ActivationHook:
-    """Forward hook to capture last-token hidden state from a decoder layer."""
+    """Forward hook to capture hidden states from a decoder layer."""
 
     def __init__(self):
         self.activation: Optional[torch.Tensor] = None
@@ -33,10 +33,18 @@ class ActivationHook:
         else:
             self.activation = output.detach()
 
-    def get_last_token(self) -> Optional[torch.Tensor]:
+    def get_last_real_token(
+        self, attention_mask: Optional[torch.Tensor] = None,
+    ) -> Optional[torch.Tensor]:
         if self.activation is None:
             return None
-        return self.activation[:, -1, :]  # [B, H]
+        if attention_mask is None:
+            return self.activation[:, -1, :]
+        # Find index of the last non-pad token per sequence:
+        # sum of attention mask gives the sequence length, minus 1 for 0-index.
+        seq_lengths = attention_mask.sum(dim=1) - 1  # [B]
+        batch_idx = torch.arange(self.activation.size(0), device=self.activation.device)
+        return self.activation[batch_idx, seq_lengths.long(), :]  # [B, H]
 
     def clear(self) -> None:
         self.activation = None
@@ -82,7 +90,7 @@ class ORRewardModel:
 
     OR = e^(k * (similarity - c)) * (rewrite_refusal - original_refusal) / d
 
-    where k, c, d are configurable (default 9.2, 0.5, 100).
+    where k, c, d are configurable (default 18.4, 0.75, 100).
     """
 
     def __init__(
@@ -137,6 +145,7 @@ class ORRewardModel:
             self.model_config.base_model_id, token=hf_token,
             device_map="auto", torch_dtype=torch_dtype,
             quantization_config=quant_config,
+            attn_implementation="eager",
         )
         self._target_model.eval()
 
@@ -192,7 +201,7 @@ class ORRewardModel:
         with torch.no_grad():
             self._target_model(**inputs, use_cache=False)
 
-        activations = self._hook.get_last_token()  # [B, H]
+        activations = self._hook.get_last_real_token(inputs.get("attention_mask"))
         if activations is None:
             raise RuntimeError("No activations captured")
 

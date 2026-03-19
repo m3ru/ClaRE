@@ -21,7 +21,6 @@ trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 # Option 1: Set token directly here (hardcode):
 #   export HUGGING_FACE_HUB_TOKEN="hf_..."
 # NOTE: This is sensitive. Don't commit/share this file if you hardcode a token.
-# Paste your HF token here, or run `huggingface-cli login` on an interactive node
 export HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-}"
 # Option 2: Set in ~/.bashrc or use huggingface-cli login
 

@@ -16,7 +16,6 @@ trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 echo "[stage] job start"
 
 # ---- Hugging Face token (paste here if you want it hardcoded) ----
-# Paste your HF token here, or run `huggingface-cli login` on an interactive node
 export HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-}"
 
 # ---- Put conda/pip caches + envs in SCRATCH (avoid HOME quota) ----

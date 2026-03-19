@@ -16,7 +16,6 @@ echo "[stage] job start"
 trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 
 # ---- Hugging Face token ----
-# Paste your HF token here, or run `huggingface-cli login` on an interactive node
 export HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-}"
 
 if [ -z "${HUGGING_FACE_HUB_TOKEN}" ] && [ -f "${HOME}/.cache/huggingface/token" ]; then

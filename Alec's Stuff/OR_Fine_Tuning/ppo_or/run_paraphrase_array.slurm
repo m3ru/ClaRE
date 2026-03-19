@@ -3,24 +3,23 @@
 #SBATCH -A coc
 #SBATCH -p ice-gpu
 #SBATCH --qos=coc-ice
-#SBATCH --gres=gpu:h100:1
+#SBATCH --gres=gpu:h200:1
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=96G
-#SBATCH -t 2:00:00
-#SBATCH --array=0-9
+#SBATCH --mem=192G
+#SBATCH -t 3:00:00
+#SBATCH --array=0-59%20
 #SBATCH --output=slurm-%A_%a.out
 #SBATCH --error=slurm-%A_%a.err
 
 set -euo pipefail
 
 SHARD_ID=${SLURM_ARRAY_TASK_ID}
-NUM_SHARDS=${NUM_SHARDS:-10}
+NUM_SHARDS=${NUM_SHARDS:-60}
 
 echo "[stage] job start — shard ${SHARD_ID}/${NUM_SHARDS}"
 trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 
 # ---- Hugging Face token ----
-# Paste your HF token here, or run `huggingface-cli login` on an interactive node
 export HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-}"
 
 if [ -z "${HUGGING_FACE_HUB_TOKEN}" ] && [ -f "${HOME}/.cache/huggingface/token" ]; then
@@ -97,9 +96,9 @@ REFUSAL_VECTOR_PATH="${REFUSAL_VECTOR_PATH:-${SCRATCH_DATA}/refusal_vector.layer
 # ---- Configuration ----
 GEN_MODEL="${GEN_MODEL:-openai/gpt-oss-120b}"
 SCORING_MODEL="${SCORING_MODEL:-meta-llama/Meta-Llama-3-8B-Instruct}"
-MAX_PROMPTS="${MAX_PROMPTS:-500}"
-N_PARAPHRASES="${N_PARAPHRASES:-20}"
-TEMPERATURE="${TEMPERATURE:-0.9}"
+MAX_PROMPTS="${MAX_PROMPTS:-3000}"
+N_PARAPHRASES="${N_PARAPHRASES:-30}"
+TEMPERATURE="${TEMPERATURE:-0.8}"
 ACTIVATION_LAYER="${ACTIVATION_LAYER:-32}"
 SCORE_BATCH_SIZE="${SCORE_BATCH_SIZE:-8}"
 CHECKPOINT_EVERY="${CHECKPOINT_EVERY:-25}"

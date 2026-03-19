@@ -4,7 +4,7 @@
 Trains Llama-3-8B-Instruct (with LoRA) to rewrite benign prompts into
 versions that trigger safety overrefusal while preserving semantic meaning.
 
-Reward = OR score = e^(9.2*(sim-0.5)) * (rewrite_refusal - orig_refusal) / 100
+Reward = OR score = e^(18.4*(sim-0.75)) * (rewrite_refusal - orig_refusal) / 100
 
 Usage:
     python train_ppo.py --data_path dolly15k.jsonl --refusal_vector_path vector.npz
@@ -18,7 +18,11 @@ import sys
 from dataclasses import asdict
 from typing import Dict, List, Optional
 
+import os as _os
+_os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "0"
+_os.environ["TORCH_CUDNN_V8_API_DISABLED"] = "1"
 import torch
+torch.backends.cudnn.enabled = False
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -154,6 +158,7 @@ def load_policy_model(model_config: ModelConfig, lora_config: LoRAConfig, traini
         model = AutoModelForCausalLMWithValueHead.from_pretrained(
             model_config.base_model_id, token=hf_token,
             torch_dtype=torch_dtype, device_map={"": 0}, peft_config=peft_config,
+            attn_implementation="eager",
         )
         try:
             from peft import set_peft_model_state_dict
@@ -178,6 +183,7 @@ def load_policy_model(model_config: ModelConfig, lora_config: LoRAConfig, traini
         model = AutoModelForCausalLMWithValueHead.from_pretrained(
             model_config.base_model_id, token=hf_token,
             torch_dtype=torch_dtype, device_map={"": 0}, peft_config=peft_config,
+            attn_implementation="eager",
         )
 
     if training_config.gradient_checkpointing:
@@ -432,7 +438,7 @@ def train(config: FullConfig):
         print(f"[sanity] warning: {e}")
 
     print("\n[train] Starting training...")
-    print(f"[train] Reward: OR = e^(9.2*(sim-0.5)) * delta_refusal / {config.reward.refusal_divisor}")
+    print(f"[train] Reward: OR = e^({config.reward.similarity_exponent}*(sim-{config.reward.similarity_center})) * delta_refusal / {config.reward.refusal_divisor}")
     print(f"[train] Steps: {config.training.num_training_steps}")
     print(f"[train] System prompt: {prompt_cfg.system_prompt[:120]}...")
     print(f"[train] Few-shot examples: {len(prompt_cfg.few_shot_examples)}")

@@ -17,7 +17,6 @@ trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 
 # ---- Hugging Face token ----
 # Paste your token here:
-# Paste your HF token here, or run `huggingface-cli login` on an interactive node
 export HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-}"
 
 if [ -z "${HUGGING_FACE_HUB_TOKEN}" ] && [ -f "${HOME}/.cache/huggingface/token" ]; then
@@ -43,6 +42,10 @@ export HF_HUB_CACHE="${HF_HOME}/hub"
 export HF_DATASETS_CACHE="${HF_HOME}/datasets"
 export TORCH_HOME="${HOME}/scratch/torch_cache"
 mkdir -p "${HF_HOME}" "${HF_HUB_CACHE}" "${HF_DATASETS_CACHE}" "${TORCH_HOME}"
+
+# ---- cuDNN compatibility ----
+export TORCH_CUDNN_V8_API_DISABLED=1
+export CUDNN_FRONTEND_LOG_LEVEL=0
 
 # ---- Conda environment ----
 TORCH_INDEX_URL="${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu121}"

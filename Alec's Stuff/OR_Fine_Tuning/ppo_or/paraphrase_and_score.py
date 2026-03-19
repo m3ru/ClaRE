@@ -30,15 +30,25 @@ import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-PARAPHRASE_SYSTEM_PROMPT = (
-    "You are a paraphrasing tool. Given a user prompt, output ONLY a single "
-    "paraphrased version that preserves the original meaning but uses different "
-    "wording. Do NOT include any analysis, reasoning, thinking, commentary, "
-    "labels, or explanation. Do NOT repeat the instructions. Output ONLY the "
-    "paraphrased text and nothing else."
+_PARAPHRASE_USER_TEMPLATE = (
+    "Rewrite the following text using different words while keeping the same "
+    "meaning. Output ONLY the rewritten text, nothing else.\n\n"
+    "Text: {prompt}"
 )
 
-# Patterns that indicate the model leaked reasoning into the output
+_JUNK_MARKERS = [
+    "you are a paraphrasing",
+    "given a user prompt",
+    "output only a single",
+    "output only the paraphrased",
+    "preserves the original meaning",
+    "do not include any analysis",
+    "do not repeat the instructions",
+    "paraphrasing tool",
+    "rewrite the following text",
+    "output only the rewritten",
+]
+
 _REASONING_PREFIXES = [
     "analysis",
     "reasoning",
@@ -52,61 +62,134 @@ _REASONING_PREFIXES = [
     "i need to",
     "paraphrase:",
     "paraphrased version:",
-    "output:",
-    "result:",
-    "here is",
-    "here's",
+    "make sure",
+    "let's produce",
+    "let's output",
+    "now produce",
+    "now paraphrase",
+    "check if",
+    "we must",
+    "we'll produce",
+    "we'll output",
+    "that seems",
+    "no extra",
+    "must be only",
+    "write as one",
+    "they likely",
+    "they want",
+    "plus context",
+    "with a context",
+    "not sure",
+    "wait:",
+    "wait,",
 ]
 
 
 def _clean_paraphrase(text: str, original: str) -> str:
-    """Strip reasoning preamble that gpt-oss sometimes prepends."""
+    """Strip instruction echoes, reasoning preamble, and format markers.
+
+    gpt-oss-120b has three failure modes:
+      1. Echoes the system/instruction prompt verbatim → reject entirely
+      2. Emits internal reasoning then 'assistantfinal' then good text → recover
+      3. Prepends reasoning but no clear delimiter → heuristic extraction
+    """
     import re
 
     stripped = text.strip()
     if not stripped:
         return ""
 
-    # If text starts with a known reasoning prefix, try to extract the
-    # actual paraphrase that usually follows after a newline or quote.
-    lower = stripped.lower()
-    has_prefix = any(lower.startswith(p) for p in _REASONING_PREFIXES)
+    # --- Mode 2: recover text after 'assistantfinal' marker ---
+    af_tag = "assistantfinal"
+    af_idx = stripped.lower().find(af_tag)
+    if af_idx != -1:
+        stripped = stripped[af_idx + len(af_tag):].strip()
+        if not stripped:
+            return ""
 
+    # --- Mode 1: reject instruction/system-prompt echoes ---
+    lower = stripped.lower()
+    if any(marker in lower[:250] for marker in _JUNK_MARKERS):
+        # The entire output is the instruction echo — unsalvageable
+        return ""
+
+    # --- Mode 3: strip reasoning preamble ---
+    has_prefix = any(lower.startswith(p) for p in _REASONING_PREFIXES)
     if has_prefix:
-        # Strategy 1: find text in quotes
+        # Strategy A: find text in quotes
         quoted = re.findall(r'"([^"]{15,})"', stripped)
         if quoted:
             best = max(quoted, key=len)
             return best.strip()
 
-        # Strategy 2: take the last paragraph (reasoning is usually first)
+        # Strategy B: take the last paragraph
         paragraphs = [p.strip() for p in stripped.split("\n\n") if p.strip()]
         if len(paragraphs) > 1:
             candidate = paragraphs[-1]
-            # Make sure it's not also reasoning
             c_lower = candidate.lower()
             if not any(c_lower.startswith(p) for p in _REASONING_PREFIXES):
-                return candidate
+                if not any(m in c_lower[:200] for m in _JUNK_MARKERS):
+                    return candidate
 
-        # Strategy 3: take last line
+        # Strategy C: take last line
         lines = [ln.strip() for ln in stripped.split("\n") if ln.strip()]
         if len(lines) > 1:
             candidate = lines[-1]
             c_lower = candidate.lower()
             if not any(c_lower.startswith(p) for p in _REASONING_PREFIXES):
-                return candidate
+                if not any(m in c_lower[:200] for m in _JUNK_MARKERS):
+                    return candidate
 
-        # Strategy 4: find a sentence that looks like a paraphrase
-        # (contains some overlap with original words)
+        # Strategy D: find a sentence with word overlap to the original
         orig_words = set(original.lower().split())
         sentences = re.split(r'(?<=[.?!])\s+', stripped)
         for sent in reversed(sentences):
             sent_words = set(sent.lower().split())
             overlap = len(orig_words & sent_words) / max(len(orig_words), 1)
             if overlap > 0.15 and len(sent.split()) > 5:
-                return sent.strip()
+                s_lower = sent.lower()
+                if not any(m in s_lower for m in _JUNK_MARKERS):
+                    return sent.strip()
+
+        return ""
 
     return stripped
+
+
+_STOP_WORDS = frozenset({
+    "a", "an", "the", "is", "are", "was", "were", "of", "in", "to",
+    "and", "or", "for", "on", "at", "by", "it", "its", "be", "as",
+    "with", "that", "this", "from", "but", "not", "have", "has", "had",
+    "do", "does", "did", "can", "could", "will", "would", "should",
+    "what", "which", "who", "how", "when", "where", "why", "if", "so",
+    "me", "my", "you", "your", "i", "we", "our", "they", "them",
+})
+
+
+def _extract_question(prompt: str) -> str:
+    """Extract just the question portion of a prompt, ignoring Context blocks."""
+    import re
+    parts = re.split(r'\n+\s*Context\s*:', prompt, maxsplit=1)
+    return parts[0].strip()
+
+
+def _is_valid_paraphrase(text: str, original: str) -> bool:
+    """Quick heuristic check that text is a plausible paraphrase of original."""
+    if not text or len(text.split()) < 3:
+        return False
+    lower = text.lower()
+    if any(m in lower[:200] for m in _JUNK_MARKERS):
+        return False
+
+    question = _extract_question(original)
+    ref = question if len(question.split()) >= 3 else original
+
+    orig_words = set(ref.lower().split()) - _STOP_WORDS
+    para_words = set(lower.split()) - _STOP_WORDS
+    if not orig_words or len(orig_words) <= 3:
+        return True
+    overlap = len(orig_words & para_words) / len(orig_words)
+    return overlap >= 0.08
 
 
 def load_prompts(path: str, max_prompts: int = 0) -> List[str]:
@@ -145,24 +228,35 @@ def generate_paraphrases(
     pipe,
     prompt: str,
     n: int = 20,
-    temperature: float = 0.9,
-    max_new_tokens: int = 512,
+    temperature: float = 0.8,
+    max_new_tokens: int = 256,
     top_p: float = 0.95,
     batch_size: int = 5,
+    max_retries: int = 3,
 ) -> List[str]:
-    messages = [
-        {"role": "developer", "content": PARAPHRASE_SYSTEM_PROMPT},
-        {"role": "user", "content": prompt},
-    ]
+    user_msg = _PARAPHRASE_USER_TEMPLATE.format(prompt=prompt)
+    messages = [{"role": "user", "content": user_msg}]
 
-    paraphrases = []
-    remaining = n
-    while remaining > 0:
-        k = min(remaining, batch_size)
+    token_cap = max(128, min(max_new_tokens, len(prompt.split()) * 4 + 64))
+
+    paraphrases: List[str] = []
+    seen: set = set()
+    calls_left = math.ceil(n / batch_size)
+    retry_rounds = 0
+
+    while len(paraphrases) < n and (calls_left > 0 or retry_rounds < max_retries):
+        if calls_left <= 0:
+            retry_rounds += 1
+            shortfall = n - len(paraphrases)
+            calls_left = math.ceil(shortfall / batch_size)
+
+        k = min(batch_size, n - len(paraphrases), calls_left * batch_size)
+        if k <= 0:
+            break
         try:
             outputs = pipe(
                 messages,
-                max_new_tokens=max_new_tokens,
+                max_new_tokens=token_cap,
                 do_sample=True,
                 temperature=temperature,
                 top_p=top_p,
@@ -174,12 +268,18 @@ def generate_paraphrases(
                 assistant_msg = out["generated_text"][-1]
                 raw = assistant_msg.get("content", "").strip()
                 text = _clean_paraphrase(raw, prompt)
-                if text and len(text.split()) >= 3:
-                    paraphrases.append(text)
+                if not _is_valid_paraphrase(text, prompt):
+                    continue
+                norm = " ".join(text.lower().split())
+                if norm in seen:
+                    continue
+                seen.add(norm)
+                paraphrases.append(text)
         except Exception as e:
             print(f"  [gen] Error generating paraphrase batch: {e}")
-        remaining -= k
-    return paraphrases
+        calls_left -= 1
+
+    return paraphrases[:n]
 
 
 def score_paraphrases(
@@ -248,7 +348,7 @@ def main():
                         help="Model for refusal scoring")
     parser.add_argument("--n_paraphrases", type=int, default=20)
     parser.add_argument("--max_prompts", type=int, default=500)
-    parser.add_argument("--temperature", type=float, default=0.9)
+    parser.add_argument("--temperature", type=float, default=0.8)
     parser.add_argument("--activation_layer", type=int, default=32)
     parser.add_argument("--score_batch_size", type=int, default=8)
     parser.add_argument("--checkpoint_every", type=int, default=50)
@@ -304,6 +404,10 @@ def main():
                 "original": prompt,
                 "paraphrases_text": paraphrases,
             })
+
+            if len(paraphrases) < args.n_paraphrases:
+                print(f"[phase1] WARNING: only {len(paraphrases)}/{args.n_paraphrases} "
+                      f"valid paraphrases for prompt {global_idx}: {prompt[:80]}")
 
             if (i + 1) % 5 == 0 or i == 0:
                 print(f"[phase1] {i+1}/{len(prompts)} — "
