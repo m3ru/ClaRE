@@ -27,7 +27,7 @@ echo "Python: $(which python)"
 echo "PyTorch: $(python -c 'import torch; print(torch.__version__)')"
 echo "CUDA: $(python -c 'import torch; print(torch.cuda.is_available())')"
 
-python train_rwr.py \
+python -u train_rwr.py \
     --shard_dir ../or_paraphrase_3k \
     --output_dir ./rwr_checkpoints \
     --base_model meta-llama/Meta-Llama-3-8B-Instruct \

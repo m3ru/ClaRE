@@ -166,6 +166,7 @@ def train(
 
     global_step = 0
     model.train()
+    print("[train] Entering training loop...")
 
     for epoch in range(training_config.num_epochs):
         epoch_loss = 0.0
@@ -174,8 +175,12 @@ def train(
 
         optimizer.zero_grad()
         for step, batch in enumerate(train_loader):
+            if step == 0 and epoch == 0:
+                print("[train] First batch loaded, starting forward pass...")
             batch = {k: v.to(device) for k, v in batch.items()}
             outputs = model(**batch)
+            if step == 0 and epoch == 0:
+                print(f"[train] First forward pass done, loss={outputs.loss.item():.4f}")
             loss = outputs.loss / training_config.gradient_accumulation_steps
             loss.backward()
 

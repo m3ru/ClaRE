@@ -147,7 +147,7 @@ def tokenize_chat(original: str, paraphrase: str, tokenizer, data_config: DataCo
 
 
 class RWRDataset(Dataset):
-    """SFT-style dataset: each item is a tokenized (prompt -> paraphrase) example."""
+    """SFT-style dataset: pre-tokenized (prompt -> paraphrase) examples."""
 
     def __init__(
         self,
@@ -156,25 +156,28 @@ class RWRDataset(Dataset):
         data_config: DataConfig,
         max_seq_length: int = 512,
     ):
-        self.pairs = pairs
-        self.tokenizer = tokenizer
-        self.data_config = data_config
-        self.max_seq_length = max_seq_length
+        # Pre-tokenize everything upfront to avoid per-batch overhead
+        print(f"[data] Pre-tokenizing {len(pairs)} examples...")
+        self.examples = []
+        for i, pair in enumerate(pairs):
+            input_ids, attention_mask, labels = tokenize_chat(
+                pair["original"], pair["paraphrase"],
+                tokenizer, data_config, max_seq_length,
+            )
+            self.examples.append({
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "labels": labels,
+            })
+            if (i + 1) % 5000 == 0:
+                print(f"  {i + 1}/{len(pairs)} tokenized")
+        print(f"[data] Pre-tokenization done")
 
     def __len__(self):
-        return len(self.pairs)
+        return len(self.examples)
 
     def __getitem__(self, idx):
-        pair = self.pairs[idx]
-        input_ids, attention_mask, labels = tokenize_chat(
-            pair["original"], pair["paraphrase"],
-            self.tokenizer, self.data_config, self.max_seq_length,
-        )
-        return {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "labels": labels,
-        }
+        return self.examples[idx]
 
 
 def build_weighted_sampler(weights: np.ndarray, num_samples: int) -> WeightedRandomSampler:
