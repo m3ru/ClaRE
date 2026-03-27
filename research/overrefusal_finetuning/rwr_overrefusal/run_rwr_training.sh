@@ -4,9 +4,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=96G
+#SBATCH --mem=40G
 #SBATCH --gpus-per-node=nvidia_h100_80gb_hbm3_3g.40gb:1
-#SBATCH --time=0-04:00:00
+#SBATCH --time=0-02:00:00
 #SBATCH --output=logs/rwr_train_%j.out
 #SBATCH --error=logs/rwr_train_%j.err
 #SBATCH --mail-type=FAIL,END
