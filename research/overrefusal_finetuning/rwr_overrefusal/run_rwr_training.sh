@@ -1,24 +1,25 @@
 #!/bin/bash
 #SBATCH --job-name=rwr-train
+#SBATCH --account=def-vganesh
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=12
-#SBATCH --mem=64G
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=96G
+#SBATCH --gpus-per-node=nvidia_h100_80gb_hbm3_3g.40gb:1
 #SBATCH --time=0-04:00:00
-#SBATCH --account=CHANGE_ME
-#SBATCH --gres=gpu:1
 #SBATCH --output=logs/rwr_train_%j.out
 #SBATCH --error=logs/rwr_train_%j.err
-#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --export=ALL
 
+set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 
-source ~/.bashrc 2>/dev/null || true
-conda activate CHANGE_ME
-
-set -eo pipefail
+module load scipy-stack/2024b
+source ~/general/bin/activate
+export HF_HOME="${HF_HOME:-$PWD/.cache/huggingface}"
 
 echo "Starting RWR training at $(date)"
 echo "Using GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader)"
