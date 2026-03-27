@@ -17,9 +17,9 @@ set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 
-module load scipy-stack/2024b
+module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME="${HF_HOME:-$PWD/.cache/huggingface}"
+export HF_HOME=~/.cache/huggingface
 
 echo "Starting RWR training at $(date)"
 echo "Using GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader)"
