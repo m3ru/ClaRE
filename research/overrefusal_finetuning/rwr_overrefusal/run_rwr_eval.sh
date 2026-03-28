@@ -17,8 +17,9 @@ set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 
-module load cuda scipy-stack/2024b
+module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
+pip install pyarrow
 export HF_HOME=~/.cache/huggingface
 
 echo "Starting RWR eval at $(date)"
