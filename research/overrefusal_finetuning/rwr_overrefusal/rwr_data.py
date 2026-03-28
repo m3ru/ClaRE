@@ -44,10 +44,18 @@ def filter_and_bin(
     binning_config: BinningConfig,
 ) -> Tuple[List[Dict], np.ndarray]:
     """Filter by similarity floor, assign quantile bins, return (pairs, sample_weights)."""
-    # Filter
-    filtered = [p for p in pairs if p["similarity"] >= binning_config.similarity_floor]
-    n_dropped = len(pairs) - len(filtered)
-    print(f"[data] Filtered: {n_dropped} pairs below similarity {binning_config.similarity_floor} "
+    # Filter: similarity floor + non-negative reward
+    # Negative-reward examples would teach the model to produce paraphrases that
+    # DECREASE refusal — the opposite of what we want. Since this is SFT (not RL),
+    # there's no mechanism to push the model away from bad examples, only toward them.
+    pre_count = len(pairs)
+    filtered = [p for p in pairs
+                if p["similarity"] >= binning_config.similarity_floor
+                and p[binning_config.reward_key] >= 0]
+    n_sim_dropped = sum(1 for p in pairs if p["similarity"] < binning_config.similarity_floor)
+    n_neg_dropped = pre_count - n_sim_dropped - len(filtered)
+    print(f"[data] Filtered: {n_sim_dropped} below similarity {binning_config.similarity_floor}, "
+          f"{n_neg_dropped} with negative reward "
           f"({len(filtered)} remaining)")
 
     if not filtered:
