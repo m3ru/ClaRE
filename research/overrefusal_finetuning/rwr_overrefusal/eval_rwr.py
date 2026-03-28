@@ -43,6 +43,7 @@ def load_generator(base_model_id: str, adapter_dir: str = None, torch_dtype="bfl
     tokenizer = AutoTokenizer.from_pretrained(base_model_id, use_fast=True, token=hf_token)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "left"  # required for batched generation with decoder-only models
 
     model = AutoModelForCausalLM.from_pretrained(
         base_model_id, token=hf_token, torch_dtype=dtype,
