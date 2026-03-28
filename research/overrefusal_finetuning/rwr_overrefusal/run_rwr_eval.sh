@@ -20,6 +20,7 @@ mkdir -p logs
 module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
 pip install pyarrow
+pip install sentence-transformers
 export HF_HOME=~/.cache/huggingface
 
 echo "Starting RWR eval at $(date)"
