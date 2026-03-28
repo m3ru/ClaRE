@@ -17,8 +17,13 @@ set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 
+# Build a clean venv on the node's local disk (fast I/O, avoids parallel FS issues)
 module load cuda scipy-stack/2024b
-source ~/general/bin/activate
+virtualenv --no-download $SLURM_TMPDIR/env
+source $SLURM_TMPDIR/env/bin/activate
+pip install --no-index --upgrade pip
+pip install --no-index -r requirements.txt
+
 export HF_HOME=~/.cache/huggingface
 
 echo "Starting RWR training at $(date)"
