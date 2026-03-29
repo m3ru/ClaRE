@@ -44,7 +44,7 @@ class BinningConfig:
     # Sampling weight per bin (lowest reward -> highest reward).
     # Change these numbers to control how aggressively we upweight high-reward samples.
     bin_weights: List[float] = field(default_factory=lambda: [1, 2, 4, 8, 16])
-    reward_key: str = "or_score_raw"  # field in the shard data to bin on
+    reward_key: str = "refusal_delta"  # field in the shard data to bin on
     similarity_floor: float = 0.5     # drop pairs below this similarity
 
 

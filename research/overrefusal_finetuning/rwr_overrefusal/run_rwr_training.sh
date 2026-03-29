@@ -29,7 +29,7 @@ echo "CUDA: $(python -c 'import torch; print(torch.cuda.is_available())')"
 
 python -u train_rwr.py \
     --shard_dir ../or_paraphrase_3k \
-    --output_dir ./rwr_checkpoints \
+    --output_dir ./rwr_checkpoints_refusaldelta \
     --base_model meta-llama/Llama-3.1-8B-Instruct \
     --num_epochs 3 \
     --batch_size 4 \

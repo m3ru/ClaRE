@@ -62,7 +62,7 @@ def load_generator(base_model_id: str, adapter_dir: str = None, torch_dtype="bfl
 def generate_paraphrases(
     model, tokenizer, prompts: List[str],
     n_per_prompt: int = 5, temperature: float = 0.7,
-    max_new_tokens: int = 256, batch_size: int = 4,
+    max_new_tokens: int = 64, batch_size: int = 4,
 ) -> Dict[str, List[str]]:
     """Generate n paraphrases per prompt. Returns {original: [generations]}."""
     results = {}
