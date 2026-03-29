@@ -43,9 +43,16 @@ class BinningConfig:
     num_bins: int = 5
     # Sampling weight per bin (lowest reward -> highest reward).
     # Change these numbers to control how aggressively we upweight high-reward samples.
-    bin_weights: List[float] = field(default_factory=lambda: [1, 2, 4, 8, 16])
-    reward_key: str = "refusal_delta"  # field in the shard data to bin on
+    bin_weights: List[float] = field(default_factory=lambda: [0, 0, 0, 1, 16])
+    reward_key: str = "or_score_raw"  # field in the shard data to bin on
     similarity_floor: float = 0.5     # drop pairs below this similarity
+    # Recompute or_score_raw on load: exp(k*(sim-c)) * delta / d
+    # Set to ensure consistent scoring across data from different sources.
+    # k=5.0 balances refusal_delta signal with similarity gating (corr=0.82).
+    recompute_or_score: bool = True
+    similarity_exponent: float = 5.0
+    similarity_center: float = 0.75
+    refusal_divisor: float = 100.0
 
 
 @dataclass
@@ -68,7 +75,6 @@ class TrainingConfig:
 
 @dataclass
 class DataConfig:
-    shard_dir: str = "../or_paraphrase_3k"
-    num_shards: int = 60
+    shard_dir: str = "../or_paraphrase_3k"  # comma-separated for multiple dirs
     system_prompt: str = SYSTEM_PROMPT
     prompt_template: str = PROMPT_TEMPLATE

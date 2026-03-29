@@ -17,26 +17,53 @@ from rwr_config import BinningConfig, DataConfig
 
 
 def load_shards(data_config: DataConfig) -> List[Dict]:
-    """Load all shard JSON files and flatten to (original, paraphrase, scores) dicts."""
+    """Load all shard JSON files and flatten to (original, paraphrase, scores) dicts.
+
+    Supports multiple shard directories (comma-separated in data_config.shard_dir)
+    and auto-detects shard count by globbing for matching files.
+    """
+    import glob
+
+    shard_dirs = [d.strip() for d in data_config.shard_dir.split(",") if d.strip()]
     pairs = []
-    for i in range(data_config.num_shards):
-        path = os.path.join(data_config.shard_dir, f"or_susceptibility_rankings_shard{i}.json")
-        if not os.path.exists(path):
-            print(f"[data] Warning: shard {i} not found at {path}, skipping")
+    total_shards = 0
+
+    for shard_dir in shard_dirs:
+        shard_files = sorted(glob.glob(os.path.join(shard_dir, "or_susceptibility_rankings_shard*.json")))
+        if not shard_files:
+            print(f"[data] Warning: no shards found in {shard_dir}")
             continue
-        with open(path, "r") as f:
-            shard = json.load(f)
-        for item in shard:
-            for p in item["paraphrases"]:
-                pairs.append({
-                    "original": item["original"],
-                    "paraphrase": p["paraphrase"],
-                    "or_score_raw": p["or_score_raw"],
-                    "refusal_delta": p["refusal_delta"],
-                    "similarity": p["similarity"],
-                })
-    print(f"[data] Loaded {len(pairs)} pairs from {data_config.num_shards} shards")
+        total_shards += len(shard_files)
+        for path in shard_files:
+            with open(path, "r") as f:
+                shard = json.load(f)
+            for item in shard:
+                for p in item["paraphrases"]:
+                    pairs.append({
+                        "original": item["original"],
+                        "paraphrase": p["paraphrase"],
+                        "or_score_raw": p["or_score_raw"],
+                        "refusal_delta": p["refusal_delta"],
+                        "similarity": p["similarity"],
+                    })
+
+    print(f"[data] Loaded {len(pairs)} pairs from {total_shards} shards across {len(shard_dirs)} dir(s)")
     return pairs
+
+
+def recompute_or_scores(pairs: List[Dict], binning_config: BinningConfig) -> None:
+    """Recompute or_score_raw in-place from refusal_delta and similarity.
+
+    Different data sources may have used different exponents (k=18.4 vs k=5.0).
+    This ensures consistent scoring across all data before binning.
+    """
+    import math
+    k = binning_config.similarity_exponent
+    c = binning_config.similarity_center
+    d = binning_config.refusal_divisor
+    for p in pairs:
+        p["or_score_raw"] = math.exp(k * (p["similarity"] - c)) * p["refusal_delta"] / d
+    print(f"[data] Recomputed or_score_raw with k={k}, c={c}, d={d}")
 
 
 def filter_and_bin(

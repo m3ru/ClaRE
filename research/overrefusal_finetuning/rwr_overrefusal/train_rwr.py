@@ -25,6 +25,7 @@ from rwr_data import (
     build_weighted_sampler,
     filter_and_bin,
     load_shards,
+    recompute_or_scores,
     train_val_split,
 )
 
@@ -113,6 +114,8 @@ def train(
 
     # --- Data ---
     pairs = load_shards(data_config)
+    if binning_config.recompute_or_score:
+        recompute_or_scores(pairs, binning_config)
     filtered, sample_weights = filter_and_bin(pairs, binning_config)
     train_pairs, train_weights, val_pairs, val_weights = train_val_split(
         filtered, sample_weights, training_config.val_fraction, training_config.seed,
