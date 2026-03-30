@@ -67,23 +67,18 @@ def generate_paraphrases(
     """Generate n paraphrases per prompt. Returns {original: [generations]}."""
     results = {}
 
-    for i in range(0, len(prompts), batch_size):
-        batch_prompts = prompts[i:i + batch_size]
-        # Repeat each prompt n times for batched generation
-        expanded = []
-        for p in batch_prompts:
-            user_content = PROMPT_TEMPLATE.format(prompt=p)
-            messages = [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_content},
-            ]
-            text = tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True,
-            )
-            expanded.extend([text] * n_per_prompt)
+    for i, p in enumerate(prompts):
+        user_content = PROMPT_TEMPLATE.format(prompt=p)
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
+        ]
+        text = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True,
+        )
 
         inputs = tokenizer(
-            expanded, return_tensors="pt", padding=True,
+            [text], return_tensors="pt", padding=True,
             truncation=True, max_length=512,
         ).to(model.device)
 
@@ -95,19 +90,18 @@ def generate_paraphrases(
                 temperature=temperature,
                 top_p=0.9,
                 top_k=50,
+                num_return_sequences=n_per_prompt,
                 pad_token_id=tokenizer.pad_token_id,
             )
 
-        # Decode only the generated part (strip the prompt)
-        for j, ids in enumerate(output_ids):
-            prompt_len = inputs["input_ids"].shape[1]
+        prompt_len = inputs["input_ids"].shape[1]
+        results[p] = []
+        for ids in output_ids:
             gen_text = tokenizer.decode(ids[prompt_len:], skip_special_tokens=True).strip()
-            prompt_idx = j // n_per_prompt
-            orig = batch_prompts[prompt_idx]
-            results.setdefault(orig, []).append(gen_text)
+            results[p].append(gen_text)
 
-        if (i // batch_size + 1) % 10 == 0:
-            print(f"  Generated {i + len(batch_prompts)}/{len(prompts)} prompts")
+        if (i + 1) % 50 == 0:
+            print(f"  Generated {i + 1}/{len(prompts)} prompts")
 
     return results
 
