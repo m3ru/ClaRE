@@ -193,7 +193,7 @@ def main():
     parser.add_argument("--shard_dir", type=str, default="../or_paraphrase_3k")
     parser.add_argument("--refusal_vector_path", type=str, required=True)
     parser.add_argument("--output", type=str, default="eval_results.json")
-    parser.add_argument("--base_model", type=str, default="meta-llama/Llama-3.1-8B-Instruct")
+    parser.add_argument("--base_model", type=str, default="meta-llama/Meta-Llama-3-8B-Instruct")
     parser.add_argument("--n_per_prompt", type=int, default=5)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--gen_batch_size", type=int, default=4)

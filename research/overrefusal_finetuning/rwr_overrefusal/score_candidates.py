@@ -10,7 +10,7 @@ Usage:
         --input_jsonl ../../../overrefusal_sampling/outputs/taskaware_5k.jsonl \
         --refusal_vector_path ../../refusal_vector/Vector_Extraction/refusal_vector.layer032.npz \
         --output_dir ./scored_taskaware \
-        --target_model meta-llama/Llama-3.1-8B-Instruct
+        --target_model meta-llama/Meta-Llama-3-8B-Instruct
 """
 
 import argparse
@@ -176,7 +176,7 @@ def main():
     parser.add_argument("--input_jsonl", type=str, required=True)
     parser.add_argument("--output_dir", type=str, default="./scored_taskaware")
     parser.add_argument("--refusal_vector_path", type=str, required=True)
-    parser.add_argument("--target_model", type=str, default="meta-llama/Llama-3.1-8B-Instruct")
+    parser.add_argument("--target_model", type=str, default="meta-llama/Meta-Llama-3-8B-Instruct")
     parser.add_argument("--activation_layer", type=int, default=32)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--shard_size", type=int, default=50, help="Prompts per shard file")

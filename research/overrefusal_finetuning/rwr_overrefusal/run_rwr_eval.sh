@@ -29,7 +29,7 @@ python -u eval_rwr.py \
     --adapter_dir ./rwr_checkpoints_refusaldelta/final \
     --shard_dir ../or_paraphrase_3k \
     --refusal_vector_path ../../refusal_vector/Vector_Extraction/refusal_vector.layer032.npz \
-    --base_model meta-llama/Llama-3.1-8B-Instruct \
+    --base_model meta-llama/Meta-Llama-3-8B-Instruct \
     --eval_base_model \
     --n_per_prompt 5 \
     --temperature 0.7 \

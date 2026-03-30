@@ -29,7 +29,7 @@ python -u score_candidates.py \
     --input_jsonl ../../../overrefusal_sampling/outputs/taskaware_5k.jsonl \
     --output_dir ./scored_taskaware \
     --refusal_vector_path ../../refusal_vector/Vector_Extraction/refusal_vector.layer032.npz \
-    --target_model meta-llama/Llama-3.1-8B-Instruct \
+    --target_model meta-llama/Meta-Llama-3-8B-Instruct \
     --batch_size 8 \
     --similarity_exponent 5.0 \
     --similarity_center 0.75 \
