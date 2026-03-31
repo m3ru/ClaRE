@@ -17,7 +17,7 @@ set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 
-module load cuda scipy-stack/2024b
+module load gcc arrow/23.0.1 cuda scipy-stack/2024b
 source ~/general/bin/activate
 export HF_HOME=~/.cache/huggingface
 
