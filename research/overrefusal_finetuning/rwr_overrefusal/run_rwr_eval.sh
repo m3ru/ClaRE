@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=40G
 #SBATCH --gpus-per-node=nvidia_h100_80gb_hbm3_3g.40gb:1
-#SBATCH --time=0-01:30:00
+#SBATCH --time=0-06:00:00
 #SBATCH --output=logs/rwr_eval_%j.out
 #SBATCH --error=logs/rwr_eval_%j.err
 #SBATCH --mail-type=FAIL,END
@@ -31,7 +31,8 @@ python -u eval_rwr.py \
     --refusal_vector_path ../../refusal_vector/Vector_Extraction/refusal_vector.layer032.npz \
     --base_model meta-llama/Meta-Llama-3-8B-Instruct \
     --eval_base_model \
-    --n_per_prompt 5 \
+    --n_per_prompt 3 \
+    --max_eval_prompts 200 \
     --temperature 0.7 \
     --output eval_results.json
 

@@ -193,6 +193,8 @@ def main():
     parser.add_argument("--gen_batch_size", type=int, default=4)
     parser.add_argument("--score_batch_size", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--max_eval_prompts", type=int, default=200,
+                        help="Cap on number of val prompts to evaluate (random subset)")
     parser.add_argument("--eval_base_model", action="store_true",
                         help="Also generate from the base model (no adapter) as a baseline")
     args = parser.parse_args()
@@ -207,6 +209,10 @@ def main():
     _, _, val_pairs, _ = train_val_split(filtered, weights, val_fraction=0.1, seed=args.seed)
 
     val_originals = list({p["original"] for p in val_pairs})
+    if args.max_eval_prompts and len(val_originals) > args.max_eval_prompts:
+        import random as _rnd
+        _rnd.seed(args.seed)
+        val_originals = _rnd.sample(val_originals, args.max_eval_prompts)
     print(f"[eval] {len(val_originals)} held-out prompts")
 
     results = {"val_prompts": len(val_originals), "n_per_prompt": args.n_per_prompt}
