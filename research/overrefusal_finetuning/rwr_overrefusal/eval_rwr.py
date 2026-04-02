@@ -107,16 +107,22 @@ def generate_paraphrases(
 
 
 def score_generations(generations: Dict[str, List[str]], refusal_vector_path: str, base_model_id: str):
-    """Score all (original, generation) pairs using ORRewardModel."""
+    """Score all (original, generation) pairs using ORRewardModel.
+    Uses scoring params from rwr_config.BinningConfig to stay consistent with training."""
     from config import ModelConfig as PPOModelConfig, RewardConfig
     from reward_model import ORRewardModel
+    from rwr_config import BinningConfig
 
+    binning = BinningConfig()
     model_config = PPOModelConfig(
         base_model_id=base_model_id,
         refusal_vector_path=refusal_vector_path,
         activation_layer=32,
     )
     reward_config = RewardConfig()
+    reward_config.similarity_exponent = binning.similarity_exponent
+    reward_config.similarity_center = binning.similarity_center
+    reward_config.refusal_divisor = binning.refusal_divisor
     reward_model = ORRewardModel(model_config, reward_config)
 
     scored = []
