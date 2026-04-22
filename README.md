@@ -29,7 +29,7 @@ This produces a single direction in representation space that correlates with re
 
 Once extracted, the vector can be used in several ways. It can score new prompts by measuring how strongly their activations align with the refusal direction. It can also be used for steering experiments where the model's activations are shifted along the refusal direction to influence behavior.
 
-Implementation and experiments live in research/refusal_vector. That module also contains PEZ-style optimization experiments and steering demos.
+Implementation lives in `research/refusal_vector/`. See that module's README for extraction scripts and SLURM commands.
 
 ## Current Pipeline
 
@@ -49,48 +49,29 @@ The project aims to build tools for scalable automated discovery of model vulner
 
 ## Repository Layout
 
-The default branch is main.
-
 ```
 ClaRE/
 ├── research/
-│   ├── refusal_classification/   # classify outputs as refusal vs non-refusal
-│   ├── refusal_vector/           # refusal vector extraction, PEZ experiments, steering demo
-│   ├── prompt_generations/       # prompt generation and filtering
-│   ├── epo_dreams/               # EPO-style refusal optimization experiments
-│   ├── overrefusal_finetuning/   # PPO training for over-refusal and prompt rewriting
-│   └── overrefusal_sampling/     # sampling benign and over-refusal pairs for SFT
-├── SFT_Scoring/                  # scoring pipeline for SFT candidates
-├── scripts/                      # helper scripts
-├── src/                          # shared utilities and configuration
-└── assets/
+│   ├── refusal_vector/             # refusal direction extraction (difference-of-means)
+│   ├── overrefusal_finetuning/
+│   │   ├── ppo_or/                 # paraphrase generation & OR scoring pipeline
+│   │   ├── rwr_overrefusal/        # reward-weighted regression training
+│   │   └── or_paraphrase_3k/       # scored paraphrase data (used by RWR)
+│   └── overrefusal_sampling/       # API-based benign/over-refusal pair generation
+├── src/                            # shared utilities and configuration
+└── archive/                        # legacy experiments and superseded code
 ```
 
-Most submodules inside research/ and SFT_Scoring/ have their own README and dependency list. Dependencies are installed per module; there is no single top-level requirements.txt.
+Each active module has its own README with method details, key files, and run instructions. Dependencies are installed per module.
 
 ## Getting Started
 
-Each research component can be run on its own.
+Each component can be run independently. Start with the one relevant to your task:
 
-To extract or experiment with the refusal vector, start with research/refusal_vector.
-
-To run the scoring pipeline used for SFT data filtering, see SFT_Scoring.
-
-To generate benign and over-refusal training pairs, look at research/overrefusal_sampling.
-
-To train prompt rewriting or over-refusal models with PPO, see research/overrefusal_finetuning.
-
-To classify model outputs as refusals or non-refusals, use research/refusal_classification.
-
-Example setup:
-
-```bash
-cd research/refusal_classification
-pip install -r requirements.txt
-
-cd ../../SFT_Scoring
-pip install -r requirements.txt
-```
+1. **Extract the refusal vector**: `research/refusal_vector/` — produces the refusal direction used by all downstream scoring.
+2. **Generate & score paraphrases**: `research/overrefusal_finetuning/ppo_or/` — paraphrase benign prompts and rank by OR susceptibility.
+3. **Train a prompt rewriter**: `research/overrefusal_finetuning/rwr_overrefusal/` — RWR fine-tuning using scored paraphrases.
+4. **Generate API-based candidates**: `research/overrefusal_sampling/` — sample over-refusal pairs via API for additional training data.
 
 ## License
 

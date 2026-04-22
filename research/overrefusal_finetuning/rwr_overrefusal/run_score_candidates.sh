@@ -28,7 +28,7 @@ echo "CUDA: $(python -c 'import torch; print(torch.cuda.is_available())')"
 python -u score_candidates.py \
     --input_jsonl ../../../overrefusal_sampling/outputs/taskaware_5k.jsonl \
     --output_dir ./scored_taskaware \
-    --refusal_vector_path ../../refusal_vector/Vector_Extraction/refusal_vector.layer032.npz \
+    --refusal_vector_path ../../refusal_vector/3_Vector_Extraction/refusal_vector.layer032.npz \
     --target_model meta-llama/Meta-Llama-3-8B-Instruct \
     --batch_size 8 \
     --similarity_exponent 5.0 \

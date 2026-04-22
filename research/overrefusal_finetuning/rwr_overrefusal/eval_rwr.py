@@ -9,7 +9,7 @@ Usage:
     python eval_rwr.py \
         --adapter_dir ./rwr_checkpoints/final \
         --shard_dir ../or_paraphrase_3k \
-        --refusal_vector_path ../../refusal_vector/Vector_Extraction/refusal_vector.layer032.npz \
+        --refusal_vector_path ../../refusal_vector/3_Vector_Extraction/refusal_vector.layer032.npz \
         --output eval_results.json
 """
 

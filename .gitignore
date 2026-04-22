@@ -70,3 +70,19 @@ slurm-*.err
 
 # Numpy/model artifacts
 *.npz
+
+# Local-only archive of old experiments (too large for git)
+archive/
+
+# Secrets / API keys — never commit
+.env
+.env.*
+!.env.example
+**/openai_key*
+**/*.secret
+**/secrets/
+
+# Paraphrase API outputs (large, regeneratable)
+research/overrefusal_finetuning/paraphrases_api/
+**/batch_requests_*.jsonl
+**/batch_results_*.jsonl

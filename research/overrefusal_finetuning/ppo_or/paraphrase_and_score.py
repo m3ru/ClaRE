@@ -152,7 +152,7 @@ def generate_paraphrases(
 ) -> List[str]:
     messages = [
         {"role": "developer", "content": PARAPHRASE_SYSTEM_PROMPT},
-        {"role": "user", "content": prompt},
+        {"role": "user", "content": f'Please paraphrase the following: "{prompt}"'},
     ]
 
     paraphrases = []
