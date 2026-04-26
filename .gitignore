@@ -70,6 +70,8 @@ slurm-*.err
 
 # Numpy/model artifacts
 *.npz
+# ...except small refusal vectors we want tracked
+!research/refusal_vector/qwen3_extraction/refusal_vector_qwen3*.npz
 
 # Local-only archive of old experiments (too large for git)
 archive/
