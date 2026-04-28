@@ -109,6 +109,7 @@ def train(
     binning_config: BinningConfig,
     training_config: TrainingConfig,
     data_config: DataConfig,
+    num_samples_per_epoch: int = 0,
 ):
     torch.manual_seed(training_config.seed)
 
@@ -129,7 +130,9 @@ def train(
     train_dataset = RWRDataset(train_pairs, tokenizer, data_config, training_config.max_seq_length)
     val_dataset = RWRDataset(val_pairs, tokenizer, data_config, training_config.max_seq_length)
 
-    sampler = build_weighted_sampler(train_weights, num_samples=len(train_dataset))
+    sampler_size = num_samples_per_epoch if num_samples_per_epoch > 0 else len(train_dataset)
+    print(f"[train] WeightedRandomSampler size per epoch: {sampler_size}")
+    sampler = build_weighted_sampler(train_weights, num_samples=sampler_size)
     pad_id = tokenizer.pad_token_id
 
     train_loader = DataLoader(
@@ -245,6 +248,7 @@ def parse_args():
     parser.add_argument("--base_model", type=str, default="meta-llama/Meta-Llama-3-8B-Instruct")
     parser.add_argument("--num_epochs", type=int, default=3)
     parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--gradient_accumulation_steps", type=int, default=4)
     parser.add_argument("--learning_rate", type=float, default=1.5e-5)
     parser.add_argument("--max_seq_length", type=int, default=512)
     parser.add_argument("--num_bins", type=int, default=5)
@@ -252,6 +256,17 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--gradient_checkpointing", action="store_true", default=True)
     parser.add_argument("--no_gradient_checkpointing", action="store_true")
+    # BinningConfig overrides (defaults match the v3 BinningConfig dataclass)
+    parser.add_argument("--bin_weights", type=str, default="",
+                        help="Comma-separated bin weights (default: BinningConfig default).")
+    parser.add_argument("--similarity_exponent", type=float, default=None,
+                        help="OR formula k. Default: BinningConfig default (5.0).")
+    parser.add_argument("--similarity_center", type=float, default=None,
+                        help="OR formula c. Default: BinningConfig default (0.75).")
+    parser.add_argument("--refusal_divisor", type=float, default=None,
+                        help="OR formula d. Default: BinningConfig default (100.0).")
+    parser.add_argument("--num_samples_per_epoch", type=int, default=0,
+                        help="WeightedRandomSampler size (0 = len(train_dataset)).")
     return parser.parse_args()
 
 
@@ -260,14 +275,27 @@ def main():
 
     model_config = ModelConfig(base_model_id=args.base_model)
     lora_config = LoRAConfig()
-    binning_config = BinningConfig(
+
+    # Build BinningConfig with optional overrides
+    binning_kwargs = dict(
         num_bins=args.num_bins,
         similarity_floor=args.similarity_floor,
     )
+    if args.bin_weights:
+        binning_kwargs["bin_weights"] = [float(x) for x in args.bin_weights.split(",")]
+    if args.similarity_exponent is not None:
+        binning_kwargs["similarity_exponent"] = args.similarity_exponent
+    if args.similarity_center is not None:
+        binning_kwargs["similarity_center"] = args.similarity_center
+    if args.refusal_divisor is not None:
+        binning_kwargs["refusal_divisor"] = args.refusal_divisor
+    binning_config = BinningConfig(**binning_kwargs)
+
     training_config = TrainingConfig(
         learning_rate=args.learning_rate,
         num_epochs=args.num_epochs,
         per_device_batch_size=args.batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
         max_seq_length=args.max_seq_length,
         seed=args.seed,
         output_dir=args.output_dir,
@@ -275,7 +303,8 @@ def main():
     )
     data_config = DataConfig(shard_dir=args.shard_dir)
 
-    train(model_config, lora_config, binning_config, training_config, data_config)
+    train(model_config, lora_config, binning_config, training_config, data_config,
+          num_samples_per_epoch=args.num_samples_per_epoch)
 
 
 if __name__ == "__main__":
