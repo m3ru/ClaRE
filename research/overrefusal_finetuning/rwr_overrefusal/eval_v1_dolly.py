@@ -101,14 +101,20 @@ def run_one_source(
     output_path: str,
     eval_base_model: bool = True,
     val_pairs_for_baseline: List[Dict] = None,
+    scoring_model_id: str = None,
 ):
+    if scoring_model_id is None:
+        scoring_model_id = base_model_id
     print(f"\n{'='*70}\n[{label}] starting eval — {len(prompts)} prompts\n{'='*70}")
+    print(f"[{label}] generator={base_model_id}  scorer={scoring_model_id}")
     results = {
         "source": label,
         "n_prompts": len(prompts),
         "n_per_prompt": n_per_prompt,
         "temperature": temperature,
         "adapter": rwr_adapter_dir,
+        "generator_model": base_model_id,
+        "scoring_model": scoring_model_id,
     }
 
     if val_pairs_for_baseline is not None:
@@ -140,9 +146,9 @@ def run_one_source(
         torch.cuda.empty_cache()
         print(f"[{label}] base generation done in {time.time()-t0:.0f}s")
 
-    # --- Score everything ---
-    print(f"[{label}] scoring RWR generations...")
-    rwr_scored = score_generations(rwr_gens, refusal_vector_path, base_model_id)
+    # --- Score everything (using scoring_model_id, which may differ from generator) ---
+    print(f"[{label}] scoring RWR generations with {scoring_model_id}...")
+    rwr_scored = score_generations(rwr_gens, refusal_vector_path, scoring_model_id)
     results["rwr"] = {
         "generations": rwr_scored,
         "stats": {
@@ -153,8 +159,8 @@ def run_one_source(
     }
 
     if base_gens is not None:
-        print(f"[{label}] scoring base generations...")
-        base_scored = score_generations(base_gens, refusal_vector_path, base_model_id)
+        print(f"[{label}] scoring base generations with {scoring_model_id}...")
+        base_scored = score_generations(base_gens, refusal_vector_path, scoring_model_id)
         results["base_model"] = {
             "generations": base_scored,
             "stats": {
@@ -196,7 +202,13 @@ def main():
     ap.add_argument("--shard_dir", required=True,
                     help="Directory with the staged dolly ranked.json (or_susceptibility_rankings_shard0.json)")
     ap.add_argument("--refusal_vector_path", required=True)
-    ap.add_argument("--base_model", default="meta-llama/Meta-Llama-3-8B-Instruct")
+    ap.add_argument("--base_model", default="meta-llama/Meta-Llama-3-8B-Instruct",
+                    help="Generator model — the LLM the adapter sits on top of.")
+    ap.add_argument("--scoring_model", default=None,
+                    help="Scoring model — the model whose activations are projected "
+                         "onto the refusal vector. Defaults to --base_model. Use a different "
+                         "value (e.g. meta-llama/Llama-Guard-3-8B) when the refusal vector was "
+                         "extracted from a different model than the one generating.")
     ap.add_argument("--output_dir", required=True)
     ap.add_argument("--n_per_prompt", type=int, default=5)
     ap.add_argument("--temperature", type=float, default=0.7)
@@ -219,6 +231,7 @@ def main():
             os.path.join(args.output_dir, "eval_dolly_val.json"),
             eval_base_model=not args.no_base_eval,
             val_pairs_for_baseline=val_pairs,
+            scoring_model_id=args.scoring_model,
         )
 
     if "alpaca" in args.sources:
@@ -229,6 +242,7 @@ def main():
             args.n_per_prompt, args.temperature,
             os.path.join(args.output_dir, "eval_alpaca.json"),
             eval_base_model=not args.no_base_eval,
+            scoring_model_id=args.scoring_model,
         )
 
 
