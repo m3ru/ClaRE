@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J rwr_v3_lg_dolly
+#SBATCH -J rwr_v1_lg_dolly
 #SBATCH -A coc
 #SBATCH -p ice-gpu
 #SBATCH --qos=coc-ice
@@ -13,12 +13,11 @@
 
 # Phase B of the Llama-Guard mirror pipeline:
 # RWR training on the Llama-Guard-rescored dolly paraphrases.
-# Uses v3 settings (k=5.0, c=0.75, weights=[0,0,0,1,16]) — the recipe that
-# actually beats base on Llama, so we have a fair shot at producing a useful
-# attacker against Llama-Guard.
+# Uses v1 settings (k=18.4, c=0.5, weights=[1,2,4,8,16]) per user preference —
+# v3 generations had similarity-to-original too low to be useful rewrites.
 
 set -euo pipefail
-echo "[stage] RWR v3-Llama-Guard-dolly start on $(hostname) at $(date)"
+echo "[stage] RWR v1-Llama-Guard-dolly start on $(hostname) at $(date)"
 trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 
 # ---- HF token ----
@@ -54,7 +53,7 @@ PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
 RWR_DIR="${PROJECT_ROOT}/research/overrefusal_finetuning/rwr_overrefusal"
 LG_RANKED="${PROJECT_ROOT}/research/overrefusal_finetuning/paraphrases_api/dolly/llamaguard/ranked.json"
 SHARD_STAGE_DIR="${SCRATCH_BASE}/rwr_llamaguard_dolly_data"
-OUTPUT_DIR="${SCRATCH_BASE}/rwr_v3_llamaguard_dolly_checkpoints"
+OUTPUT_DIR="${SCRATCH_BASE}/rwr_v1_llamaguard_dolly_checkpoints"
 
 [ -f "${LG_RANKED}" ] || { echo "[error] missing rescored ranked.json: ${LG_RANKED}"; exit 2; }
 [ -d "${RWR_DIR}" ] || { echo "[error] missing RWR dir: ${RWR_DIR}"; exit 2; }
@@ -68,11 +67,11 @@ if [ ! -f "${SHARD_FILE}" ] || [ "${LG_RANKED}" -nt "${SHARD_FILE}" ]; then
 fi
 echo "[stage] shard file size: $(du -sh ${SHARD_FILE} | cut -f1)"
 
-# v3 recipe
-SIMILARITY_EXPONENT="${SIMILARITY_EXPONENT:-5.0}"
-SIMILARITY_CENTER="${SIMILARITY_CENTER:-0.75}"
+# v1 recipe (per user preference — v3 had similarity too low)
+SIMILARITY_EXPONENT="${SIMILARITY_EXPONENT:-18.4}"
+SIMILARITY_CENTER="${SIMILARITY_CENTER:-0.5}"
 REFUSAL_DIVISOR="${REFUSAL_DIVISOR:-100.0}"
-BIN_WEIGHTS="${BIN_WEIGHTS:-0,0,0,1,16}"
+BIN_WEIGHTS="${BIN_WEIGHTS:-1,2,4,8,16}"
 SIMILARITY_FLOOR="${SIMILARITY_FLOOR:-0.5}"
 NUM_BINS="${NUM_BINS:-5}"
 
@@ -87,7 +86,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 echo "[config] shard_dir=${SHARD_STAGE_DIR}"
 echo "[config] output_dir=${OUTPUT_DIR}"
-echo "[config] v3 recipe: k=${SIMILARITY_EXPONENT} c=${SIMILARITY_CENTER} d=${REFUSAL_DIVISOR} weights=${BIN_WEIGHTS}"
+echo "[config] v1 recipe: k=${SIMILARITY_EXPONENT} c=${SIMILARITY_CENTER} d=${REFUSAL_DIVISOR} weights=${BIN_WEIGHTS}"
 echo "[config] epochs=${NUM_EPOCHS} bs=${BATCH_SIZE} grad_accum=${GRAD_ACCUM} samples/ep=${NUM_SAMPLES_PER_EPOCH}"
 
 cd "${RWR_DIR}"

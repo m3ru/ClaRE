@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J rwr_v3_lg_eval
+#SBATCH -J rwr_v1_lg_eval
 #SBATCH -A coc
 #SBATCH -p ice-gpu
 #SBATCH --qos=coc-ice
@@ -16,7 +16,7 @@
 # Scorer    = Llama-Guard-3-8B + Llama-Guard refusal vector (the target).
 
 set -euo pipefail
-echo "[stage] v3-LG eval start on $(hostname) at $(date)"
+echo "[stage] v1-LG eval start on $(hostname) at $(date)"
 trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 
 export HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-}"
@@ -46,10 +46,10 @@ echo "[stage] python: $(python --version)"
 
 PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
 RWR_DIR="${PROJECT_ROOT}/research/overrefusal_finetuning/rwr_overrefusal"
-ADAPTER_DIR="${ADAPTER_DIR:-${SCRATCH_BASE}/rwr_v3_llamaguard_dolly_checkpoints/final}"
+ADAPTER_DIR="${ADAPTER_DIR:-${SCRATCH_BASE}/rwr_v1_llamaguard_dolly_checkpoints/final}"
 SHARD_DIR="${SHARD_DIR:-${SCRATCH_BASE}/rwr_llamaguard_dolly_data}"
 LLAMAGUARD_DIR="${PROJECT_ROOT}/research/refusal_vector/llamaguard_extraction"
-OUTPUT_DIR="${OUTPUT_DIR:-${RWR_DIR}/eval_v3_llamaguard_dolly}"
+OUTPUT_DIR="${OUTPUT_DIR:-${RWR_DIR}/eval_v1_llamaguard_dolly}"
 
 [ -d "${ADAPTER_DIR}" ] || { echo "[error] missing adapter: ${ADAPTER_DIR}"; exit 2; }
 [ -d "${SHARD_DIR}" ] || { echo "[error] missing shard dir: ${SHARD_DIR}"; exit 2; }
