@@ -1,0 +1,30 @@
+Starting pilot score at Thu May 28 12:06:43 PDT 2026
+Input:  prompt_iteration_results/dataset_research_framing_medium.jsonl
+Output: prompt_iteration_results/dataset_research_framing_medium_shards
+GPU: NVIDIA H100 80GB HBM3
+[load] 600 valid candidates across 200 prompts (0 skipped)
+[score] Scoring 600 pairs in batches of 8...
+[reward] Loading target model for refusal scoring...
+[reward] bitsandbytes unavailable, loading without quantization
+[reward] Target model loaded, hook on layer 32
+[reward] Loading refusal vector...
+[reward] Refusal vector loaded (layer 32, L2=85.4365)
+[reward] Loading similarity model...
+[reward] Similarity model loaded
+  400/600 scored
+[score] Done
+[reward] Cleanup complete
+
+[save] 4 shards, 200 prompts, 600 pairs
+  refusal_delta: mean=1.428 median=0.353 %pos=74.2%
+  similarity:    mean=0.869 median=0.883
+  or_score_raw:  mean=0.031 median=0.006
+  Saved to prompt_iteration_results/dataset_research_framing_medium_shards/
+Pilot score completed at Thu May 28 12:12:04 PDT 2026
+total 360
+drwxr-x--- 2 meru meru  4096 May 28 12:12 .
+drwxr-x--- 5 meru meru  4096 May 28 12:12 ..
+-rw-r----- 1 meru meru 87558 May 28 12:12 or_susceptibility_rankings_shard0.json
+-rw-r----- 1 meru meru 86221 May 28 12:12 or_susceptibility_rankings_shard1.json
+-rw-r----- 1 meru meru 89144 May 28 12:12 or_susceptibility_rankings_shard2.json
+-rw-r----- 1 meru meru 88646 May 28 12:12 or_susceptibility_rankings_shard3.json
