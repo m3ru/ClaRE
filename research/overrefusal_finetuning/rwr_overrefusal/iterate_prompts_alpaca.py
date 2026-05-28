@@ -160,6 +160,9 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--no_baseline", action="store_true",
                     help="Skip the BASELINE_REFERENCE control variant.")
+    ap.add_argument("--variant_names", nargs="+", default=None,
+                    help="If set, only run variants whose PromptVariant.name is in this list "
+                         "(applied AFTER the baseline injection, so it can filter the baseline too).")
     ap.add_argument("--output_name", default="iterate_alpaca_results.json",
                     help="Filename for the per-variant results JSON")
     args = ap.parse_args()
@@ -171,8 +174,15 @@ def main():
     variants: List[PromptVariant] = list(VARIANTS)
     if not args.no_baseline:
         variants = [BASELINE_REFERENCE] + variants
+    if args.variant_names:
+        requested = set(args.variant_names)
+        kept = [v for v in variants if v.name in requested]
+        missing = requested - {v.name for v in kept}
+        if missing:
+            print(f"[warn] requested variant_names not found in prompt_variants.py: {sorted(missing)}")
+        variants = kept
     if not variants:
-        raise SystemExit("No variants to run. Fill in prompt_variants.py:VARIANTS.")
+        raise SystemExit("No variants to run. Fill in prompt_variants.py:VARIANTS or check --variant_names.")
     for v in variants:
         if v.system_prompt.strip().startswith("TODO"):
             print(f"[warn] variant '{v.name}' still has a TODO system prompt")
