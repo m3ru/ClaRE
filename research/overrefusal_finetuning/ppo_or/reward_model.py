@@ -122,6 +122,20 @@ class ORRewardModel:
         if self._target_tokenizer.pad_token is None:
             self._target_tokenizer.pad_token = self._target_tokenizer.eos_token
 
+        # Some chat templates (e.g. Llama-Guard-3) reject a system role and
+        # require alternating user/assistant turns. Detect once; fall back to a
+        # user-only message for those. Must match extract_activations_sharded.py
+        # so the extracted vector and the scoring activations stay consistent.
+        try:
+            self._target_tokenizer.apply_chat_template(
+                [{"role": "system", "content": "x"}, {"role": "user", "content": "y"}],
+                tokenize=False, add_generation_prompt=True,
+            )
+            self._use_system_role = True
+        except Exception:
+            self._use_system_role = False
+        print(f"[reward] chat template accepts system role: {self._use_system_role}")
+
         quant_config = None
         if self.model_config.quantize_target_model:
             try:
@@ -175,10 +189,13 @@ class ORRewardModel:
 
         formatted = []
         for p in prompts:
-            msgs = [
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": p},
-            ]
+            if self._use_system_role:
+                msgs = [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": p},
+                ]
+            else:
+                msgs = [{"role": "user", "content": p}]
             formatted.append(self._target_tokenizer.apply_chat_template(
                 msgs, tokenize=False, add_generation_prompt=True
             ))

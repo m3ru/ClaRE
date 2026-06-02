@@ -146,12 +146,31 @@ def main():
         token=hf_token,
     )
 
+    # Some chat templates (e.g. Llama-Guard-3) reject a system role and require
+    # strictly alternating user/assistant turns. Detect once and fall back to a
+    # user-only message for those models. Llama-3/Qwen behaviour is unchanged.
+    def _accepts_system() -> bool:
+        try:
+            tok.apply_chat_template(
+                [{"role": "system", "content": "x"}, {"role": "user", "content": "y"}],
+                tokenize=False, add_generation_prompt=True,
+            )
+            return True
+        except Exception:
+            return False
+
+    use_system = _accepts_system()
+    print(f"[template] chat template accepts system role: {use_system}", flush=True)
+
     # Helper to build consistent chat text from a raw user prompt
     def build_chat(u: str) -> str:
-        msgs = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": u},
-        ]
+        if use_system:
+            msgs = [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": u},
+            ]
+        else:
+            msgs = [{"role": "user", "content": u}]
         return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
     batch_size = max(1, args.batch_size)

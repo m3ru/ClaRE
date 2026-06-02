@@ -7,7 +7,7 @@
 #SBATCH --constraint="gpu-h200|gpu-h100|gpu-l40s|gpu-a100"
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=96G
-#SBATCH -t 06:00:00
+#SBATCH -t 16:00:00
 #SBATCH --output=slurm-%j.out
 #SBATCH --error=slurm-%j.err
 
@@ -27,9 +27,21 @@ echo "[stage] llamaguard pipeline start on $(hostname) at $(date)"
 trap 'echo "[error] failed at line ${LINENO}" >&2' ERR
 
 # ---- HF token ----
+# meta-llama/Llama-Guard-3-8B is GATED. This job needs a token from a HF account
+# that has accepted the Llama-Guard-3-8B license, or step 1 dies with a 401
+# GatedRepoError (see slurm-5298236.err). Token is read from, in order:
+#   $HUGGING_FACE_HUB_TOKEN env, ~/.cache/huggingface/token, $HOME/.hf_token
 export HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-}"
-if [ -z "${HUGGING_FACE_HUB_TOKEN}" ] && [ -f "${HOME}/.cache/huggingface/token" ]; then
-  export HUGGING_FACE_HUB_TOKEN="$(cat "${HOME}/.cache/huggingface/token")"
+for tf in "${HOME}/.cache/huggingface/token" "${HOME}/.hf_token"; do
+  if [ -z "${HUGGING_FACE_HUB_TOKEN}" ] && [ -f "${tf}" ]; then
+    export HUGGING_FACE_HUB_TOKEN="$(tr -d '[:space:]' < "${tf}")"
+  fi
+done
+export HF_TOKEN="${HUGGING_FACE_HUB_TOKEN}"
+if [ -z "${HUGGING_FACE_HUB_TOKEN}" ]; then
+  echo "[error] No HF token found. Llama-Guard-3-8B is gated — set HUGGING_FACE_HUB_TOKEN" >&2
+  echo "[error] or write the token to ~/.cache/huggingface/token, then resubmit." >&2
+  exit 2
 fi
 
 # ---- Caches on scratch (avoid 30G home quota and xet's home-dir reconstructor) ----
@@ -57,11 +69,22 @@ nvidia-smi | head -20 || true
 
 # ---- Paths ----
 PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
-EXTRACT_PY="${PROJECT_ROOT}/research/refusal_vector/Vector_Extraction/extract_activations_sharded.py"
-COMPUTE_PY="${PROJECT_ROOT}/research/refusal_vector/Vector_Extraction/compute_refusal_vector.py"
+# The vector-extraction dir was renamed 3_Vector_Extraction in the local repo
+# reorg, but older PACE checkouts still have the un-prefixed Vector_Extraction.
+# Auto-detect so this slurm runs against either layout.
+VEC_DIR=""
+for cand in "3_Vector_Extraction" "Vector_Extraction"; do
+  if [ -f "${PROJECT_ROOT}/research/refusal_vector/${cand}/extract_activations_sharded.py" ]; then
+    VEC_DIR="${PROJECT_ROOT}/research/refusal_vector/${cand}"; break
+  fi
+done
+[ -n "${VEC_DIR}" ] || { echo "[error] could not locate Vector_Extraction dir under ${PROJECT_ROOT}/research/refusal_vector"; exit 2; }
+echo "[config] vector-extraction dir: ${VEC_DIR}"
+EXTRACT_PY="${VEC_DIR}/extract_activations_sharded.py"
+COMPUTE_PY="${VEC_DIR}/compute_refusal_vector.py"
 SCORE_PY="${PROJECT_ROOT}/research/overrefusal_finetuning/ppo_or/score_and_rank_all.py"
-BENIGN_INPUT="${PROJECT_ROOT}/research/refusal_vector/Vector_Extraction/final_benign_prompts.csv"
-REFUSAL_INPUT="${PROJECT_ROOT}/research/refusal_vector/Vector_Extraction/final_refusals_prompts.csv"
+BENIGN_INPUT="${VEC_DIR}/final_benign_prompts.csv"
+REFUSAL_INPUT="${VEC_DIR}/final_refusals_prompts.csv"
 PARAPHRASES_ROOT="${PROJECT_ROOT}/research/overrefusal_finetuning/paraphrases_api"
 
 LLAMAGUARD_DIR="${PROJECT_ROOT}/research/refusal_vector/llamaguard_extraction"
@@ -128,6 +151,7 @@ python -u "${SCORE_PY}" \
   --scoring_model "${MODEL}" \
   --activation_layer "${LAYER_NUM}" \
   --datasets dolly \
+  --batch_size "${SCORE_BATCH_SIZE:-32}" \
   --output_subdir llamaguard
 
 echo "[done] pipeline complete"
