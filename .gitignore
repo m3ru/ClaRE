@@ -20,6 +20,14 @@ CLAUDE.md
 *.bin
 **/checkpoint-*/
 **/checkpoints/
+# Catch named checkpoint dirs (e.g. rwr_claude_checkpoints/, rwr_orp3k_baseline_checkpoints/)
+*_checkpoints/
+
+# Slurm / run log dirs
+logs/
+
+# Redundant pre-dedup shard dirs (keep only the *_deduped/ versions used for training)
+**/dataset_*_full_shards/
 
 # Python cache
 __pycache__/
