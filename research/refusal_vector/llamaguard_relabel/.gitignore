@@ -1,0 +1,7 @@
+# regenerable input (prompt column of llama8b_outputs_filtered.csv)
+unique_prompts.csv
+# intermediate raw labels (the lg_*_prompts.csv splits are derived from this)
+llamaguard_labels.csv
+# slurm logs
+slurm-*.out
+slurm-*.err
