@@ -209,17 +209,22 @@ def main():
         if k > S:
             k = S
 
-        # For each selected layer, accumulate the mean over last-k prompt tokens per example
-        # We aggregate in float64 on CPU for numerical stability
-        # hidden_states[l] shape: [B, S, H]
-        for li, l in enumerate(layers_indices):
-            hs = hidden_states[l]  # torch.Tensor [B, S, H]
-            # select last k tokens along seq dimension, then mean over tokens and batch
-            # shape after select: [B, k, H]
-            slice_hs = hs[:, S-k:S, :].to(torch.float32).float()  # ensure float32 before cpu
-            # mean over token dimension, keep [B, H]
-            tok_mean = slice_hs.mean(dim=1)
-            # sum over batch, move to cpu numpy float64
+        # Robust to padding side: gather the last-k REAL (non-pad) tokens per row
+        # via the attention mask, instead of assuming positions [S-k:S] are real
+        # (only true for left padding). For left padding this is identical to
+        # hs[:, S-k:S]; for right padding it avoids averaging in PAD activations.
+        am = enc["attention_mask"].to(torch.int)
+        last_idx = S - 1 - am.flip(1).argmax(dim=1)                      # [B]
+        offs = torch.arange(k, device=last_idx.device)                  # 0..k-1
+        pos = (last_idx.unsqueeze(1) - offs.unsqueeze(0)).clamp(min=0)  # [B, k]
+        rows = torch.arange(B, device=last_idx.device).unsqueeze(1)     # [B, 1]
+
+        # For each selected layer, accumulate the mean over the last-k real tokens.
+        # We aggregate in float64 on CPU for numerical stability.
+        for li, lyr in enumerate(layers_indices):
+            hs = hidden_states[lyr]                       # [B, S, H]
+            slice_hs = hs[rows, pos, :].to(torch.float32)  # [B, k, H]
+            tok_mean = slice_hs.mean(dim=1)                # [B, H]
             batch_sum = tok_mean.sum(dim=0).cpu().to(torch.float64).numpy()
             sum_by_layer[li] += batch_sum
 

@@ -33,10 +33,23 @@ class ActivationHook:
         else:
             self.activation = output.detach()
 
-    def get_last_token(self) -> Optional[torch.Tensor]:
+    def get_last_token(self, attention_mask: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
+        """Last *real* (non-pad) token hidden state, robust to padding side.
+
+        If an attention_mask is given, gathers the activation at the last
+        attended position of each row (works for left OR right padding); this
+        avoids the bug where right-padding makes position -1 a PAD token. With
+        no mask it falls back to [:, -1, :] (correct only for left padding).
+        """
         if self.activation is None:
             return None
-        return self.activation[:, -1, :]  # [B, H]
+        if attention_mask is None:
+            return self.activation[:, -1, :]  # [B, H]
+        # last index where mask == 1, per row (contiguous standard padding)
+        seq = attention_mask.shape[1]
+        last_idx = seq - 1 - attention_mask.to(torch.int).flip(1).argmax(dim=1)  # [B]
+        rows = torch.arange(self.activation.size(0), device=self.activation.device)
+        return self.activation[rows, last_idx.to(self.activation.device)]  # [B, H]
 
     def clear(self) -> None:
         self.activation = None
@@ -216,7 +229,7 @@ class ORRewardModel:
         with torch.no_grad():
             self._target_model(**inputs, use_cache=False)
 
-        activations = self._hook.get_last_token()  # [B, H]
+        activations = self._hook.get_last_token(inputs["attention_mask"])  # [B, H]
         if activations is None:
             raise RuntimeError("No activations captured")
 
