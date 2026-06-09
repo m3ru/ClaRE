@@ -119,6 +119,13 @@ class ORRewardModel:
         self._target_tokenizer = AutoTokenizer.from_pretrained(
             self.model_config.base_model_id, use_fast=True, token=hf_token,
         )
+        # CRITICAL: last-token activation is read as [:, -1, :]. The tokenizer
+        # default is right-padding, which puts a PAD token at position -1 for
+        # every sequence shorter than the longest in its batch -> corrupted
+        # activations and a systematic, length-dependent scoring bias (the
+        # original was scored as a uniform unpadded batch, paraphrases as a
+        # padded mixed batch). Must match extract_activations_sharded.py.
+        self._target_tokenizer.padding_side = "left"
         if self._target_tokenizer.pad_token is None:
             self._target_tokenizer.pad_token = self._target_tokenizer.eos_token
 
