@@ -61,7 +61,7 @@ python -u "${SCORE_PY}" \
   --datasets dolly \
   --batch_size 32 \
   --no_quantize \
-  --output_subdir llamaguard_relabeled
+  --output_subdir llamaguard_fixed
 
 echo "[done] rescore complete at $(date)"
 ls -la "${PARA_ROOT}/dolly/llamaguard_relabeled/" 2>&1 || true

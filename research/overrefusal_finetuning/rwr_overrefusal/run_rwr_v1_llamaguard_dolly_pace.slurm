@@ -51,9 +51,10 @@ nvidia-smi | head -20 || true
 # ---- Paths ----
 PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
 RWR_DIR="${PROJECT_ROOT}/research/overrefusal_finetuning/rwr_overrefusal"
-LG_RANKED="${PROJECT_ROOT}/research/overrefusal_finetuning/paraphrases_api/dolly/llamaguard/ranked.json"
-SHARD_STAGE_DIR="${SCRATCH_BASE}/rwr_llamaguard_dolly_data"
-OUTPUT_DIR="${SCRATCH_BASE}/rwr_v1_llamaguard_dolly_checkpoints"
+# Defaults point at the FIXED re-score (relabeled vector + padding-fixed scorer).
+LG_RANKED="${LG_RANKED:-${PROJECT_ROOT}/research/overrefusal_finetuning/paraphrases_api/dolly/llamaguard_fixed/ranked.json}"
+SHARD_STAGE_DIR="${SHARD_STAGE_DIR:-${SCRATCH_BASE}/rwr_llamaguard_fixed_dolly_data}"
+OUTPUT_DIR="${OUTPUT_DIR:-${SCRATCH_BASE}/rwr_v1_llamaguard_fixed_checkpoints}"
 
 [ -f "${LG_RANKED}" ] || { echo "[error] missing rescored ranked.json: ${LG_RANKED}"; exit 2; }
 [ -d "${RWR_DIR}" ] || { echo "[error] missing RWR dir: ${RWR_DIR}"; exit 2; }

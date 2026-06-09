@@ -5,3 +5,8 @@ llamaguard_labels.csv
 # slurm logs
 slurm-*.out
 slurm-*.err
+
+# re-score data (large, regenerable / on PACE)
+claude_dolly_rewrites.json
+claude_dolly_rewrites_llamaguard.json
+claude_heldout_alpaca.json
