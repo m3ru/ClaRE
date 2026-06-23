@@ -1,5 +1,7 @@
 # Claude→Llama RWR Distillation — Training Results
 
+> **BAD RESULTS — numbers below are pre-fix (padding bug in the OR scorer). See:** `research/overrefusal_finetuning/results_writeups/2026-06-18_padding_bug_rescore_behavioral_brief.md`
+
 Tests the hypothesis: **can Llama-3-8B imbibe overrefusal-triggering patterns from Claude-generated rewrites via RWR, and does that produce a better attack model than the existing `or_paraphrase_3k` (gpt-oss-120b blind-paraphrase) data?**
 
 Trained on Claude data, the RWR model's top-decile (p90) OR score on held-out prompts is **2.9× the `or_paraphrase_3k`-trained model on alpaca and 1.7× on dolly**, at equal or higher similarity. Same training pipeline, same hyperparameters — only the training data differs.
