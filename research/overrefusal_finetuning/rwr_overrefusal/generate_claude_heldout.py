@@ -43,7 +43,7 @@ sys.path.insert(0, THIS_DIR)
 sys.path.insert(0, os.path.join(THIS_DIR, "..", "ppo_or"))
 
 # Reuse the retry-wrapped Anthropic call from the existing pipeline.
-from iterate_prompts_claude import call_claude_with_retry
+from iterate_prompts_claude import call_claude_with_retry  # noqa: E402
 
 
 def load_heldout_alpaca_prompts(held_out_results_path: str) -> List[Tuple[int, str]]:

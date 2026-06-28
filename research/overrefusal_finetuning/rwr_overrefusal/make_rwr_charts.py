@@ -37,8 +37,10 @@ def load_stats():
         return d["results"][lbl]["alpaca"]["stats"]["or_score_raw"]
     out = {}
     for lbl in ("claude_rwr", "baseline", "rwr_v3"):
-        st = s(k5, lbl); out[lbl] = (st["mean"], st["p90"])
-    st = s(ls, "llama_self_rwr"); out["llama_self_rwr"] = (st["mean"], st["p90"])
+        st = s(k5, lbl)
+        out[lbl] = (st["mean"], st["p90"])
+    st = s(ls, "llama_self_rwr")
+    out["llama_self_rwr"] = (st["mean"], st["p90"])
     st = rc["variants"]["imitation_research_framing"]["stats"]["or_score_raw"]
     out["claude_paraphrases"] = (st["mean"], st["p90"])
     return out
@@ -64,8 +66,8 @@ def single_chart(stats, idx, title_metric, fname, subtitle):
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
     fig, ax = plt.subplots(figsize=(9.6, 5.4), dpi=200)
     fig.patch.set_facecolor("white")
-    bars = ax.barh(range(len(order)), vals, color=colors, height=0.62,
-                   edgecolor="white", linewidth=0.8, zorder=3)
+    ax.barh(range(len(order)), vals, color=colors, height=0.62,
+            edgecolor="white", linewidth=0.8, zorder=3)
     ax.set_yticks(range(len(order)))
     ax.set_yticklabels([_two_line(k) for k in order])
     xmax = max(vals)
@@ -85,7 +87,7 @@ def single_chart(stats, idx, title_metric, fname, subtitle):
              "OR = exp(5·(sim−0.75))·refusal_delta/100, layer-32 refusal-vector activations. "
              "Held-out alpaca (n=600), disjoint from training. Proxy metric, not behavioral refusals.",
              fontsize=7.6, color="#8b949e")
-    fig.tight_layout(rect=[0, 0.035, 1, 1])
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
     out = os.path.join(THIS, fname)
     fig.savefig(out, facecolor="white", bbox_inches="tight")
     plt.close(fig)
@@ -119,7 +121,7 @@ def grouped_chart(stats, fname):
     fig.text(0.012, 0.012,
              "n=600, identical 200 prompts, k=5.0. Mean rewards broad consistency; p90 rewards the extreme tail RWR trains on.",
              fontsize=7.8, color="#8b949e")
-    fig.tight_layout(rect=[0, 0.03, 1, 0.97])
+    fig.tight_layout(rect=(0, 0.03, 1, 0.97))
     out = os.path.join(THIS, fname)
     fig.savefig(out, facecolor="white", bbox_inches="tight")
     plt.close(fig)

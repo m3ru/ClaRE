@@ -35,7 +35,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, THIS_DIR)
 sys.path.insert(0, os.path.join(THIS_DIR, "..", "ppo_or"))
 
-from eval_rwr import load_generator, generate_paraphrases, score_generations
+from eval_rwr import load_generator, generate_paraphrases, score_generations  # noqa: E402
 
 
 def load_alpaca_training_prompts(training_seed: int, n: int) -> List[Tuple[str, str]]:
