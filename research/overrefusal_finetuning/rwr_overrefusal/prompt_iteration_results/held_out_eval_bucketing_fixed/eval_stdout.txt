@@ -1,0 +1,274 @@
+---------------------------------------
+Begin Slurm Prolog: Jun-28-2026 14:02:45
+Job ID:    5442557
+User ID:   aharris345
+Account:   coc
+Job name:  rwr_eval_bucketing_fixed
+Partition: ice-gpu
+QOS:       coc-ice
+---------------------------------------
+[stage] eval_bucketing_fixed on atl1-1-03-013-3-0.pace.gatech.edu at Sun Jun 28 14:02:45 EDT 2026
+[stage] python: Python 3.11.15
+Sun Jun 28 14:03:03 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.58.03              Driver Version: 595.58.03      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000001:48:00.0 Off |                    0 |
+| N/A   68C    P0             99W /  700W |       0MiB /  81559MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+[stage] models: baseline=baseline claude_rwr_fixed=/home/hice1/aharris345/scratch/rwr_claude_fixed_checkpoints/final claude_rwr_v1_fixed=/home/hice1/aharris345/scratch/rwr_claude_v1_fixed_checkpoints/final
+[eval] models to evaluate (3):
+  baseline              adapter_dir=baseline
+  claude_rwr_fixed      adapter_dir=/home/hice1/aharris345/scratch/rwr_claude_fixed_checkpoints/final
+  claude_rwr_v1_fixed   adapter_dir=/home/hice1/aharris345/scratch/rwr_claude_v1_fixed_checkpoints/final
+[heldout] reconstructing training + iteration indices to exclude...
+[heldout] excluding 2519 alpaca indices used for training/iteration
+[heldout] alpaca: selected 200 held-out prompts (eval_seed=99)
+[heldout] excluding 2500 dolly row-ids used for training
+[heldout] dolly: selected 200 held-out prompts (eval_seed=99)
+
+================================================================================
+STAGE 1: GENERATION
+================================================================================
+
+[gen] loading model: baseline (adapter=None)
+[gen] 'baseline' model loaded in 14s
+[gen] baseline × alpaca: 200 prompts × 3
+  Generated 50/200 prompts
+  Generated 100/200 prompts
+  Generated 150/200 prompts
+  Generated 200/200 prompts
+[gen] baseline × alpaca done in 146s
+[gen] baseline × dolly: 200 prompts × 3
+  Generated 50/200 prompts
+  Generated 100/200 prompts
+  Generated 150/200 prompts
+  Generated 200/200 prompts
+[gen] baseline × dolly done in 153s
+
+[gen] loading model: claude_rwr_fixed (adapter=/home/hice1/aharris345/scratch/rwr_claude_fixed_checkpoints/final)
+[eval] Loading LoRA adapter from /home/hice1/aharris345/scratch/rwr_claude_fixed_checkpoints/final
+[gen] 'claude_rwr_fixed' model loaded in 13s
+[gen] claude_rwr_fixed × alpaca: 200 prompts × 3
+  Generated 50/200 prompts
+  Generated 100/200 prompts
+  Generated 150/200 prompts
+  Generated 200/200 prompts
+[gen] claude_rwr_fixed × alpaca done in 129s
+[gen] claude_rwr_fixed × dolly: 200 prompts × 3
+  Generated 50/200 prompts
+  Generated 100/200 prompts
+  Generated 150/200 prompts
+  Generated 200/200 prompts
+[gen] claude_rwr_fixed × dolly done in 122s
+
+[gen] loading model: claude_rwr_v1_fixed (adapter=/home/hice1/aharris345/scratch/rwr_claude_v1_fixed_checkpoints/final)
+[eval] Loading LoRA adapter from /home/hice1/aharris345/scratch/rwr_claude_v1_fixed_checkpoints/final
+[gen] 'claude_rwr_v1_fixed' model loaded in 11s
+[gen] claude_rwr_v1_fixed × alpaca: 200 prompts × 3
+  Generated 50/200 prompts
+  Generated 100/200 prompts
+  Generated 150/200 prompts
+  Generated 200/200 prompts
+[gen] claude_rwr_v1_fixed × alpaca done in 130s
+[gen] claude_rwr_v1_fixed × dolly: 200 prompts × 3
+  Generated 50/200 prompts
+  Generated 100/200 prompts
+  Generated 150/200 prompts
+  Generated 200/200 prompts
+[gen] claude_rwr_v1_fixed × dolly done in 124s
+
+================================================================================
+STAGE 2: SCORING
+================================================================================
+
+[score] baseline × alpaca
+[reward] Loading target model for refusal scoring...
+[reward] chat template accepts system role: True
+[reward] Target model loaded, hook on layer 32
+[reward] Loading refusal vector...
+[reward] Refusal vector loaded (layer 32, L2=85.4365)
+[reward] Loading similarity model...
+[reward] Similarity model loaded
+[reward] Cleanup complete
+[score] baseline × alpaca done in 32s (600 pairs)
+
+[score] baseline × dolly
+[reward] Loading target model for refusal scoring...
+[reward] chat template accepts system role: True
+[reward] Target model loaded, hook on layer 32
+[reward] Loading refusal vector...
+[reward] Refusal vector loaded (layer 32, L2=85.4365)
+[reward] Loading similarity model...
+[reward] Similarity model loaded
+[reward] Cleanup complete
+[score] baseline × dolly done in 22s (600 pairs)
+
+[score] claude_rwr_fixed × alpaca
+[reward] Loading target model for refusal scoring...
+[reward] chat template accepts system role: True
+[reward] Target model loaded, hook on layer 32
+[reward] Loading refusal vector...
+[reward] Refusal vector loaded (layer 32, L2=85.4365)
+[reward] Loading similarity model...
+[reward] Similarity model loaded
+[reward] Cleanup complete
+[score] claude_rwr_fixed × alpaca done in 21s (600 pairs)
+
+[score] claude_rwr_fixed × dolly
+[reward] Loading target model for refusal scoring...
+[reward] chat template accepts system role: True
+[reward] Target model loaded, hook on layer 32
+[reward] Loading refusal vector...
+[reward] Refusal vector loaded (layer 32, L2=85.4365)
+[reward] Loading similarity model...
+[reward] Similarity model loaded
+[reward] Cleanup complete
+[score] claude_rwr_fixed × dolly done in 20s (600 pairs)
+
+[score] claude_rwr_v1_fixed × alpaca
+[reward] Loading target model for refusal scoring...
+[reward] chat template accepts system role: True
+[reward] Target model loaded, hook on layer 32
+[reward] Loading refusal vector...
+[reward] Refusal vector loaded (layer 32, L2=85.4365)
+[reward] Loading similarity model...
+[reward] Similarity model loaded
+[reward] Cleanup complete
+[score] claude_rwr_v1_fixed × alpaca done in 20s (600 pairs)
+
+[score] claude_rwr_v1_fixed × dolly
+[reward] Loading target model for refusal scoring...
+[reward] chat template accepts system role: True
+[reward] Target model loaded, hook on layer 32
+[reward] Loading refusal vector...
+[reward] Refusal vector loaded (layer 32, L2=85.4365)
+[reward] Loading similarity model...
+[reward] Similarity model loaded
+[reward] Cleanup complete
+[score] claude_rwr_v1_fixed × dolly done in 21s (600 pairs)
+
+[done] wrote prompt_iteration_results/held_out_eval_bucketing_fixed/held_out_eval_results.json
+
+====================================================================================================
+HELD-OUT EVAL SUMMARY
+====================================================================================================
+
+--- corpus: alpaca (n_prompts=200, n_per_prompt=3) ---
+
+  or_score_raw:
+    model                        n     mean   median      p75      p90      p95     %pos
+    baseline                   600   0.0228   0.0103   0.0309   0.0632   0.0977   79.8%
+    claude_rwr_fixed           600   0.0099   0.0084   0.0239   0.0408   0.0557   64.8%
+    claude_rwr_v1_fixed        600   0.0101   0.0082   0.0232   0.0404   0.0512   66.3%
+
+  refusal_delta:
+    model                        n     mean   median      p75      p90      p95     %pos
+    baseline                   600   4.3920   2.5375   6.3578  12.8770  20.5635   79.8%
+    claude_rwr_v1_fixed        600   0.6129   0.4448   1.3414   2.4156   3.1115   66.3%
+    claude_rwr_fixed           600   0.5811   0.5084   1.3360   2.3368   3.0123   64.8%
+
+  similarity:
+    model                        n     mean   median      p75      p90      p95     %pos
+    claude_rwr_fixed           600   0.8714   0.8844   0.9260   0.9517   0.9657  100.0%
+    claude_rwr_v1_fixed        600   0.8680   0.8825   0.9252   0.9485   0.9688  100.0%
+    baseline                   600   0.5947   0.6181   0.7317   0.8157   0.8570  100.0%
+
+--- corpus: dolly (n_prompts=200, n_per_prompt=3) ---
+
+  or_score_raw:
+    model                        n     mean   median      p75      p90      p95     %pos
+    baseline                   600   0.0175   0.0085   0.0300   0.0596   0.0900   74.2%
+    claude_rwr_v1_fixed        600   0.0102   0.0062   0.0204   0.0435   0.0637   62.3%
+    claude_rwr_fixed           600   0.0101   0.0062   0.0204   0.0431   0.0644   63.0%
+
+  refusal_delta:
+    model                        n     mean   median      p75      p90      p95     %pos
+    baseline                   600   2.6248   1.7475   4.3145   7.9916  11.1195   74.2%
+    claude_rwr_fixed           600   0.6553   0.2826   1.3399   2.6152   3.7138   63.0%
+    claude_rwr_v1_fixed        600   0.6634   0.3245   1.3837   2.4787   4.0708   62.3%
+
+  similarity:
+    model                        n     mean   median      p75      p90      p95     %pos
+    claude_rwr_fixed           600   0.8671   0.8847   0.9263   0.9549   0.9670  100.0%
+    claude_rwr_v1_fixed        600   0.8654   0.8825   0.9266   0.9510   0.9678  100.0%
+    baseline                   600   0.6680   0.7068   0.7949   0.8523   0.8768   99.8%
+[stage] re-score at k=5.0 for comparability with published numbers
+[rescore] using k=5.0, c=0.75, d=100.0
+[rescore] baseline × alpaca: 600 pairs
+[reward] Loading target model for refusal scoring...
+[reward] chat template accepts system role: True
+[reward] Target model loaded, hook on layer 32
+[reward] Loading refusal vector...
+[reward] Refusal vector loaded (layer 32, L2=85.4365)
+[reward] Loading similarity model...
+[reward] Similarity model loaded
+[rescore] baseline × dolly: 600 pairs
+[rescore] claude_rwr_fixed × alpaca: 600 pairs
+[rescore] claude_rwr_fixed × dolly: 600 pairs
+[rescore] claude_rwr_v1_fixed × alpaca: 600 pairs
+[rescore] claude_rwr_v1_fixed × dolly: 600 pairs
+[reward] Cleanup complete
+[rescore] wrote prompt_iteration_results/held_out_eval_bucketing_fixed/held_out_eval_results_k5.json
+
+====================================================================================================
+RE-SCORED HELD-OUT EVAL SUMMARY (k=5.0, c=0.75, d=100)
+====================================================================================================
+
+--- corpus: alpaca ---
+
+  or_score_raw:
+    model                        n      mean    median       p75       p90       p95     %pos
+    baseline                   600    0.0228    0.0103    0.0309    0.0632    0.0977   79.8%
+    claude_rwr_fixed           600    0.0099    0.0084    0.0239    0.0408    0.0557   64.8%
+    claude_rwr_v1_fixed        600    0.0101    0.0082    0.0232    0.0404    0.0512   66.3%
+
+  refusal_delta:
+    model                        n      mean    median       p75       p90       p95     %pos
+    baseline                   600    4.3920    2.5375    6.3578   12.8770   20.5635   79.8%
+    claude_rwr_v1_fixed        600    0.6129    0.4448    1.3414    2.4156    3.1115   66.3%
+    claude_rwr_fixed           600    0.5811    0.5084    1.3360    2.3368    3.0123   64.8%
+
+  similarity:
+    model                        n      mean    median       p75       p90       p95     %pos
+    claude_rwr_fixed           600    0.8714    0.8844    0.9260    0.9517    0.9657  100.0%
+    claude_rwr_v1_fixed        600    0.8680    0.8825    0.9252    0.9485    0.9688  100.0%
+    baseline                   600    0.5947    0.6181    0.7317    0.8157    0.8570  100.0%
+
+--- corpus: dolly ---
+
+  or_score_raw:
+    model                        n      mean    median       p75       p90       p95     %pos
+    baseline                   600    0.0175    0.0085    0.0300    0.0596    0.0900   74.2%
+    claude_rwr_v1_fixed        600    0.0102    0.0062    0.0204    0.0435    0.0637   62.3%
+    claude_rwr_fixed           600    0.0101    0.0062    0.0204    0.0431    0.0644   63.0%
+
+  refusal_delta:
+    model                        n      mean    median       p75       p90       p95     %pos
+    baseline                   600    2.6248    1.7475    4.3145    7.9916   11.1195   74.2%
+    claude_rwr_fixed           600    0.6553    0.2826    1.3399    2.6152    3.7138   63.0%
+    claude_rwr_v1_fixed        600    0.6634    0.3245    1.3837    2.4787    4.0708   62.3%
+
+  similarity:
+    model                        n      mean    median       p75       p90       p95     %pos
+    claude_rwr_fixed           600    0.8671    0.8847    0.9263    0.9549    0.9670  100.0%
+    claude_rwr_v1_fixed        600    0.8654    0.8825    0.9266    0.9510    0.9678  100.0%
+    baseline                   600    0.6680    0.7068    0.7949    0.8523    0.8768   99.8%
+[done] eval_bucketing_fixed complete at Sun Jun 28 14:21:01 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Jun-28-2026 14:21:02
+Job ID:        5442557
+User ID:       aharris345
+Account:       coc
+Job name:      rwr_eval_bucketing_fixed
+Resources:     cpu=16,gres/gpu:h100=1,mem=96G,node=1
+Rsrc Used:     cput=04:52:32,vmem=0,walltime=00:18:17,mem=12160468K,energy_used=0
+Partition:     ice-gpu
+QOS:           coc-ice
+Nodes:         atl1-1-03-013-3-0
+---------------------------------------

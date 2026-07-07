@@ -1,0 +1,32 @@
+{
+  "n_pairs": 14996,
+  "corr_ref_vs_icannot_logprob": {
+    "pearson": 0.1976114481925623,
+    "spearman": 0.13606219431117922
+  },
+  "corr_ref_vs_icannot_prob": {
+    "pearson": 0.1353399243507467,
+    "spearman": 0.14314770200953222
+  },
+  "corr_high_sim_logprob": {
+    "pearson": 0.10936352707460283,
+    "spearman": 0.07342210683745569,
+    "n": 10115,
+    "sim_threshold": 0.85
+  },
+  "sanity_recomputed_vs_stored_refusal_delta": {
+    "pearson": 0.9993806535828713,
+    "spearman": 0.9989318189303132
+  },
+  "icannot_delta_logprob": {
+    "mean": 1.1199606996471538,
+    "median": 0.9701070785522461,
+    "pct_positive": 68.14483862363296
+  },
+  "ref_delta": {
+    "mean": 0.2472367977192806,
+    "median": 0.13550734519958496,
+    "pct_positive": 55.26140304081088
+  },
+  "sign_agreement_pct": 54.721259002400636
+}
