@@ -36,7 +36,7 @@ mkdir -p logs
 module load gcc arrow/23.0.1 cuda scipy-stack/2024b
 source ~/general/bin/activate
 
-export HF_HOME="${HOME}/.cache/huggingface"
+export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1

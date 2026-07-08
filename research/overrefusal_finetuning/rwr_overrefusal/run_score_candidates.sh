@@ -19,7 +19,10 @@ mkdir -p logs
 
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=~/.cache/huggingface
+export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export HF_DATASETS_OFFLINE=1
 
 echo "Starting candidate scoring at $(date)"
 echo "Using GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader)"

@@ -21,7 +21,7 @@ module load gcc arrow/23.0.1 cuda scipy-stack/2024b
 source ~/general/bin/activate
 
 # Llama-3-8B-Instruct + alpaca-cleaned + MiniLM are all already in this cache.
-export HF_HOME="${HOME}/.cache/huggingface"
+export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
 # Compute nodes have no/limited internet — force offline so transformers/datasets
 # use the local cache instead of trying to refresh from the hub.
 export HF_HUB_OFFLINE=1
