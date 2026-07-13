@@ -94,9 +94,10 @@ def evaluate(model, val_loader, device):
     with torch.no_grad():
         for batch in val_loader:
             batch = {k: v.to(device) for k, v in batch.items()}
-            outputs = model(**batch)
-            # Count non-masked tokens for proper averaging
             n_tokens = (batch["labels"] != -100).sum().item()
+            if n_tokens == 0:
+                continue  # fully-masked batch (prompt >= max_seq_length) -> loss is nan
+            outputs = model(**batch)
             total_loss += outputs.loss.item() * n_tokens
             total_tokens += n_tokens
     model.train()
@@ -184,6 +185,8 @@ def train(
             if step == 0 and epoch == 0:
                 print("[train] First batch loaded, starting forward pass...")
             batch = {k: v.to(device) for k, v in batch.items()}
+            if (batch["labels"] != -100).sum().item() == 0:
+                continue  # fully-masked batch -> would produce nan loss/grads
             outputs = model(**batch)
             if step == 0 and epoch == 0:
                 print(f"[train] First forward pass done, loss={outputs.loss.item():.4f}")
@@ -265,6 +268,9 @@ def parse_args():
                         help="OR formula c. Default: BinningConfig default (0.75).")
     parser.add_argument("--refusal_divisor", type=float, default=None,
                         help="OR formula d. Default: BinningConfig default (100.0).")
+    parser.add_argument("--bin_edges", type=str, default="",
+                        help="Comma-separated absolute reward bin boundaries (num_bins-1 of them). "
+                             "When set, bins by threshold instead of quantile. For skewed rewards.")
     parser.add_argument("--num_samples_per_epoch", type=int, default=0,
                         help="WeightedRandomSampler size (0 = len(train_dataset)).")
     return parser.parse_args()
@@ -289,6 +295,8 @@ def main():
         binning_kwargs["similarity_center"] = args.similarity_center
     if args.refusal_divisor is not None:
         binning_kwargs["refusal_divisor"] = args.refusal_divisor
+    if args.bin_edges:
+        binning_kwargs["bin_edges"] = [float(x) for x in args.bin_edges.split(",")]
     binning_config = BinningConfig(**binning_kwargs)
 
     training_config = TrainingConfig(

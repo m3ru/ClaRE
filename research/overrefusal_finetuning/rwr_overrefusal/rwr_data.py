@@ -88,13 +88,21 @@ def filter_and_bin(
     if not filtered:
         raise ValueError("No pairs survived filtering")
 
-    # Extract rewards and compute quantile bin edges
+    # Extract rewards and assign bins.
     rewards = np.array([p[binning_config.reward_key] for p in filtered])
-    percentiles = np.linspace(0, 100, binning_config.num_bins + 1)
-    edges = np.percentile(rewards, percentiles)
-
-    # Assign bins (digitize returns 1-indexed, clip to num_bins)
-    bin_indices = np.digitize(rewards, edges[1:-1])  # 0-indexed, 0..num_bins-1
+    if binning_config.bin_edges is not None:
+        # Absolute-threshold bins: robust to heavily-skewed rewards where quantile
+        # bins collapse the whole signal-bearing tail into one bin with the noise.
+        interior = np.asarray(binning_config.bin_edges, dtype=float)
+        if len(interior) != binning_config.num_bins - 1:
+            raise ValueError(
+                f"bin_edges must have num_bins-1={binning_config.num_bins - 1} interior "
+                f"boundaries, got {len(interior)}")
+        bin_indices = np.digitize(rewards, interior)  # 0..num_bins-1
+    else:
+        percentiles = np.linspace(0, 100, binning_config.num_bins + 1)
+        edges = np.percentile(rewards, percentiles)
+        bin_indices = np.digitize(rewards, edges[1:-1])  # 0-indexed, 0..num_bins-1
 
     # Map bin index -> sampling weight
     weights = np.array(binning_config.bin_weights)

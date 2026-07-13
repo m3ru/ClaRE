@@ -1,0 +1,31 @@
+{
+  "n_pairs": 14996,
+  "formula": {
+    "k": 18.4,
+    "c": 0.75,
+    "refusal_signal": "P(response begins 'I cannot') -- absolute, probability space"
+  },
+  "or_score": {
+    "mean": 0.003396832675198276,
+    "p50": 2.1108437463731864e-08,
+    "p90": 1.836883032583304e-05,
+    "p99": 0.004673519202330884,
+    "max": 24.31909518368318
+  },
+  "p_icannot_rewrite": {
+    "p50": 2.2089175348851788e-09,
+    "p90": 1.7044069805864761e-06,
+    "p99": 0.00018549050086024048,
+    "max": 0.8813976572387623,
+    "n_gt_0.001": 66,
+    "n_gt_0.01": 24,
+    "n_gt_0.1": 11
+  },
+  "n_orig_refusal_prone": 21,
+  "orig_flag_p": 0.1,
+  "corr_vs_stored_activation_delta": {
+    "pearson_p_rw_vs_refusal_delta": 0.02724539847624559,
+    "n": 14996,
+    "note": "stored refusal_delta provenance is whatever the input shards/CSV carried"
+  }
+}

@@ -53,6 +53,12 @@ class BinningConfig:
     similarity_exponent: float = 5.0
     similarity_center: float = 0.75
     refusal_divisor: float = 100.0
+    # Optional absolute (non-quantile) bin edges on the reward. When set, pairs are
+    # binned by np.digitize(reward, bin_edges) instead of by equal-count quantiles.
+    # Needed when the reward is heavily skewed (e.g. icannot-OR, where >99% of pairs
+    # are ~0 and quantile bins can't isolate the tiny high-signal tail). len(bin_edges)
+    # must be num_bins-1 (interior boundaries); bin_weights must have num_bins entries.
+    bin_edges: Optional[List[float]] = None
 
 
 @dataclass

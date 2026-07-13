@@ -81,6 +81,12 @@ slurm-*.err
 # ...except small refusal vectors we want tracked
 !research/refusal_vector/qwen3_extraction/refusal_vector_qwen3*.npz
 
+# Activation dumps (large, regeneratable from extract_*_acts.py)
+*.npy
+
+# LoRA checkpoint dirs ending in _ckpt (adapter weights + bundled tokenizer copies)
+*_ckpt/
+
 # Local-only archive of old experiments (too large for git)
 archive/
 
