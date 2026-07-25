@@ -26,8 +26,11 @@ def main():
     ap.add_argument("--base_model", default="meta-llama/Meta-Llama-3-8B-Instruct")
     ap.add_argument("--batch_size", type=int, default=16)
     ap.add_argument("--max_length", type=int, default=512)
+    ap.add_argument("--acts_dtype", choices=["float16", "float32"], default="float16",
+                    help="float32 for large-activation models (Qwen) to avoid fp16 overflow->inf")
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
+    dt = np.float32 if args.acts_dtype == "float32" else np.float16
 
     rows = list(csv.DictReader(open(args.pairs_csv)))
     originals = [r["original"] for r in rows]
@@ -48,10 +51,10 @@ def main():
 
     print("[extract] originals...", flush=True)
     np.save(os.path.join(args.out_dir, "acts_orig.npy"),
-            last_token_all_layers(model, tok, originals, args.batch_size, args.max_length))
+            last_token_all_layers(model, tok, originals, args.batch_size, args.max_length, dt))
     print("[extract] rewrites...", flush=True)
     np.save(os.path.join(args.out_dir, "acts_rw.npy"),
-            last_token_all_layers(model, tok, rewrites, args.batch_size, args.max_length))
+            last_token_all_layers(model, tok, rewrites, args.batch_size, args.max_length, dt))
     json.dump(meta, open(os.path.join(args.out_dir, "pair_meta.json"), "w"))
     print(f"[done] acts_orig/acts_rw.npy + pair_meta.json -> {args.out_dir}")
 

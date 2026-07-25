@@ -48,7 +48,10 @@ def directions_lda(acts_ref, acts_ben, shrink=0.1):
         mr, mb = Xr.mean(0), Xb.mean(0)
         Xrc, Xbc = Xr - mr, Xb - mb
         S = (Xrc.T @ Xrc + Xbc.T @ Xbc) / (nr + nb - 2)   # pooled within-class covariance
-        S.flat[::H + 1] += shrink * (np.trace(S) / H)     # ridge on the diagonal
+        # trace-proportional ridge + absolute floor: keeps degenerate layers (e.g. the
+        # constant last-token embedding at L0 -> S=0, trace=0) non-singular. Negligible
+        # for normal layers whose trace(S)/H is O(1e3+).
+        S.flat[::H + 1] += shrink * (np.trace(S) / H) + 1e-6
         d[L] = np.linalg.solve(S, mr - mb)
     dn = np.linalg.norm(d, axis=1, keepdims=True) + 1e-9
     return d.astype(np.float64), dn

@@ -80,6 +80,8 @@ slurm-*.err
 *.npz
 # ...except small refusal vectors we want tracked
 !research/refusal_vector/qwen3_extraction/refusal_vector_qwen3*.npz
+# ...and the small Qwen signal scorers (vector/probe directions + weights)
+!research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/qwen_signals/*.npz
 
 # Activation dumps (large, regeneratable from extract_*_acts.py)
 *.npy

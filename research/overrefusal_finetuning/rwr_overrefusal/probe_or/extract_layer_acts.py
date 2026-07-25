@@ -61,17 +61,23 @@ def build_eval_set(pool_csvs, cap, rng):
     return keep
 
 
-def last_token_all_layers(model, tok, texts, batch_size, max_length):
-    """Return fp16 array [n, nL+1, H] of the last real prompt-token hidden state
-    at every layer."""
+def last_token_all_layers(model, tok, texts, batch_size, max_length, dtype=np.float16):
+    """Return [n, nL+1, H] array (dtype, default fp16) of the last real prompt-token
+    hidden state at every layer. Use float32 for models whose activations can exceed
+    the fp16 range (~65504) -- e.g. Qwen massive activations, which otherwise store as
+    inf and silently poison that layer's direction."""
     def fmt(p):
         msgs = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": p}]
-        return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+        # enable_thinking=False: verified no-op for Llama (its template ignores the kwarg,
+        # byte-identical render), and disables Qwen3's <think> block so the last-token read
+        # sits at the same pre-answer position for both model families.
+        return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True,
+                                       enable_thinking=False)
 
     assert tok.padding_side == "right", "last-token read assumes right padding"
     nL = model.config.num_hidden_layers
     H = model.config.hidden_size
-    out = np.zeros((len(texts), nL + 1, H), dtype=np.float16)
+    out = np.zeros((len(texts), nL + 1, H), dtype=dtype)
     t0 = time.time()
     for i in range(0, len(texts), batch_size):
         batch = [fmt(t) for t in texts[i:i + batch_size]]
@@ -83,7 +89,7 @@ def last_token_all_layers(model, tok, texts, batch_size, max_length):
         # hs: tuple len nL+1 of [B, T, H]
         rows = torch.arange(len(batch), device=model.device)
         for L, h in enumerate(hs):
-            out[i:i + len(batch), L, :] = h[rows, last, :].float().cpu().numpy().astype(np.float16)
+            out[i:i + len(batch), L, :] = h[rows, last, :].float().cpu().numpy().astype(dtype)
         if (i // batch_size) % 20 == 0:
             print(f"  [{i + len(batch)}/{len(texts)}] {(i+len(batch))/max(time.time()-t0,1e-3):.1f}/s", flush=True)
     return out
@@ -93,7 +99,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--refusal_csv", required=True)
     ap.add_argument("--benign_csv", required=True)
-    ap.add_argument("--pool_csvs", nargs="+", required=True)
+    ap.add_argument("--pool_csvs", nargs="*", default=None,
+                    help="eval-pool CSVs; omit to extract refuse/benign directions only")
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--base_model", default="meta-llama/Meta-Llama-3-8B-Instruct")
     ap.add_argument("--n_per_class", type=int, default=2500)
@@ -101,9 +108,12 @@ def main():
     ap.add_argument("--batch_size", type=int, default=16)
     ap.add_argument("--max_length", type=int, default=512)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--acts_dtype", choices=["float16", "float32"], default="float16",
+                    help="float32 for large-activation models (Qwen) to avoid fp16 overflow->inf")
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
     rng = random.Random(args.seed)
+    dt = np.float32 if args.acts_dtype == "float32" else np.float16
 
     from transformers import AutoModelForCausalLM, AutoTokenizer
     hf_token = os.environ.get("HF_TOKEN")
@@ -117,22 +127,23 @@ def main():
 
     ref = read_prompts(args.refusal_csv, args.n_per_class, rng)
     ben = read_prompts(args.benign_csv, args.n_per_class, rng)
-    ev = build_eval_set(args.pool_csvs, args.max_eval, rng)
-    print(f"[data] refusal={len(ref)} benign={len(ben)} eval={len(ev)} "
-          f"(eval P>1e-3: {sum(p>1e-3 for _,p in ev)})", flush=True)
+    ev = build_eval_set(args.pool_csvs, args.max_eval, rng) if args.pool_csvs else []
+    print(f"[data] refusal={len(ref)} benign={len(ben)} eval={len(ev)}"
+          + (f" (eval P>1e-3: {sum(p>1e-3 for _,p in ev)})" if ev else " (directions only)"), flush=True)
 
     print("[extract] refusal split...", flush=True)
     np.save(os.path.join(args.out_dir, "acts_ref.npy"),
-            last_token_all_layers(model, tok, ref, args.batch_size, args.max_length))
+            last_token_all_layers(model, tok, ref, args.batch_size, args.max_length, dt))
     print("[extract] benign split...", flush=True)
     np.save(os.path.join(args.out_dir, "acts_ben.npy"),
-            last_token_all_layers(model, tok, ben, args.batch_size, args.max_length))
-    print("[extract] eval pool...", flush=True)
-    np.save(os.path.join(args.out_dir, "acts_eval.npy"),
-            last_token_all_layers(model, tok, [t for t, _ in ev], args.batch_size, args.max_length))
-    json.dump([{"text": t, "p_icannot": p} for t, p in ev],
-              open(os.path.join(args.out_dir, "eval_meta.json"), "w"))
-    print(f"[done] wrote acts_ref/ben/eval.npy + eval_meta.json -> {args.out_dir}")
+            last_token_all_layers(model, tok, ben, args.batch_size, args.max_length, dt))
+    if ev:
+        print("[extract] eval pool...", flush=True)
+        np.save(os.path.join(args.out_dir, "acts_eval.npy"),
+                last_token_all_layers(model, tok, [t for t, _ in ev], args.batch_size, args.max_length, dt))
+        json.dump([{"text": t, "p_icannot": p} for t, p in ev],
+                  open(os.path.join(args.out_dir, "eval_meta.json"), "w"))
+    print(f"[done] wrote acts_ref/ben.npy{'+eval' if ev else ''} -> {args.out_dir}")
 
 
 if __name__ == "__main__":
