@@ -224,3 +224,11 @@ is too costly per candidate — a separate, larger decision this result does not
 - Hewitt & Liang (2019), *Designing and Interpreting Probes with Control Tasks*, EMNLP.
 - Marks & Tegmark (2023), *The Geometry of Truth* — mass-mean vs logistic probing.
 - Arditi et al. (2024), *Refusal in LMs is mediated by a single direction* — diff-of-means refusal baseline.
+
+## Qwen3-32B scale-up (2026-07-25) — full writeup in `qwen_experiment_brief.md`
+
+Vector + probe ensemble rebuilt on Qwen3-32B (mass-mean directions, behavioral dP target,
+logit signal deferred). Headline: refusal **vector L58 = 0.809 Spearman / 0.976 AUC**; the
+probe ensemble collapses onto L58 (≡ vector) — on Qwen the single vector suffices, unlike
+Llama's Goodharting vector. LDA worse (0.674). Cross-model table + examples in the brief.
+Scorers: `results/qwen_signals/qwen_{vector,probe}_raw.npz`.
