@@ -170,6 +170,7 @@ def tokenize_chat(original: str, paraphrase: str, tokenizer, data_config: DataCo
     ]
     prompt_text = tokenizer.apply_chat_template(
         prompt_messages, tokenize=False, add_generation_prompt=True,
+        enable_thinking=False,   # no-op for Llama; disables Qwen3 <think> so completion follows directly
     )
     prompt_ids = tokenizer.encode(prompt_text, add_special_tokens=False)
 

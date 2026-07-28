@@ -23,6 +23,7 @@ class ModelConfig:
     base_model_id: str = "meta-llama/Meta-Llama-3-8B-Instruct"
     torch_dtype: str = "bfloat16"
     hf_token: Optional[str] = None
+    load_in_4bit: bool = False   # QLoRA: 4-bit NF4 base (needed to fit a 32B model on one 80GB GPU)
 
 
 @dataclass

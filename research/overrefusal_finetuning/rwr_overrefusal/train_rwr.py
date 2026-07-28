@@ -62,15 +62,29 @@ def load_model_and_tokenizer(model_config: ModelConfig, lora_config: LoRAConfig,
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
+    quant_config = None
+    if model_config.load_in_4bit:
+        from transformers import BitsAndBytesConfig
+        quant_config = BitsAndBytesConfig(
+            load_in_4bit=True, bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch_dtype, bnb_4bit_use_double_quant=True,
+        )
+        print("[model] QLoRA: loading base in 4-bit NF4")
+
     model = AutoModelForCausalLM.from_pretrained(
         model_config.base_model_id,
         token=hf_token,
         torch_dtype=torch_dtype,
+        quantization_config=quant_config,
         device_map="auto",
         attn_implementation="eager",
     )
 
-    if training_config.gradient_checkpointing:
+    if model_config.load_in_4bit:
+        from peft import prepare_model_for_kbit_training
+        model = prepare_model_for_kbit_training(
+            model, use_gradient_checkpointing=training_config.gradient_checkpointing)
+    elif training_config.gradient_checkpointing:
         model.gradient_checkpointing_enable()
 
     peft_config = PeftLoraConfig(
@@ -273,13 +287,15 @@ def parse_args():
                              "When set, bins by threshold instead of quantile. For skewed rewards.")
     parser.add_argument("--num_samples_per_epoch", type=int, default=0,
                         help="WeightedRandomSampler size (0 = len(train_dataset)).")
+    parser.add_argument("--load_in_4bit", action="store_true",
+                        help="QLoRA: load the base model in 4-bit (needed for 32B on one 80GB GPU).")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
 
-    model_config = ModelConfig(base_model_id=args.base_model)
+    model_config = ModelConfig(base_model_id=args.base_model, load_in_4bit=args.load_in_4bit)
     lora_config = LoRAConfig()
 
     # Build BinningConfig with optional overrides
