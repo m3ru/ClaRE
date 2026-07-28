@@ -108,12 +108,18 @@ def filter_and_bin(
     weights = np.array(binning_config.bin_weights)
     sample_weights = weights[bin_indices]
 
-    # Log bin stats
+    # Log bin stats (sim_mean/delta_mean expose whether bins progress by the refusal
+    # signal or just by similarity -- important when reward = exp(k*sim)*refusal_delta).
+    sims = np.array([p["similarity"] for p in filtered])
+    deltas = np.array([p["refusal_delta"] for p in filtered])
     for b in range(binning_config.num_bins):
         mask = bin_indices == b
         count = mask.sum()
         r_mean = rewards[mask].mean() if count > 0 else 0
-        print(f"  Bin {b}: n={count}, reward_mean={r_mean:.3f}, weight={weights[b]}")
+        s_mean = sims[mask].mean() if count > 0 else 0
+        d_mean = deltas[mask].mean() if count > 0 else 0
+        print(f"  Bin {b}: n={count}, reward_mean={r_mean:.3f}, sim_mean={s_mean:.3f}, "
+              f"delta_mean={d_mean:.3f}, weight={weights[b]}")
 
     return filtered, sample_weights
 
