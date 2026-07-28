@@ -4,6 +4,19 @@ Date: 2026-07-28. Cluster: rorqual. Model: `Qwen/Qwen3-32B`, QLoRA (4-bit NF4),
 `enable_thinking=False`. Reward = Qwen-OR = `exp(k*(sim-0.75)) * probe_delta`, where
 `probe_delta` = the fitted L58 refusal-delta signal (see `qwen_experiment_brief.md`).
 
+## Bottom line
+
+1. **The L58 refusal-probe signal transfers to real behavior.** An RWR attacker trained
+   on the probe-OR reward produces rewrites that base Qwen refuses **37.9%** of the time,
+   vs a **0.0% floor** on the untouched benign prompts. (Established.)
+2. **The strong similarity gate (k=18.4) delivers this at full fidelity.** It matches the
+   delta-driven k=5.0's refusal rate (~38%) while keeping rewrites at base-level similarity
+   (0.78, no drift); k=5.0 hits the same rate only by drifting to less-faithful rewrites
+   (0.74). (Established.)
+3. **RWR's lift over base is suggestive, not yet significant.** Base Qwen is *itself* a
+   ~30% attacker given the rewrite prompt, so RWR's ~8-pt gain has overlapping 95% CIs at
+   n=71 prompts. Tightening this needs more held-out prompts. (Not established.)
+
 ## 1. Setup
 
 - **Data:** 35,850 Sonnet benign rewrites scored with the Qwen L58 delta-probe
