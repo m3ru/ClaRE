@@ -96,8 +96,8 @@ def main():
             "norms": {str(i): float(norms[i]) for i in range(nL + 1)}}
     with open(os.path.splitext(args.out)[0] + "_meta.json", "w") as f:
         json.dump(meta, f, indent=2)
-    print(f"[dir] max-L2 DIM-norm layer = L{top} (norm {norms[top]:.1f})")
-    print(f"[dir] L12 norm {norms[12]:.1f}   L17 norm {norms[17]:.1f}   L32 norm {norms[32]:.1f}")
+    print(f"[dir] max-L2 DIM-norm layer = L{top} (norm {norms[top]:.1f}) of {nL} layers")
+    print("[dir] " + "   ".join(f"L{L} norm {norms[L]:.1f}" for L in (12, 17, 32) if L <= nL))
     print(f"[done] wrote {args.out}")
 
 

@@ -65,6 +65,7 @@ def main():
     ap.add_argument("--max_new_tokens", type=int, default=48)
     ap.add_argument("--gen_batch", type=int, default=16)
     ap.add_argument("--fwd_batch", type=int, default=48)
+    ap.add_argument("--n_random", type=int, default=3)   # random-suffix control repeats
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
@@ -269,7 +270,8 @@ def main():
         Text path: decode the suffix and re-tokenize, so these numbers describe a REAL prompt,
         not the embedding-space object the optimizer manipulated.
         """
-        projs, lps = {L: [] for L in sorted({12, 17, 32, args.layer})}, []
+        nL = model.config.num_hidden_layers
+        projs, lps = {L: [] for L in sorted({12, 17, 32, args.layer}) if L <= nL}, []
         T = tgt_ids.shape[0]
         for i in range(0, len(prompts), args.fwd_batch):
             b = prompts[i:i + args.fwd_batch]
@@ -291,15 +293,21 @@ def main():
         return {f"proj_L{L}": float(np.mean(v)) for L, v in projs.items()} | {
             "logp_icannot": float(np.mean(lps))}
 
-    rand_ids = allowed_ids[torch.randint(0, allowed_ids.shape[0], (args.n_adv,), device=dev)]
-    rand_suffix = tok.decode(rand_ids)
-    arms = {"baseline_no_suffix": eval_p,
-            "random_suffix": [p + " " + rand_suffix for p in eval_p],
-            "optimized": [p + " " + suffix for p in eval_p]}
+    # Several random suffixes, not one: the smoke test showed a single gibberish suffix can
+    # move refusal a lot on its own, so the control needs to be an average, and the headline
+    # number is (optimized - random), not (optimized - no_suffix).
+    rand_suffixes = []
+    for s in range(args.n_random):
+        gen = torch.Generator(device="cpu").manual_seed(args.seed + 1000 + s)
+        ri = torch.randint(0, allowed_ids.shape[0], (args.n_adv,), generator=gen)
+        rand_suffixes.append(tok.decode(allowed_ids[ri.to(dev)]))
+    arms = {"baseline_no_suffix": eval_p, "optimized": [p + " " + suffix for p in eval_p]}
+    for s, rs in enumerate(rand_suffixes):
+        arms[f"random_suffix_{s}"] = [p + " " + rs for p in eval_p]
 
     R = {"objective": args.objective, "method": args.method,
          "layer": args.layer if args.objective == "direction" else None,
-         "suffix": suffix, "random_suffix": rand_suffix, "n_adv": args.n_adv,
+         "suffix": suffix, "random_suffixes": rand_suffixes, "n_adv": args.n_adv,
          "steps": args.steps, "n_train": args.n_train, "n_eval": len(eval_p),
          "loss_history": hist, "arms": {}}
     for name, ps in arms.items():
@@ -312,18 +320,26 @@ def main():
               f"projL12 {m['proj_L12']:8.2f}  projL17 {m['proj_L17']:8.2f}  "
               f"logP(I cannot) {m['logp_icannot']:7.3f}", flush=True)
 
+    b, o = R["arms"]["baseline_no_suffix"], R["arms"]["optimized"]
+    rand_keys = [k for k in R["arms"] if k.startswith("random_suffix_")]
+    rmean = {k: float(np.mean([R["arms"][rk][k] for rk in rand_keys]))
+             for k in ("refusal_pct", "logp_icannot")}
+    R["random_mean"] = rmean
     with open(args.out, "w") as f:
         json.dump(R, f, indent=2)
 
-    b, o = R["arms"]["baseline_no_suffix"], R["arms"]["optimized"]
+    pl = args.layer if args.objective == "direction" else 17
     print(f"\n==== {args.objective}"
           + (f"@L{args.layer}" if args.objective == "direction" else "")
           + f" via {args.method} ====")
     print(f"suffix: {suffix!r}")
-    print(f"refusal on held-out benign : {b['refusal_pct']:.1f}% -> {o['refusal_pct']:.1f}%")
-    print(f"proj L{args.layer}  : {b[f'proj_L{args.layer}'] if args.objective=='direction' else b['proj_L17']:.2f} -> "
-          f"{o[f'proj_L{args.layer}'] if args.objective=='direction' else o['proj_L17']:.2f}")
-    print(f"logP('I cannot')           : {b['logp_icannot']:.3f} -> {o['logp_icannot']:.3f}")
+    print(f"refusal on held-out benign : none {b['refusal_pct']:.1f}%  |  random {rmean['refusal_pct']:.1f}%"
+          f"  |  OPTIMIZED {o['refusal_pct']:.1f}%")
+    print(f"proj L{pl}                   : {b[f'proj_L{pl}']:.2f} -> {o[f'proj_L{pl}']:.2f}")
+    print(f"logP('I cannot')           : none {b['logp_icannot']:.3f}  |  random {rmean['logp_icannot']:.3f}"
+          f"  |  OPTIMIZED {o['logp_icannot']:.3f}")
+    print("[read] the number that matters is OPTIMIZED vs RANDOM, not vs none: a gibberish "
+          "suffix moves refusal on its own, and that is OOD-ness, not over-refusal.")
     print(f"[done] wrote {args.out}")
 
 

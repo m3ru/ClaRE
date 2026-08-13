@@ -41,6 +41,6 @@ python -u prompt_opt.py \
   --out "${OUT}/prompt_opt_${TAG}.json" \
   --objective "${OBJ}" --method "${METH}" --layer "${L}" \
   --base_model meta-llama/Meta-Llama-3-8B-Instruct \
-  --n_adv 20 --n_train 8 --n_eval 40 --steps 250 \
-  --topk 256 --n_cand 96 --cand_prompts 4
+  --n_adv 20 --n_train 8 --n_eval 60 --steps 250 \
+  --topk 256 --n_cand 96 --cand_prompts 4 --n_random 3
 echo "[done] prompt_opt ${TAG} at $(date)"
