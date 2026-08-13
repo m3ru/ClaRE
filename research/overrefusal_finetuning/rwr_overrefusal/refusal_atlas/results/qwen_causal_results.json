@@ -1,0 +1,48 @@
+{
+  "baseline_harmful_refusal_pct": 63.0,
+  "baseline_harmless_refusal_pct": 21.0,
+  "ablation": {
+    "L32": 39.0,
+    "L45": 46.0,
+    "L58": 36.0,
+    "L64": 17.0
+  },
+  "addition": {
+    "L32": {
+      "coef1.0": 31.0,
+      "coef2.0": 35.0,
+      "coef4.0": 45.0
+    },
+    "L45": {
+      "coef1.0": 37.0,
+      "coef2.0": 46.0,
+      "coef4.0": 69.0
+    },
+    "L58": {
+      "coef1.0": 43.0,
+      "coef2.0": 89.0,
+      "coef4.0": 22.0
+    },
+    "L64": {
+      "coef1.0": 26.0,
+      "coef2.0": 30.0,
+      "coef4.0": 32.0
+    }
+  },
+  "config": {
+    "n_harmful": 100,
+    "n_harmless": 100,
+    "layers": [
+      32,
+      45,
+      58,
+      64
+    ],
+    "add_coefs": [
+      1.0,
+      2.0,
+      4.0
+    ],
+    "n_dir_per_class": 2000
+  }
+}

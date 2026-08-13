@@ -1,0 +1,662 @@
+[
+ {
+  "cluster": 0,
+  "size": 10,
+  "jaccard": 0.187,
+  "keywords": "following, making, generate list, window, delicious, carrots, large, technique",
+  "source_comp": {
+   "orbench_hard": 0,
+   "single_edit_pair": 6,
+   "sonnet_pair": 3,
+   "orbench_toxic": 0,
+   "xstest": 1
+  },
+  "llama_refuse": 0.0,
+  "llama_ci": [
+   0.0,
+   0.278
+  ],
+  "llama_n": 10,
+  "llama_vector": -1.5206,
+  "llama_probe": -0.6503,
+  "llama_logit_sum": 0.0,
+  "qwen_refuse": 0.0,
+  "qwen_ci": [
+   0.0,
+   0.278
+  ],
+  "qwen_n": 10,
+  "qwen_vector": -196.0003,
+  "qwen_probe": -0.7508,
+  "qwen_logit_sum": 0.0,
+  "llama_binom_q": 0.0014,
+  "qwen_binom_q": 0.0742
+ },
+ {
+  "cluster": 1,
+  "size": 19,
+  "jaccard": 0.192,
+  "keywords": "controversial, social media, media, social, content, avoid, online, creating",
+  "source_comp": {
+   "orbench_hard": 17,
+   "single_edit_pair": 1,
+   "sonnet_pair": 0,
+   "orbench_toxic": 1,
+   "xstest": 0
+  },
+  "llama_refuse": 0.789,
+  "llama_ci": [
+   0.567,
+   0.915
+  ],
+  "llama_n": 19,
+  "llama_vector": 1.5622,
+  "llama_probe": 5.037,
+  "llama_logit_sum": 0.717,
+  "qwen_refuse": 0.632,
+  "qwen_ci": [
+   0.41,
+   0.809
+  ],
+  "qwen_n": 19,
+  "qwen_vector": 300.6957,
+  "qwen_probe": 1.5317,
+  "qwen_logit_sum": 0.4052,
+  "llama_binom_q": 0.0315,
+  "qwen_binom_q": 0.0163
+ },
+ {
+  "cluster": 2,
+  "size": 34,
+  "jaccard": 0.803,
+  "keywords": "harm, appearance, methods, effects, emotional, injury, suggest, safe",
+  "source_comp": {
+   "orbench_hard": 28,
+   "single_edit_pair": 0,
+   "sonnet_pair": 0,
+   "orbench_toxic": 3,
+   "xstest": 3
+  },
+  "llama_refuse": 0.941,
+  "llama_ci": [
+   0.809,
+   0.984
+  ],
+  "llama_n": 34,
+  "llama_vector": 1.6689,
+  "llama_probe": 5.42,
+  "llama_logit_sum": 0.7892,
+  "qwen_refuse": 0.529,
+  "qwen_ci": [
+   0.367,
+   0.685
+  ],
+  "qwen_n": 34,
+  "qwen_vector": 334.7499,
+  "qwen_probe": 1.6882,
+  "qwen_logit_sum": 0.2672,
+  "llama_binom_q": 0.0,
+  "qwen_binom_q": 0.0254
+ },
+ {
+  "cluster": 3,
+  "size": 22,
+  "jaccard": 0.539,
+  "keywords": "email, address, number, birth, status, house, office, immigration",
+  "source_comp": {
+   "orbench_hard": 0,
+   "single_edit_pair": 0,
+   "sonnet_pair": 1,
+   "orbench_toxic": 0,
+   "xstest": 21
+  },
+  "llama_refuse": 0.5,
+  "llama_ci": [
+   0.307,
+   0.693
+  ],
+  "llama_n": 22,
+  "llama_vector": 0.0122,
+  "llama_probe": 1.7568,
+  "llama_logit_sum": 0.098,
+  "qwen_refuse": 0.409,
+  "qwen_ci": [
+   0.233,
+   0.613
+  ],
+  "qwen_n": 22,
+  "qwen_vector": 92.3103,
+  "qwen_probe": 0.5741,
+  "qwen_logit_sum": 0.1346,
+  "llama_binom_q": 1.0,
+  "qwen_binom_q": 0.5128
+ },
+ {
+  "cluster": 4,
+  "size": 30,
+  "jaccard": 0.467,
+  "keywords": "best, best way, garden, kill, house, room, eliminate, old",
+  "source_comp": {
+   "orbench_hard": 1,
+   "single_edit_pair": 0,
+   "sonnet_pair": 0,
+   "orbench_toxic": 0,
+   "xstest": 29
+  },
+  "llama_refuse": 0.3,
+  "llama_ci": [
+   0.167,
+   0.479
+  ],
+  "llama_n": 30,
+  "llama_vector": 0.3568,
+  "llama_probe": 2.3636,
+  "llama_logit_sum": 0.3079,
+  "qwen_refuse": 0.267,
+  "qwen_ci": [
+   0.142,
+   0.444
+  ],
+  "qwen_n": 30,
+  "qwen_vector": 144.5636,
+  "qwen_probe": 0.8142,
+  "qwen_logit_sum": 0.1548,
+  "llama_binom_q": 0.0381,
+  "qwen_binom_q": 0.8188
+ },
+ {
+  "cluster": 5,
+  "size": 48,
+  "jaccard": 0.406,
+  "keywords": "subtly, strategies, methods, scientific, reputation, work, questionable, discreetly",
+  "source_comp": {
+   "orbench_hard": 31,
+   "single_edit_pair": 0,
+   "sonnet_pair": 0,
+   "orbench_toxic": 16,
+   "xstest": 1
+  },
+  "llama_refuse": 0.958,
+  "llama_ci": [
+   0.86,
+   0.988
+  ],
+  "llama_n": 48,
+  "llama_vector": 2.4836,
+  "llama_probe": 6.2978,
+  "llama_logit_sum": 0.883,
+  "qwen_refuse": 0.729,
+  "qwen_ci": [
+   0.59,
+   0.834
+  ],
+  "qwen_n": 48,
+  "qwen_vector": 385.3488,
+  "qwen_probe": 1.9207,
+  "qwen_logit_sum": 0.4759,
+  "llama_binom_q": 0.0,
+  "qwen_binom_q": 0.0
+ },
+ {
+  "cluster": 6,
+  "size": 30,
+  "jaccard": 0.394,
+  "keywords": "compare, world, food, argument, money, company, given, present",
+  "source_comp": {
+   "orbench_hard": 4,
+   "single_edit_pair": 12,
+   "sonnet_pair": 14,
+   "orbench_toxic": 0,
+   "xstest": 0
+  },
+  "llama_refuse": 0.133,
+  "llama_ci": [
+   0.053,
+   0.297
+  ],
+  "llama_n": 30,
+  "llama_vector": -0.5748,
+  "llama_probe": 0.7677,
+  "llama_logit_sum": 0.1249,
+  "qwen_refuse": 0.033,
+  "qwen_ci": [
+   0.006,
+   0.167
+  ],
+  "qwen_n": 30,
+  "qwen_vector": -105.2217,
+  "qwen_probe": -0.3336,
+  "qwen_logit_sum": 0.0146,
+  "llama_binom_q": 0.0001,
+  "qwen_binom_q": 0.0013
+ },
+ {
+  "cluster": 7,
+  "size": 46,
+  "jaccard": 0.49,
+  "keywords": "given, following, list, number, type, new, product, digital",
+  "source_comp": {
+   "orbench_hard": 0,
+   "single_edit_pair": 21,
+   "sonnet_pair": 24,
+   "orbench_toxic": 0,
+   "xstest": 1
+  },
+  "llama_refuse": 0.022,
+  "llama_ci": [
+   0.004,
+   0.116
+  ],
+  "llama_n": 45,
+  "llama_vector": -1.3231,
+  "llama_probe": -0.2315,
+  "llama_logit_sum": 0.0,
+  "qwen_refuse": 0.022,
+  "qwen_ci": [
+   0.004,
+   0.113
+  ],
+  "qwen_n": 46,
+  "qwen_vector": -199.1678,
+  "qwen_probe": -0.7653,
+  "qwen_logit_sum": 0.0,
+  "llama_binom_q": 0.0,
+  "qwen_binom_q": 0.0
+ },
+ {
+  "cluster": 8,
+  "size": 45,
+  "jaccard": 0.522,
+  "keywords": "identity, information, access, ethical, online, data, security, ethically",
+  "source_comp": {
+   "orbench_hard": 34,
+   "single_edit_pair": 1,
+   "sonnet_pair": 0,
+   "orbench_toxic": 7,
+   "xstest": 3
+  },
+  "llama_refuse": 0.867,
+  "llama_ci": [
+   0.738,
+   0.937
+  ],
+  "llama_n": 45,
+  "llama_vector": 1.8633,
+  "llama_probe": 5.4973,
+  "llama_logit_sum": 0.8488,
+  "qwen_refuse": 0.356,
+  "qwen_ci": [
+   0.232,
+   0.502
+  ],
+  "qwen_n": 45,
+  "qwen_vector": 337.4533,
+  "qwen_probe": 1.7006,
+  "qwen_logit_sum": 0.3022,
+  "llama_binom_q": 0.0,
+  "qwen_binom_q": 0.6536
+ },
+ {
+  "cluster": 9,
+  "size": 34,
+  "jaccard": 0.834,
+  "keywords": "sexual, enhancing, activity, various, activities, suggest, audiences, involving",
+  "source_comp": {
+   "orbench_hard": 27,
+   "single_edit_pair": 0,
+   "sonnet_pair": 1,
+   "orbench_toxic": 6,
+   "xstest": 0
+  },
+  "llama_refuse": 0.441,
+  "llama_ci": [
+   0.289,
+   0.605
+  ],
+  "llama_n": 34,
+  "llama_vector": 1.1714,
+  "llama_probe": 3.5473,
+  "llama_logit_sum": 0.4176,
+  "qwen_refuse": 0.235,
+  "qwen_ci": [
+   0.124,
+   0.4
+  ],
+  "qwen_n": 34,
+  "qwen_vector": 188.9057,
+  "qwen_probe": 1.018,
+  "qwen_logit_sum": 0.1914,
+  "llama_binom_q": 0.466,
+  "qwen_binom_q": 0.6119
+ },
+ {
+  "cluster": 10,
+  "size": 43,
+  "jaccard": 0.595,
+  "keywords": "group, story, write, specific, fictional, draft, speech, stereotypes",
+  "source_comp": {
+   "orbench_hard": 31,
+   "single_edit_pair": 2,
+   "sonnet_pair": 4,
+   "orbench_toxic": 5,
+   "xstest": 1
+  },
+  "llama_refuse": 0.651,
+  "llama_ci": [
+   0.502,
+   0.776
+  ],
+  "llama_n": 43,
+  "llama_vector": 1.5716,
+  "llama_probe": 5.1416,
+  "llama_logit_sum": 0.5933,
+  "qwen_refuse": 0.286,
+  "qwen_ci": [
+   0.172,
+   0.436
+  ],
+  "qwen_n": 42,
+  "qwen_vector": 143.4154,
+  "qwen_probe": 0.8089,
+  "qwen_logit_sum": 0.2129,
+  "llama_binom_q": 0.1238,
+  "qwen_binom_q": 0.8679
+ },
+ {
+  "cluster": 11,
+  "size": 33,
+  "jaccard": 0.577,
+  "keywords": "program, software, real, purposes, mimics, educational purposes, cause, educational",
+  "source_comp": {
+   "orbench_hard": 28,
+   "single_edit_pair": 0,
+   "sonnet_pair": 1,
+   "orbench_toxic": 3,
+   "xstest": 1
+  },
+  "llama_refuse": 0.6,
+  "llama_ci": [
+   0.423,
+   0.754
+  ],
+  "llama_n": 30,
+  "llama_vector": 0.6079,
+  "llama_probe": 2.9281,
+  "llama_logit_sum": 0.5449,
+  "qwen_refuse": 0.323,
+  "qwen_ci": [
+   0.186,
+   0.499
+  ],
+  "qwen_n": 31,
+  "qwen_vector": 249.293,
+  "qwen_probe": 1.2955,
+  "qwen_logit_sum": 0.2608,
+  "llama_binom_q": 0.5173,
+  "qwen_binom_q": 0.8679
+ },
+ {
+  "cluster": 12,
+  "size": 53,
+  "jaccard": 0.605,
+  "keywords": "sentence, following, paragraph, text, words, following sentence, rewrite, write",
+  "source_comp": {
+   "orbench_hard": 0,
+   "single_edit_pair": 23,
+   "sonnet_pair": 29,
+   "orbench_toxic": 0,
+   "xstest": 1
+  },
+  "llama_refuse": 0.019,
+  "llama_ci": [
+   0.003,
+   0.099
+  ],
+  "llama_n": 53,
+  "llama_vector": -0.9245,
+  "llama_probe": 0.2783,
+  "llama_logit_sum": 0.0012,
+  "qwen_refuse": 0.0,
+  "qwen_ci": [
+   0.0,
+   0.068
+  ],
+  "qwen_n": 53,
+  "qwen_vector": -154.8634,
+  "qwen_probe": -0.5618,
+  "qwen_logit_sum": 0.0009,
+  "llama_binom_q": 0.0,
+  "qwen_binom_q": 0.0
+ },
+ {
+  "cluster": 13,
+  "size": 22,
+  "jaccard": 0.285,
+  "keywords": "murder, does, shooting, definition, plot, criminal history, criminal, eradicate",
+  "source_comp": {
+   "orbench_hard": 0,
+   "single_edit_pair": 0,
+   "sonnet_pair": 0,
+   "orbench_toxic": 0,
+   "xstest": 22
+  },
+  "llama_refuse": 0.182,
+  "llama_ci": [
+   0.073,
+   0.385
+  ],
+  "llama_n": 22,
+  "llama_vector": -0.1723,
+  "llama_probe": 1.1927,
+  "llama_logit_sum": 0.1241,
+  "qwen_refuse": 0.045,
+  "qwen_ci": [
+   0.008,
+   0.218
+  ],
+  "qwen_n": 22,
+  "qwen_vector": -20.1514,
+  "qwen_probe": 0.0573,
+  "qwen_logit_sum": 0.0009,
+  "llama_binom_q": 0.0034,
+  "qwen_binom_q": 0.0163
+ },
+ {
+  "cluster": 14,
+  "size": 25,
+  "jaccard": 0.466,
+  "keywords": "substances, ensuring, legal, drugs, substance, procedure, illegal, outline",
+  "source_comp": {
+   "orbench_hard": 24,
+   "single_edit_pair": 0,
+   "sonnet_pair": 0,
+   "orbench_toxic": 1,
+   "xstest": 0
+  },
+  "llama_refuse": 0.84,
+  "llama_ci": [
+   0.653,
+   0.936
+  ],
+  "llama_n": 25,
+  "llama_vector": 1.4196,
+  "llama_probe": 4.7178,
+  "llama_logit_sum": 0.8031,
+  "qwen_refuse": 0.333,
+  "qwen_ci": [
+   0.18,
+   0.533
+  ],
+  "qwen_n": 24,
+  "qwen_vector": 322.5485,
+  "qwen_probe": 1.6321,
+  "qwen_logit_sum": 0.2973,
+  "llama_binom_q": 0.0019,
+  "qwen_binom_q": 0.8679
+ },
+ {
+  "cluster": 15,
+  "size": 38,
+  "jaccard": 0.518,
+  "keywords": "best, wife, best way, break, face, kill, beat, open",
+  "source_comp": {
+   "orbench_hard": 1,
+   "single_edit_pair": 0,
+   "sonnet_pair": 1,
+   "orbench_toxic": 0,
+   "xstest": 36
+  },
+  "llama_refuse": 0.474,
+  "llama_ci": [
+   0.325,
+   0.627
+  ],
+  "llama_n": 38,
+  "llama_vector": 1.1679,
+  "llama_probe": 3.6632,
+  "llama_logit_sum": 0.4612,
+  "qwen_refuse": 0.5,
+  "qwen_ci": [
+   0.348,
+   0.652
+  ],
+  "qwen_n": 38,
+  "qwen_vector": 231.4094,
+  "qwen_probe": 1.2133,
+  "qwen_logit_sum": 0.2455,
+  "llama_binom_q": 0.6622,
+  "qwen_binom_q": 0.0471
+ },
+ {
+  "cluster": 16,
+  "size": 36,
+  "jaccard": 0.362,
+  "keywords": "did, world war, war, world, scale, religious beliefs, date birth, date",
+  "source_comp": {
+   "orbench_hard": 0,
+   "single_edit_pair": 1,
+   "sonnet_pair": 2,
+   "orbench_toxic": 0,
+   "xstest": 33
+  },
+  "llama_refuse": 0.167,
+  "llama_ci": [
+   0.079,
+   0.319
+  ],
+  "llama_n": 36,
+  "llama_vector": -0.2629,
+  "llama_probe": 1.5472,
+  "llama_logit_sum": 0.1441,
+  "qwen_refuse": 0.167,
+  "qwen_ci": [
+   0.079,
+   0.319
+  ],
+  "qwen_n": 36,
+  "qwen_vector": 26.2224,
+  "qwen_probe": 0.2704,
+  "qwen_logit_sum": 0.0604,
+  "llama_binom_q": 0.0001,
+  "qwen_binom_q": 0.1185
+ },
+ {
+  "cluster": 17,
+  "size": 51,
+  "jaccard": 0.461,
+  "keywords": "legitimate, strategies, legal, methods, plan, ethical, market, illegal",
+  "source_comp": {
+   "orbench_hard": 37,
+   "single_edit_pair": 0,
+   "sonnet_pair": 0,
+   "orbench_toxic": 4,
+   "xstest": 10
+  },
+  "llama_refuse": 0.784,
+  "llama_ci": [
+   0.654,
+   0.875
+  ],
+  "llama_n": 51,
+  "llama_vector": 1.6644,
+  "llama_probe": 5.2681,
+  "llama_logit_sum": 0.7448,
+  "qwen_refuse": 0.451,
+  "qwen_ci": [
+   0.323,
+   0.586
+  ],
+  "qwen_n": 51,
+  "qwen_vector": 296.1683,
+  "qwen_probe": 1.5109,
+  "qwen_logit_sum": 0.3974,
+  "llama_binom_q": 0.0003,
+  "qwen_binom_q": 0.0873
+ },
+ {
+  "cluster": 18,
+  "size": 33,
+  "jaccard": 0.88,
+  "keywords": "live, asian, enter, shoot, white, public, years, carrots",
+  "source_comp": {
+   "orbench_hard": 0,
+   "single_edit_pair": 0,
+   "sonnet_pair": 0,
+   "orbench_toxic": 0,
+   "xstest": 33
+  },
+  "llama_refuse": 0.424,
+  "llama_ci": [
+   0.272,
+   0.592
+  ],
+  "llama_n": 33,
+  "llama_vector": 1.2285,
+  "llama_probe": 2.4163,
+  "llama_logit_sum": 0.1522,
+  "qwen_refuse": 0.212,
+  "qwen_ci": [
+   0.107,
+   0.378
+  ],
+  "qwen_n": 33,
+  "qwen_vector": 31.8001,
+  "qwen_probe": 0.296,
+  "qwen_logit_sum": 0.0057,
+  "llama_binom_q": 0.3769,
+  "qwen_binom_q": 0.4027
+ },
+ {
+  "cluster": 19,
+  "size": 42,
+  "jaccard": 0.412,
+  "keywords": "prank, bomb, safety, device, replica, materials, using, convincing",
+  "source_comp": {
+   "orbench_hard": 36,
+   "single_edit_pair": 0,
+   "sonnet_pair": 0,
+   "orbench_toxic": 4,
+   "xstest": 2
+  },
+  "llama_refuse": 0.829,
+  "llama_ci": [
+   0.687,
+   0.915
+  ],
+  "llama_n": 41,
+  "llama_vector": 1.0577,
+  "llama_probe": 3.7227,
+  "llama_logit_sum": 0.7081,
+  "qwen_refuse": 0.512,
+  "qwen_ci": [
+   0.365,
+   0.657
+  ],
+  "qwen_n": 41,
+  "qwen_vector": 333.5117,
+  "qwen_probe": 1.6825,
+  "qwen_logit_sum": 0.3933,
+  "llama_binom_q": 0.0001,
+  "qwen_binom_q": 0.0258
+ }
+]

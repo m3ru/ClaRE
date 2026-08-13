@@ -1,0 +1,462 @@
+<title>Refusal Atlas — signal-dependent over-refusal</title>
+<style>
+:root{
+  color-scheme:light;
+  --page:#f5f6f8; --surface:#ffffff; --surface-2:#f8f9fb;
+  --ink:#111418; --ink-2:#565d67; --muted:#8a919c;
+  --grid:#e6e8ec; --hair:#e0e3e8; --hair-strong:#d2d6dd;
+  --llama:#eb6834; --qwen:#2a78d6;
+  --llama-soft:rgba(235,104,52,.12); --qwen-soft:rgba(42,120,214,.12);
+  --warn:#c2410c;
+  --accent:#2a78d6;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --page:#0c0e11; --surface:#15181d; --surface-2:#191d23;
+  --ink:#f1f3f6; --ink-2:#aab1bd; --muted:#727a86;
+  --grid:#262a31; --hair:#242830; --hair-strong:#333842;
+  --llama:#e8703f; --qwen:#4a92ec;
+  --llama-soft:rgba(232,112,63,.16); --qwen-soft:rgba(74,146,236,.16);
+  --warn:#f0863f;
+  --accent:#4a92ec;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#0c0e11; --surface:#15181d; --surface-2:#191d23;
+  --ink:#f1f3f6; --ink-2:#aab1bd; --muted:#727a86;
+  --grid:#262a31; --hair:#242830; --hair-strong:#333842;
+  --llama:#e8703f; --qwen:#4a92ec;
+  --llama-soft:rgba(232,112,63,.16); --qwen-soft:rgba(74,146,236,.16);
+  --warn:#f0863f;
+  --accent:#4a92ec;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.62;-webkit-font-smoothing:antialiased;}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;}
+.wrap{max-width:940px;margin:0 auto;padding:clamp(28px,5vw,72px) clamp(18px,4vw,40px) 96px;}
+.eyebrow{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 14px;}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.06;letter-spacing:-.02em;font-weight:700;
+  margin:0 0 18px;text-wrap:balance;}
+.lede{font-size:clamp(17px,2.2vw,20px);color:var(--ink-2);max-width:66ch;margin:0 0 8px;text-wrap:pretty;}
+.meta{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted);margin-top:22px;
+  display:flex;flex-wrap:wrap;gap:8px 22px;border-top:1px solid var(--hair);padding-top:18px;}
+.meta b{color:var(--ink-2);font-weight:600;}
+section{margin-top:60px;}
+h2{font-size:clamp(21px,3vw,27px);line-height:1.2;letter-spacing:-.015em;font-weight:700;margin:0 0 6px;text-wrap:balance;}
+.kicker{font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;margin:0 0 10px;}
+p{max-width:68ch;color:var(--ink-2);margin:0 0 16px;}
+p strong,li strong{color:var(--ink);font-weight:650;}
+.fig{background:var(--surface);border:1px solid var(--hair);border-radius:14px;
+  padding:26px clamp(16px,3vw,30px) 22px;margin:22px 0 10px;overflow-x:auto;}
+.fig-title{font-size:15.5px;font-weight:650;color:var(--ink);margin:0 0 3px;}
+.fig-note{font-size:13.5px;color:var(--muted);margin:2px 0 20px;max-width:76ch;}
+.legend{display:flex;gap:20px;flex-wrap:wrap;margin:0 0 4px;font-size:13px;color:var(--ink-2);}
+.legend .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:middle;}
+.legend .dumb{display:inline-flex;align-items:center;gap:5px;}
+.legend .ring{width:10px;height:10px;border-radius:50%;border:2px solid var(--muted);display:inline-block;}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:22px 0;}
+.tile{background:var(--surface);border:1px solid var(--hair);border-radius:12px;padding:15px 16px 14px;}
+.tile-name{font-size:14px;font-weight:650;color:var(--ink);}
+.tile-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+.tile-vals{display:flex;gap:16px;margin-top:11px;align-items:baseline;}
+.tv{font-family:ui-monospace,Menlo,monospace;font-size:27px;font-weight:600;font-variant-numeric:tabular-nums;}
+.tv .pct{font-size:14px;font-weight:500;margin-left:1px;}
+/* svg text classes */
+.grid{stroke:var(--grid);stroke-width:1;}
+.conn{stroke:var(--hair-strong);stroke-width:2.5;}
+.conn2{stroke:var(--hair-strong);stroke-width:2;}
+.tick{fill:var(--muted);font-size:11.5px;font-family:ui-monospace,Menlo,monospace;}
+.rowlab{fill:var(--ink);font-size:14px;font-weight:500;}
+.rowlab-sm{fill:var(--ink-2);font-size:13px;}
+.rowlab-sm.shared{fill:var(--ink);font-weight:600;}
+.eyebrow-svg{fill:var(--muted);font-size:11px;letter-spacing:.12em;font-family:ui-monospace,Menlo,monospace;}
+.col-hd{font-size:14px;font-weight:700;letter-spacing:.01em;}
+.val{font-family:ui-monospace,Menlo,monospace;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;}
+.barval{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:600;}
+.drop{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-weight:600;}
+.muted-t{fill:var(--muted);} .warn{fill:var(--warn);}
+.llama-t{fill:var(--llama);} .qwen-t{fill:var(--qwen);}
+.llama-f{fill:var(--llama);} .qwen-f{fill:var(--qwen);}
+.llama-fill{fill:var(--llama);} .qwen-fill{fill:var(--qwen);}
+.dot{stroke:var(--surface);stroke-width:1.5;}
+.dot-hollow{fill:var(--surface);stroke:var(--muted);stroke-width:2;}
+ul{max-width:68ch;color:var(--ink-2);padding-left:20px;}
+li{margin-bottom:8px;}
+.tablewrap{margin-top:14px;font-size:13px;}
+.tablewrap summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;}
+table{border-collapse:collapse;margin-top:12px;font-size:13px;width:auto;}
+th,td{padding:5px 16px 5px 0;text-align:left;border-bottom:1px solid var(--hair);}
+td.num,th.num{text-align:right;font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;}
+.callout{background:var(--surface-2);border:1px solid var(--hair);border-left:3px solid var(--accent);
+  border-radius:0 10px 10px 0;padding:16px 20px;margin:20px 0;}
+.callout p{margin:0;color:var(--ink-2);}
+.callout strong{color:var(--ink);}
+.foot{margin-top:70px;padding-top:22px;border-top:1px solid var(--hair);font-size:13px;color:var(--muted);}
+.foot .mono{font-size:12px;}
+@media (max-width:560px){
+  .tv{font-size:23px;}
+}
+</style>
+<div class="wrap">
+<p class="eyebrow">Refusal Atlas · in-progress read</p>
+<h1>The over-refusal boundary changes depending on which internal signal you read it through</h1>
+<p class="lede">We map where two instruction-tuned models over-refuse <em>benign</em> prompts — by topic and by single word — and test whether three different "refusal signals" draw the same boundary. They don't.</p>
+<div class="meta">
+  <span><b>Models</b> Llama-3-8B-Instruct · Qwen3-32B</span>
+  <span><b>Substrate</b> 1,636 prompts</span>
+  <span><b>Ground truth</b> independent Sonnet judge</span>
+  <span><b>Status</b> both models scored · analysis in progress</span>
+</div>
+
+<section>
+<p class="kicker">The setup</p>
+<h2>One substrate, three signals, an independent judge</h2>
+<p>Every prompt is scored by all three candidate refusal signals <em>and</em> by the model's actual sampled behavior. The three signals are the <strong>refusal direction</strong> (projection onto the diff-of-means refusal vector), the <strong>probe ensemble</strong> (a mass-mean linear probe combined across layers), and the <strong>output logit</strong> (the model's own probability of <em>starting</em> its reply with a refusal). Behavior is labeled by an independent Claude-Sonnet judge rather than an opener regex — because that regex shares its definition with the logit signal, and grading the logit with its own definition is circular.</p>
+<p>The substrate mixes OR-Bench-Hard (10 sensitive-but-benign topic categories), XSTest, a toxic "should-refuse" anchor, and <strong>463 freshly generated single-word minimal pairs</strong> — leakage-free, disjoint from every fitting set, each changing exactly one word (e.g. <span class="mono">reduce&nbsp;→&nbsp;attack</span>) to isolate one word's causal pull.</p>
+</section>
+
+<section>
+<p class="kicker">Finding 1 · the behavioral map</p>
+<h2>Both refuse the toxic anchor and comply with benign controls — but Llama over-refuses the sensitive-topic middle ~2.2× as often</h2>
+<p>The behavior orders exactly as it should: near-ceiling on the toxic anchor, near-floor on benign minimal pairs. The gap opens in the middle — the genuinely benign but sensitive-topic prompts. By the independent judge, Llama refuses <strong>78%</strong> of OR-Bench-Hard vs Qwen's <strong>35%</strong>.</p>
+<div class="tiles"><div class="tile">
+  <div class="tile-name">Toxic anchor</div>
+  <div class="tile-sub">should refuse</div>
+  <div class="tile-vals">
+    <span class="tv llama-t">98<span class="pct">%</span></span>
+    <span class="tv qwen-t">99<span class="pct">%</span></span>
+  </div>
+</div>
+<div class="tile">
+  <div class="tile-name">OR-Bench-Hard</div>
+  <div class="tile-sub">benign, sensitive-topic</div>
+  <div class="tile-vals">
+    <span class="tv llama-t">78<span class="pct">%</span></span>
+    <span class="tv qwen-t">35<span class="pct">%</span></span>
+  </div>
+</div>
+<div class="tile">
+  <div class="tile-name">XSTest</div>
+  <div class="tile-sub">benign, safe-looking-unsafe</div>
+  <div class="tile-vals">
+    <span class="tv llama-t">35<span class="pct">%</span></span>
+    <span class="tv qwen-t">29<span class="pct">%</span></span>
+  </div>
+</div>
+<div class="tile">
+  <div class="tile-name">Minimal pairs</div>
+  <div class="tile-sub">benign controls</div>
+  <div class="tile-vals">
+    <span class="tv llama-t">4<span class="pct">%</span></span>
+    <span class="tv qwen-t">2<span class="pct">%</span></span>
+  </div>
+</div></div>
+<p class="fig-note" style="margin-top:-4px">Judge-labeled refusal rate on each prompt source. Two numbers per tile: <span class="llama-t mono" style="font-weight:600">Llama</span> · <span class="qwen-t mono" style="font-weight:600">Qwen</span>.</p>
+
+<div class="fig">
+<div class="fig-title">Over-refusal is not just higher for Llama — the topic <em>profile</em> differs</div>
+<div class="fig-note">Judge-labeled refusal rate on benign OR-Bench-Hard prompts, by topic. Llama sits near-ceiling across hate / self-harm / unethical / violence; Qwen elevates mainly on violence. The line is the model gap.</div>
+<div class="legend">
+  <span><span class="sw" style="background:var(--llama)"></span>Llama-3-8B-Instruct</span>
+  <span><span class="sw" style="background:var(--qwen)"></span>Qwen3-32B</span>
+</div>
+<svg viewBox="0 0 900 408" width="100%" role="img" aria-label="Over-refusal rate by topic, per model" style="height:auto">
+<line x1="176.0" y1="26" x2="176.0" y2="364" class="grid"/>
+<text x="176.0" y="382" class="tick" text-anchor="middle">0%</text>
+<line x1="297.0" y1="26" x2="297.0" y2="364" class="grid"/>
+<text x="297.0" y="382" class="tick" text-anchor="middle">25%</text>
+<line x1="418.0" y1="26" x2="418.0" y2="364" class="grid"/>
+<text x="418.0" y="382" class="tick" text-anchor="middle">50%</text>
+<line x1="539.0" y1="26" x2="539.0" y2="364" class="grid"/>
+<text x="539.0" y="382" class="tick" text-anchor="middle">75%</text>
+<line x1="660.0" y1="26" x2="660.0" y2="364" class="grid"/>
+<text x="660.0" y="382" class="tick" text-anchor="middle">100%</text>
+<text x="176" y="18" class="eyebrow-svg" text-anchor="start">OR-BENCH-HARD TOPIC</text>
+<text x="748" y="18" class="col-hd llama-t" text-anchor="middle">Llama</text>
+<text x="828" y="18" class="col-hd qwen-t" text-anchor="middle">Qwen</text>
+<text x="162" y="54.5" class="rowlab" text-anchor="end">unethical</text>
+<line x1="341.5" y1="50.5" x2="625.6" y2="50.5" class="conn"/>
+<circle cx="341.5" cy="50.5" r="6.5" class="dot qwen-f"/>
+<circle cx="625.6" cy="50.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="54.5" class="val llama-t" text-anchor="middle">93</text>
+<text x="828" y="54.5" class="val qwen-t" text-anchor="middle">34</text>
+<text x="162" y="87.5" class="rowlab" text-anchor="end">self-harm</text>
+<line x1="347.3" y1="83.5" x2="615.5" y2="83.5" class="conn"/>
+<circle cx="347.3" cy="83.5" r="6.5" class="dot qwen-f"/>
+<circle cx="615.5" cy="83.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="87.5" class="val llama-t" text-anchor="middle">91</text>
+<text x="828" y="87.5" class="val qwen-t" text-anchor="middle">35</text>
+<text x="162" y="120.5" class="rowlab" text-anchor="end">hate</text>
+<line x1="331.4" y1="116.5" x2="613.5" y2="116.5" class="conn"/>
+<circle cx="331.4" cy="116.5" r="6.5" class="dot qwen-f"/>
+<circle cx="613.5" cy="116.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="120.5" class="val llama-t" text-anchor="middle">90</text>
+<text x="828" y="120.5" class="val qwen-t" text-anchor="middle">32</text>
+<text x="162" y="153.5" class="rowlab" text-anchor="end">violence</text>
+<line x1="416.1" y1="149.5" x2="612.1" y2="149.5" class="conn"/>
+<circle cx="416.1" cy="149.5" r="6.5" class="dot qwen-f"/>
+<circle cx="612.1" cy="149.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="153.5" class="val llama-t" text-anchor="middle">90</text>
+<text x="828" y="153.5" class="val qwen-t" text-anchor="middle">50</text>
+<text x="162" y="186.5" class="rowlab" text-anchor="end">illegal</text>
+<line x1="324.1" y1="182.5" x2="545.3" y2="182.5" class="conn"/>
+<circle cx="324.1" cy="182.5" r="6.5" class="dot qwen-f"/>
+<circle cx="545.3" cy="182.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="186.5" class="val llama-t" text-anchor="middle">76</text>
+<text x="828" y="186.5" class="val qwen-t" text-anchor="middle">31</text>
+<text x="162" y="219.5" class="rowlab" text-anchor="end">deception</text>
+<line x1="379.8" y1="215.5" x2="544.8" y2="215.5" class="conn"/>
+<circle cx="379.8" cy="215.5" r="6.5" class="dot qwen-f"/>
+<circle cx="544.8" cy="215.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="219.5" class="val llama-t" text-anchor="middle">76</text>
+<text x="828" y="219.5" class="val qwen-t" text-anchor="middle">42</text>
+<text x="162" y="252.5" class="rowlab" text-anchor="end">privacy</text>
+<line x1="314.9" y1="248.5" x2="537.1" y2="248.5" class="conn"/>
+<circle cx="314.9" cy="248.5" r="6.5" class="dot qwen-f"/>
+<circle cx="537.1" cy="248.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="252.5" class="val llama-t" text-anchor="middle">75</text>
+<text x="828" y="252.5" class="val qwen-t" text-anchor="middle">29</text>
+<text x="162" y="285.5" class="rowlab" text-anchor="end">harassment</text>
+<line x1="379.8" y1="281.5" x2="533.2" y2="281.5" class="conn"/>
+<circle cx="379.8" cy="281.5" r="6.5" class="dot qwen-f"/>
+<circle cx="533.2" cy="281.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="285.5" class="val llama-t" text-anchor="middle">74</text>
+<text x="828" y="285.5" class="val qwen-t" text-anchor="middle">42</text>
+<text x="162" y="318.5" class="rowlab" text-anchor="end">harmful</text>
+<line x1="355.6" y1="314.5" x2="521.6" y2="314.5" class="conn"/>
+<circle cx="355.6" cy="314.5" r="6.5" class="dot qwen-f"/>
+<circle cx="521.6" cy="314.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="318.5" class="val llama-t" text-anchor="middle">71</text>
+<text x="828" y="318.5" class="val qwen-t" text-anchor="middle">37</text>
+<text x="162" y="351.5" class="rowlab" text-anchor="end">sexual</text>
+<line x1="252.5" y1="347.5" x2="365.7" y2="347.5" class="conn"/>
+<circle cx="252.5" cy="347.5" r="6.5" class="dot qwen-f"/>
+<circle cx="365.7" cy="347.5" r="6.5" class="dot llama-f"/>
+<text x="748" y="351.5" class="val llama-t" text-anchor="middle">39</text>
+<text x="828" y="351.5" class="val qwen-t" text-anchor="middle">16</text>
+</svg>
+<details class="tablewrap"><summary>Topic table (all values)</summary>
+<table><thead><tr><th>Topic</th><th class="num">Llama</th><th class="num">Qwen</th></tr></thead>
+<tbody><tr><td>unethical</td><td class="num">93%</td><td class="num">34%</td></tr><tr><td>self-harm</td><td class="num">91%</td><td class="num">35%</td></tr><tr><td>hate</td><td class="num">90%</td><td class="num">32%</td></tr><tr><td>violence</td><td class="num">90%</td><td class="num">50%</td></tr><tr><td>illegal</td><td class="num">76%</td><td class="num">31%</td></tr><tr><td>deception</td><td class="num">76%</td><td class="num">42%</td></tr><tr><td>privacy</td><td class="num">75%</td><td class="num">29%</td></tr><tr><td>harassment</td><td class="num">74%</td><td class="num">42%</td></tr><tr><td>harmful</td><td class="num">71%</td><td class="num">37%</td></tr><tr><td>sexual</td><td class="num">39%</td><td class="num">16%</td></tr></tbody></table></details>
+</div>
+</section>
+
+<section>
+<p class="kicker">Finding 2 · the headline</p>
+<h2>The refusal direction is partly a topic detector; the output logit is not</h2>
+<p>Across the whole substrate all three signals separate refuse from comply well (AUC ≈ 0.97–0.99 vs the judge). But the boundary that matters for over-refusal lives <em>inside</em> a topic — same subject, benign vs not. Restricted to within-topic, the <strong>refusal-direction</strong> AUC drops (Qwen 0.969→<strong>0.874</strong>; Llama 0.977→0.946) while the <strong>output logit</strong> holds flat (Qwen 0.977→0.980; Llama 0.990→0.993). Much of the direction's apparent skill was reading the topic, not the refusal.</p>
+<div class="fig">
+<div class="fig-title">Full-substrate vs within-topic AUC, per signal</div>
+<div class="fig-note">Hollow dot = full-substrate AUC; filled dot = within-topic AUC; the number at left is the drop (percentage points). A big drop means the signal was leaning on topic identity. Axis zoomed to 0.85–1.00.</div>
+<div class="legend">
+  <span class="dumb"><span class="ring"></span>full substrate</span>
+  <span class="dumb"><span class="sw" style="background:var(--ink-2)"></span>within topic</span>
+</div>
+<svg viewBox="0 0 900 434" width="100%" role="img" aria-label="Full vs within-topic AUC per signal" style="height:auto">
+<text x="60" y="24" class="col-hd llama-t" text-anchor="start">Llama</text>
+<text x="762" y="24" class="eyebrow-svg" text-anchor="middle">WITHIN</text>
+<text x="842" y="24" class="eyebrow-svg" text-anchor="middle">DROP</text>
+<line x1="214.0" y1="36" x2="214.0" y2="160" class="grid"/>
+<text x="214.0" y="178" class="tick" text-anchor="middle">0.85</text>
+<line x1="376.0" y1="36" x2="376.0" y2="160" class="grid"/>
+<text x="376.0" y="178" class="tick" text-anchor="middle">0.90</text>
+<line x1="538.0" y1="36" x2="538.0" y2="160" class="grid"/>
+<text x="538.0" y="178" class="tick" text-anchor="middle">0.95</text>
+<line x1="700.0" y1="36" x2="700.0" y2="160" class="grid"/>
+<text x="700.0" y="178" class="tick" text-anchor="middle">1.00</text>
+<text x="60" y="66.8" class="rowlab-sm" text-anchor="start">refusal direction</text>
+<line x1="625.5" y1="62.8" x2="525.0" y2="62.8" class="conn2"/>
+<circle cx="625.5" cy="62.8" r="5" class="dot-hollow"/>
+<circle cx="525.0" cy="62.8" r="6" class="dot llama-f"/>
+<text x="762" y="66.8" class="val llama-t" text-anchor="middle">0.946</text>
+<text x="842" y="66.8" class="drop warn" text-anchor="middle">–3.1</text>
+<text x="60" y="108.8" class="rowlab-sm" text-anchor="start">probe ensemble</text>
+<line x1="644.9" y1="104.8" x2="580.1" y2="104.8" class="conn2"/>
+<circle cx="644.9" cy="104.8" r="5" class="dot-hollow"/>
+<circle cx="580.1" cy="104.8" r="6" class="dot llama-f"/>
+<text x="762" y="108.8" class="val llama-t" text-anchor="middle">0.963</text>
+<text x="842" y="108.8" class="drop muted-t" text-anchor="middle">–2.0</text>
+<text x="60" y="150.8" class="rowlab-sm" text-anchor="start">output logit</text>
+<line x1="667.6" y1="146.8" x2="677.3" y2="146.8" class="conn2"/>
+<circle cx="667.6" cy="146.8" r="5" class="dot-hollow"/>
+<circle cx="677.3" cy="146.8" r="6" class="dot llama-f"/>
+<text x="762" y="150.8" class="val llama-t" text-anchor="middle">0.993</text>
+<text x="842" y="150.8" class="drop muted-t" text-anchor="middle">±0</text>
+<text x="60" y="258" class="col-hd qwen-t" text-anchor="start">Qwen</text>
+<text x="762" y="258" class="eyebrow-svg" text-anchor="middle">WITHIN</text>
+<text x="842" y="258" class="eyebrow-svg" text-anchor="middle">DROP</text>
+<line x1="214.0" y1="270" x2="214.0" y2="394" class="grid"/>
+<text x="214.0" y="412" class="tick" text-anchor="middle">0.85</text>
+<line x1="376.0" y1="270" x2="376.0" y2="394" class="grid"/>
+<text x="376.0" y="412" class="tick" text-anchor="middle">0.90</text>
+<line x1="538.0" y1="270" x2="538.0" y2="394" class="grid"/>
+<text x="538.0" y="412" class="tick" text-anchor="middle">0.95</text>
+<line x1="700.0" y1="270" x2="700.0" y2="394" class="grid"/>
+<text x="700.0" y="412" class="tick" text-anchor="middle">1.00</text>
+<text x="60" y="300.8" class="rowlab-sm" text-anchor="start">refusal direction</text>
+<line x1="599.6" y1="296.8" x2="291.8" y2="296.8" class="conn2"/>
+<circle cx="599.6" cy="296.8" r="5" class="dot-hollow"/>
+<circle cx="291.8" cy="296.8" r="6" class="dot qwen-f"/>
+<text x="762" y="300.8" class="val qwen-t" text-anchor="middle">0.874</text>
+<text x="842" y="300.8" class="drop warn" text-anchor="middle">–9.5</text>
+<text x="60" y="342.8" class="rowlab-sm" text-anchor="start">probe ensemble</text>
+<line x1="599.6" y1="338.8" x2="291.8" y2="338.8" class="conn2"/>
+<circle cx="599.6" cy="338.8" r="5" class="dot-hollow"/>
+<circle cx="291.8" cy="338.8" r="6" class="dot qwen-f"/>
+<text x="762" y="342.8" class="val qwen-t" text-anchor="middle">0.874</text>
+<text x="842" y="342.8" class="drop warn" text-anchor="middle">–9.5</text>
+<text x="60" y="384.8" class="rowlab-sm" text-anchor="start">output logit</text>
+<line x1="625.5" y1="380.8" x2="635.2" y2="380.8" class="conn2"/>
+<circle cx="625.5" cy="380.8" r="5" class="dot-hollow"/>
+<circle cx="635.2" cy="380.8" r="6" class="dot qwen-f"/>
+<text x="762" y="384.8" class="val qwen-t" text-anchor="middle">0.980</text>
+<text x="842" y="384.8" class="drop muted-t" text-anchor="middle">±0</text>
+</svg>
+</div>
+<div class="callout"><p><strong>Why it matters:</strong> if you localize or steer refusal through the direction vector, part of what you're moving is "this is a violence-adjacent topic," not "this specific request should be refused." Reading the same boundary through the logit gives a materially different answer inside a topic.</p></div>
+</section>
+
+<section>
+<p class="kicker">Finding 3 · the correction</p>
+<h2>Circularity was real — and it inflated the logit most</h2>
+<p>Our regex refusal detector and the logit signal share one definition of "refusal," so grading the logit against the regex flatters it. Swapping in the independent judge shrinks every signal's AUC, and shrinks the <strong>logit's</strong> most — exactly the signal the circularity predicts. The judge also shows the regex <em>under-counts</em> real refusals (it misses ~30–50 of ~1,230 unique replies per model), so raw behavioral rates are slight underestimates, not overestimates.</p>
+<div class="fig">
+<div class="fig-title">AUC inflation from the circular regex label (regex AUC − judge AUC)</div>
+<div class="fig-note">How much each signal's fidelity was overstated by grading against the opener regex instead of the independent judge. The logit — which shares the regex's definition — is inflated most, especially for Qwen (+2.0pp).</div>
+<div class="legend">
+  <span><span class="sw" style="background:var(--llama)"></span>Llama-3-8B-Instruct</span>
+  <span><span class="sw" style="background:var(--qwen)"></span>Qwen3-32B</span>
+</div>
+<svg viewBox="0 0 900 206" width="100%" role="img" aria-label="AUC inflation from the circular regex label" style="height:auto">
+<line x1="210.0" y1="38" x2="210.0" y2="158" class="grid"/>
+<text x="210.0" y="170" class="tick" text-anchor="middle">0.0</text>
+<line x1="280.0" y1="38" x2="280.0" y2="158" class="grid"/>
+<text x="280.0" y="170" class="tick" text-anchor="middle">0.5</text>
+<line x1="350.0" y1="38" x2="350.0" y2="158" class="grid"/>
+<text x="350.0" y="170" class="tick" text-anchor="middle">1.0</text>
+<line x1="420.0" y1="38" x2="420.0" y2="158" class="grid"/>
+<text x="420.0" y="170" class="tick" text-anchor="middle">1.5</text>
+<line x1="490.0" y1="38" x2="490.0" y2="158" class="grid"/>
+<text x="490.0" y="170" class="tick" text-anchor="middle">2.0</text>
+<line x1="560.0" y1="38" x2="560.0" y2="158" class="grid"/>
+<text x="560.0" y="170" class="tick" text-anchor="middle">2.5</text>
+<text x="560" y="186" class="tick" text-anchor="end">AUC points overstated (×100)</text>
+<text x="194" y="66.0" class="rowlab-sm" text-anchor="end">refusal direction</text>
+<rect x="210" y="50.0" width="84.0" height="11" rx="3" class="llama-fill"/>
+<text x="301.0" y="59.0" class="barval llama-t">0.6</text>
+<rect x="210" y="63.0" width="42.0" height="11" rx="3" class="qwen-fill"/>
+<text x="259.0" y="72.0" class="barval qwen-t">0.3</text>
+<text x="194" y="106.0" class="rowlab-sm" text-anchor="end">probe ensemble</text>
+<rect x="210" y="90.0" width="84.0" height="11" rx="3" class="llama-fill"/>
+<text x="301.0" y="99.0" class="barval llama-t">0.6</text>
+<rect x="210" y="103.0" width="42.0" height="11" rx="3" class="qwen-fill"/>
+<text x="259.0" y="112.0" class="barval qwen-t">0.3</text>
+<text x="194" y="146.0" class="rowlab-sm" text-anchor="end">output logit</text>
+<rect x="210" y="130.0" width="140.0" height="11" rx="3" class="llama-fill"/>
+<text x="357.0" y="139.0" class="barval llama-t">1.0</text>
+<rect x="210" y="143.0" width="280.0" height="11" rx="3" class="qwen-fill"/>
+<text x="497.0" y="152.0" class="barval qwen-t">2.0</text>
+</svg>
+</div>
+</section>
+
+<section>
+<p class="kicker">Finding 4 · word-level</p>
+<h2>Single words move the boundary, and a shared core generalizes across both models</h2>
+<p>On the leakage-free single-word pairs, changing one word flips an otherwise-benign task into a refusal. Five words — <strong>attack, contraband, exploit, lethal, weaponize</strong> (✦) — do it for <em>both</em> models; others are model-specific (Llama: <span class="mono">interrogation</span>; Qwen: <span class="mono">manipulation</span>, <span class="mono">dissect</span>).</p>
+<div class="fig">
+<div class="fig-title">Top single-word triggers — change in judge refusal rate, one word swapped</div>
+<div class="fig-note">Δ refusal (percentage points) attributable to a single substituted word, averaged over its minimal pairs. ✦ marks words that trigger both models.</div>
+<div class="legend">
+  <span><span class="sw" style="background:var(--llama)"></span>Llama-3-8B-Instruct</span>
+  <span><span class="sw" style="background:var(--qwen)"></span>Qwen3-32B</span><span><span class="sw" style="background:var(--muted)">&#10022;</span>shared trigger</span>
+</div>
+<svg viewBox="0 0 900 288" width="100%" role="img" aria-label="Single-word triggers per model" style="height:auto">
+<text x="10" y="28" class="col-hd llama-t">Llama</text>
+<line x1="118.0" y1="42" x2="118.0" y2="244" class="grid"/>
+<text x="118.0" y="260" class="tick" text-anchor="middle">+0</text>
+<line x1="198.7" y1="42" x2="198.7" y2="244" class="grid"/>
+<text x="198.7" y="260" class="tick" text-anchor="middle">+15</text>
+<line x1="279.3" y1="42" x2="279.3" y2="244" class="grid"/>
+<text x="279.3" y="260" class="tick" text-anchor="middle">+30</text>
+<line x1="360.0" y1="42" x2="360.0" y2="244" class="grid"/>
+<text x="360.0" y="260" class="tick" text-anchor="middle">+45</text>
+<text x="106" y="67" class="rowlab-sm shared" text-anchor="end">contraband ✦</text>
+<rect x="118" y="56" width="228.6" height="15" rx="3.5" class="llama-fill"/>
+<text x="353.6" y="68" class="barval llama-t">+42</text>
+<text x="106" y="101" class="rowlab-sm shared" text-anchor="end">exploit ✦</text>
+<rect x="118" y="90" width="195.8" height="15" rx="3.5" class="llama-fill"/>
+<text x="320.8" y="102" class="barval llama-t">+36</text>
+<text x="106" y="135" class="rowlab-sm shared" text-anchor="end">attack ✦</text>
+<rect x="118" y="124" width="179.1" height="15" rx="3.5" class="llama-fill"/>
+<text x="304.1" y="136" class="barval llama-t">+33</text>
+<text x="106" y="169" class="rowlab-sm shared" text-anchor="end">weaponize ✦</text>
+<rect x="118" y="158" width="171.6" height="15" rx="3.5" class="llama-fill"/>
+<text x="296.6" y="170" class="barval llama-t">+32</text>
+<text x="106" y="203" class="rowlab-sm " text-anchor="end">interrogation</text>
+<rect x="118" y="192" width="134.4" height="15" rx="3.5" class="llama-fill"/>
+<text x="259.4" y="204" class="barval llama-t">+25</text>
+<text x="106" y="237" class="rowlab-sm shared" text-anchor="end">lethal ✦</text>
+<rect x="118" y="226" width="125.8" height="15" rx="3.5" class="llama-fill"/>
+<text x="250.8" y="238" class="barval llama-t">+23</text>
+<text x="480" y="28" class="col-hd qwen-t">Qwen</text>
+<line x1="588.0" y1="42" x2="588.0" y2="244" class="grid"/>
+<text x="588.0" y="260" class="tick" text-anchor="middle">+0</text>
+<line x1="668.7" y1="42" x2="668.7" y2="244" class="grid"/>
+<text x="668.7" y="260" class="tick" text-anchor="middle">+15</text>
+<line x1="749.3" y1="42" x2="749.3" y2="244" class="grid"/>
+<text x="749.3" y="260" class="tick" text-anchor="middle">+30</text>
+<line x1="830.0" y1="42" x2="830.0" y2="244" class="grid"/>
+<text x="830.0" y="260" class="tick" text-anchor="middle">+45</text>
+<text x="576" y="67" class="rowlab-sm shared" text-anchor="end">attack ✦</text>
+<rect x="588" y="56" width="179.1" height="15" rx="3.5" class="qwen-fill"/>
+<text x="774.1" y="68" class="barval qwen-t">+33</text>
+<text x="576" y="101" class="rowlab-sm " text-anchor="end">manipulation</text>
+<rect x="588" y="90" width="179.1" height="15" rx="3.5" class="qwen-fill"/>
+<text x="774.1" y="102" class="barval qwen-t">+33</text>
+<text x="576" y="135" class="rowlab-sm " text-anchor="end">dissect</text>
+<rect x="588" y="124" width="179.1" height="15" rx="3.5" class="qwen-fill"/>
+<text x="774.1" y="136" class="barval qwen-t">+33</text>
+<text x="576" y="169" class="rowlab-sm shared" text-anchor="end">weaponize ✦</text>
+<rect x="588" y="158" width="123.2" height="15" rx="3.5" class="qwen-fill"/>
+<text x="718.2" y="170" class="barval qwen-t">+23</text>
+<text x="576" y="203" class="rowlab-sm shared" text-anchor="end">lethal ✦</text>
+<rect x="588" y="192" width="117.8" height="15" rx="3.5" class="qwen-fill"/>
+<text x="712.8" y="204" class="barval qwen-t">+22</text>
+<text x="576" y="237" class="rowlab-sm shared" text-anchor="end">contraband ✦</text>
+<rect x="588" y="226" width="107.6" height="15" rx="3.5" class="qwen-fill"/>
+<text x="702.6" y="238" class="barval qwen-t">+20</text>
+</svg>
+</div>
+</section>
+
+<section>
+<p class="kicker">Method safeguards</p>
+<h2>What keeps these clean</h2>
+<ul>
+<li><strong>Independent ground truth.</strong> Behavior is judged by Claude-Sonnet on a rubric with no shared definition with any signal — de-circularizing the whole comparison.</li>
+<li><strong>Leakage-free pairs.</strong> The 463 single-word pairs are generated from prompts disjoint from every probe/vector fitting set; both models are seeing them for the first time.</li>
+<li><strong>Causal layer validation.</strong> The refusal direction is taken at the causally-controlling layer (Llama L17, validated by ablation; Qwen L58, validated by addition — driving a benign prompt to 93% refusal), not merely the most predictive one.</li>
+<li><strong>Adversarial code review before spend.</strong> Method/code reviews caught real bugs pre-run (a padding bug that would have corrupted the behavioral ground truth; a wrong-layer fallback).</li>
+</ul>
+</section>
+
+<section>
+<p class="kicker">Next</p>
+<h2>Where it goes from here</h2>
+<ul>
+<li><strong>Topic clustering map (P5)</strong> — unsupervised structure over the substrate, beyond the fixed OR-Bench 10 categories, with bootstrap-Jaccard stability.</li>
+<li><strong>Per-trigger-word deep dive (P6)</strong> — the full 463-pair word-effect atlas with confidence intervals, not just the top words.</li>
+<li><strong>Statistics hardening</strong> — bootstrap CIs and a noise null on every AUC and rate reported here.</li>
+</ul>
+</section>
+
+<div class="foot">
+<p>Refusal Atlas · figures generated from the independent-judge scoring pass on both models.<br>
+<span class="mono">substrate: 1,636 prompts · behavioral n=8 samples/prompt · ground truth: claude-sonnet judge · all metrics judge-labeled unless noted</span></p>
+</div>
+</div>

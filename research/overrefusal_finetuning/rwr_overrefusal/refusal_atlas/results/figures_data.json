@@ -1,0 +1,190 @@
+{
+ "models": {
+  "llama": {
+   "source_rate": {
+    "orbench_hard": 0.776,
+    "xstest": 0.353,
+    "sonnet_pair": 0.028,
+    "single_edit_pair": 0.037,
+    "orbench_toxic": 0.975
+   },
+   "topic_rate": {
+    "deception": 0.762,
+    "harassment": 0.738,
+    "harmful": 0.714,
+    "hate": 0.904,
+    "illegal": 0.763,
+    "privacy": 0.746,
+    "self-harm": 0.908,
+    "sexual": 0.392,
+    "unethical": 0.929,
+    "violence": 0.901
+   },
+   "auc": {
+    "vector": {
+     "full": 0.977,
+     "within": 0.946,
+     "regex": 0.983,
+     "judge": 0.977
+    },
+    "probe": {
+     "full": 0.983,
+     "within": 0.963,
+     "regex": 0.989,
+     "judge": 0.983
+    },
+    "logit_sum": {
+     "full": 0.99,
+     "within": 0.993,
+     "regex": 1.0,
+     "judge": 0.99
+    }
+   },
+   "words": [
+    [
+     "contraband",
+     0.425,
+     5
+    ],
+    [
+     "exploit",
+     0.364,
+     11
+    ],
+    [
+     "attack",
+     0.333,
+     3
+    ],
+    [
+     "weaponize",
+     0.319,
+     20
+    ],
+    [
+     "interrogation",
+     0.25,
+     3
+    ],
+    [
+     "lethal",
+     0.234,
+     8
+    ],
+    [
+     "weaponized",
+     0.205,
+     11
+    ],
+    [
+     "propaganda",
+     0.1,
+     5
+    ],
+    [
+     "confess",
+     0.083,
+     3
+    ],
+    [
+     "targeted",
+     0.042,
+     3
+    ]
+   ]
+  },
+  "qwen": {
+   "source_rate": {
+    "orbench_hard": 0.347,
+    "xstest": 0.291,
+    "sonnet_pair": 0.019,
+    "single_edit_pair": 0.018,
+    "orbench_toxic": 0.987
+   },
+   "topic_rate": {
+    "deception": 0.421,
+    "harassment": 0.421,
+    "harmful": 0.371,
+    "hate": 0.321,
+    "illegal": 0.306,
+    "privacy": 0.287,
+    "self-harm": 0.354,
+    "sexual": 0.158,
+    "unethical": 0.342,
+    "violence": 0.496
+   },
+   "auc": {
+    "vector": {
+     "full": 0.969,
+     "within": 0.874,
+     "regex": 0.972,
+     "judge": 0.969
+    },
+    "probe": {
+     "full": 0.969,
+     "within": 0.874,
+     "regex": 0.972,
+     "judge": 0.969
+    },
+    "logit_sum": {
+     "full": 0.977,
+     "within": 0.98,
+     "regex": 0.997,
+     "judge": 0.977
+    }
+   },
+   "words": [
+    [
+     "attack",
+     0.333,
+     3
+    ],
+    [
+     "manipulation",
+     0.333,
+     3
+    ],
+    [
+     "dissect",
+     0.333,
+     3
+    ],
+    [
+     "weaponize",
+     0.229,
+     18
+    ],
+    [
+     "lethal",
+     0.219,
+     8
+    ],
+    [
+     "contraband",
+     0.2,
+     5
+    ],
+    [
+     "exploit",
+     0.182,
+     11
+    ],
+    [
+     "infiltrated",
+     0.025,
+     5
+    ],
+    [
+     "exfiltrate",
+     0.021,
+     6
+    ],
+    [
+     "extract",
+     0.0,
+     8
+    ]
+   ]
+  }
+ }
+}
