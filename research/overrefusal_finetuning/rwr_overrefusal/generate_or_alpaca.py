@@ -72,6 +72,14 @@ def main():
     ap.add_argument("--output_dir", required=True)
     ap.add_argument("--num_shards", type=int, required=True)
     ap.add_argument("--shard_idx", type=int, required=True)
+    ap.add_argument("--shuffle_seed", type=int, default=-1,
+                    help="if >=0, shuffle the remaining pool with this seed (43 = Sonnet-pool order) "
+                         "before skip/cap; matches generate_or_sonnet's sampling order")
+    ap.add_argument("--skip_first", type=int, default=0,
+                    help="skip the first N of the shuffled pool (6000 = the originals the Sonnet "
+                         "training pool already consumed) -> provably-disjoint scale-up pool")
+    ap.add_argument("--num_prompts", type=int, default=0,
+                    help="cap pool size after skipping (0 = all remaining)")
     ap.add_argument("--n_per_prompt", type=int, default=4)
     ap.add_argument("--temperature", type=float, default=1.0)
     ap.add_argument("--top_p", type=float, default=0.9)
@@ -94,6 +102,12 @@ def main():
     hf = os.environ.get("HUGGING_FACE_HUB_TOKEN") or os.environ.get("HF_TOKEN")
     ds = load_dataset("yahma/alpaca-cleaned", split="train")
     allp = remaining_prompts(ds)
+    if args.shuffle_seed >= 0:
+        random.Random(args.shuffle_seed).shuffle(allp)   # match Sonnet-pool sampling order
+    if args.skip_first > 0:
+        allp = allp[args.skip_first:]                    # drop originals the Sonnet pool consumed
+    if args.num_prompts > 0:
+        allp = allp[:args.num_prompts]
     # contiguous shard slice
     per = (len(allp) + args.num_shards - 1) // args.num_shards
     s, e = args.shard_idx * per, min(len(allp), (args.shard_idx + 1) * per)
@@ -117,7 +131,7 @@ def main():
         return tok.apply_chat_template(
             [{"role": "system", "content": SYSTEM_PROMPT},
              {"role": "user", "content": PROMPT_TEMPLATE.format(prompt=p)}],
-            tokenize=False, add_generation_prompt=True)
+            tokenize=False, add_generation_prompt=True, enable_thinking=False)
 
     def clean(t):
         t = t.strip()
