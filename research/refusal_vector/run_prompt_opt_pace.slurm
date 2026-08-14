@@ -36,7 +36,11 @@ case "${SLURM_ARRAY_TASK_ID}" in
   5) OBJ=direction; METH=pez; L=17 ;;
   *) echo "bad cfg"; exit 2 ;;
 esac
-TAG="${OBJ}_${METH}_L${L}"
+# BLOCK=1 forbids profanity/violence tokens -> any refusal is refusal of benign-LOOKING text
+BLOCK="${BLOCK:-0}"
+EXTRA=""; TAGSUF=""
+if [ "${BLOCK}" = "1" ]; then EXTRA="--block_profanity"; TAGSUF="_clean"; fi
+TAG="${OBJ}_${METH}_L${L}${TAGSUF}"
 echo "[cfg] objective=${OBJ} method=${METH} layer=${L} -> ${TAG}"
 
 python -u prompt_opt.py \
@@ -45,5 +49,5 @@ python -u prompt_opt.py \
   --objective "${OBJ}" --method "${METH}" --layer "${L}" \
   --base_model meta-llama/Meta-Llama-3-8B-Instruct \
   --n_adv 20 --n_train 8 --n_eval 60 --steps 250 \
-  --topk 256 --n_cand 96 --cand_prompts 4 --n_random 3
+  --topk 256 --n_cand 96 --cand_prompts 4 --n_random 3 ${EXTRA}
 echo "[done] prompt_opt ${TAG} at $(date)"
