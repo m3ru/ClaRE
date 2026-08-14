@@ -7,7 +7,7 @@
 #SBATCH --constraint="gpu-h200|gpu-h100|gpu-a100|gpu-l40s"
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH -t 08:00:00
+#SBATCH -t 12:00:00
 #SBATCH --array=0-2
 #SBATCH --output=slurm-%x-%A_%a.out
 #SBATCH --error=slurm-%x-%A_%a.err
@@ -30,7 +30,11 @@ case "${SLURM_ARRAY_TASK_ID}" in
   2) OBJ=direction; L=17 ;;
   *) echo "bad cfg"; exit 2 ;;
 esac
-TAG="rw_${OBJ}_L${L}"
+# BLOCK=1 forbids taboo/harm-adjacent tokens, forcing NON-lexical over-refusal
+BLOCK="${BLOCK:-0}"
+EXTRA=""; TAGSUF=""
+if [ "${BLOCK}" = "1" ]; then EXTRA="--block_profanity"; TAGSUF="_noTaboo"; fi
+TAG="rw_${OBJ}_L${L}${TAGSUF}"
 echo "[cfg] ${TAG}"
 
 python -u prompt_rewrite_opt.py \
@@ -38,8 +42,8 @@ python -u prompt_rewrite_opt.py \
   --dirs_npz "${OUT}/harmful_dirs_all_layers.npz" \
   --out "${OUT}/${TAG}.json" \
   --objective "${OBJ}" --layer "${L}" \
-  --n_prompts 30 --steps 100 --topk 256 --n_cand 96 \
-  --sim_floor 0.85 --lam 20.0
+  --n_prompts 60 --steps 100 --topk 256 --n_cand 96 \
+  --sim_floor 0.85 --lam 20.0 ${EXTRA}
 
 python -u score_llamaguard_flags.py \
   --in_json "${OUT}/${TAG}.json" --out "${OUT}/${TAG}_flagged.json"
