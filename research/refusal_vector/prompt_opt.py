@@ -66,6 +66,10 @@ def main():
     ap.add_argument("--gen_batch", type=int, default=16)
     ap.add_argument("--fwd_batch", type=int, default=48)
     ap.add_argument("--n_random", type=int, default=3)   # random-suffix control repeats
+    ap.add_argument("--block_profanity", action="store_true",
+                    help="Forbid overtly sexual/slur/violent tokens. Without this, the optimizer "
+                         "can win by making the prompt genuinely objectionable, which is NOT "
+                         "over-refusal. With it, any refusal is refusal of benign-looking text.")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
@@ -166,11 +170,29 @@ def main():
         if s is not None and s.startswith("<|"):
             continue
         allowed[i] = True
+    if args.block_profanity:
+        BLOCK = ["sex", "porn", "nude", "naked", "slut", "whore", "rape", "anal", "penis",
+                 "vagina", "boob", "tit", "cum", "fuck", "shit", "bitch", "cunt", "dick",
+                 "nigg", "fag", "kill", "murder", "bomb", "terror", "suicide", "nazi",
+                 "molest", "pedo", "incest", "erotic", "orgas", "masturb", "genital"]
+        nb = 0
+        for i in torch.nonzero(allowed).squeeze(-1).tolist():
+            d = tok.decode([i]).strip().lower()
+            if d and any(w in d for w in BLOCK):
+                allowed[i] = False
+                nb += 1
+        print(f"[init] blocked {nb} profanity/violence tokens", flush=True)
     allowed = allowed.to(dev)
     allowed_ids = torch.nonzero(allowed).squeeze(-1)
     print(f"[init] {int(allowed.sum())}/{V} tokens allowed", flush=True)
 
-    init_ids = torch.tensor([tok.encode(" !", add_special_tokens=False)[-1]] * args.n_adv, device=dev)
+    # Space-separated "!" -- 20 bare "!" tokens re-tokenize into FEWER tokens (BPE merges them),
+    # which made every candidate fail the round-trip filter and froze GCG at its init.
+    _init = tok(" ".join(["!"] * args.n_adv), add_special_tokens=False).input_ids
+    _init = (_init + [_init[-1]] * args.n_adv)[:args.n_adv]
+    init_ids = torch.tensor(_init, device=dev)
+
+    n_fallback = 0
 
     def roundtrip_ok(ids):
         s = tok.decode(ids)
@@ -178,6 +200,7 @@ def main():
 
     # =================== GCG ===================
     def run_gcg():
+        nonlocal n_fallback
         adv = init_ids.clone()
         hist = []
         t0 = time.time()
@@ -194,9 +217,12 @@ def main():
             pick = torch.randint(0, args.topk, (args.n_cand,), device=dev)
             cands = adv.repeat(args.n_cand, 1)
             cands[torch.arange(args.n_cand, device=dev), pos] = top[pos, pick]
-            keep = [i for i in range(args.n_cand) if roundtrip_ok(cands[i].tolist())]
-            if not keep:
-                continue
+            keep = [i for i in range(cands.shape[0]) if roundtrip_ok(cands[i].tolist())]
+            if len(keep) < 4:
+                # Filter starved the step. Keep everything rather than skip: the final eval
+                # re-tokenizes from decoded text anyway, so any drift is measured honestly.
+                keep = list(range(cands.shape[0]))
+                n_fallback += 1
             cands = cands[keep]
 
             csegs = [train_seg[i] for i in
@@ -244,7 +270,13 @@ def main():
 
     adv_ids, hist = run_gcg() if args.method == "gcg" else run_pez()
     suffix = tok.decode(adv_ids)
+    rt_ok = roundtrip_ok(adv_ids.tolist())
+    moved = adv_ids.tolist() != init_ids.tolist()
     print(f"\n[opt] FINAL SUFFIX: {suffix!r}", flush=True)
+    print(f"[opt] changed-from-init={moved}  round-trip-stable={rt_ok}  "
+          f"filter-fallback-steps={n_fallback}/{args.steps}", flush=True)
+    if not moved:
+        print("[WARN] suffix identical to init -- the search made NO progress.", flush=True)
 
     # =================== evaluation (text path = a real prompt) ===================
     def fmt(p):
@@ -309,6 +341,8 @@ def main():
          "layer": args.layer if args.objective == "direction" else None,
          "suffix": suffix, "random_suffixes": rand_suffixes, "n_adv": args.n_adv,
          "steps": args.steps, "n_train": args.n_train, "n_eval": len(eval_p),
+         "changed_from_init": bool(moved), "roundtrip_stable": bool(rt_ok),
+         "filter_fallback_steps": int(n_fallback),
          "loss_history": hist, "arms": {}}
     for name, ps in arms.items():
         resp = generate(ps)

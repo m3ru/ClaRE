@@ -2,3 +2,6 @@
 # (ablation + abliteration on AdvBench). Metrics are committed; raw compliances are not.
 *_harmful_responses.jsonl
 ablated_harmful_responses.jsonl
+# Optimized adversarial suffixes: these are explicit solicitations for harmful content.
+# Aggregate metrics live in PROMPT_OPT_RESULTS.md; the raw suffixes stay on scratch.
+prompt_opt_*.json
