@@ -10,8 +10,11 @@
 set -euo pipefail
 REMOTE="${1:-pace}"
 
-echo "[1/3] checking PACE + syncing repo"
-ssh -o ConnectTimeout=20 "${REMOTE}" 'set -e; cd ~/ClaRE && git fetch --all -q && git checkout -q alec && git pull -q --ff-only && git log --oneline -1'
+echo "[1/3] checking PACE + syncing scripts"
+# NOTE: ~/ClaRE on PACE is NOT a git checkout (files are copied up), so sync by scp.
+ssh -o ConnectTimeout=20 "${REMOTE}" 'mkdir -p ~/ClaRE/research/refusal_vector'
+scp -q "$(dirname "$0")"/{build_harmful_dirs.py,prompt_opt.py,run_build_dirs_pace.slurm,run_prompt_opt_pace.slurm} \
+    "${REMOTE}:~/ClaRE/research/refusal_vector/"
 
 echo "[2/3] submitting direction build"
 BUILD_ID=$(ssh "${REMOTE}" 'cd ~/ClaRE/research/refusal_vector && sbatch --parsable run_build_dirs_pace.slurm')
