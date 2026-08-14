@@ -74,6 +74,13 @@ def main():
     ap.add_argument("--lam", type=float, default=20.0)
     ap.add_argument("--max_prompt_tok", type=int, default=48)
     ap.add_argument("--max_new_tokens", type=int, default=48)
+    ap.add_argument("--fluency_weight", type=float, default=0.0,
+                    help="Weight on the prompt's own NLL under the base model. Penalises "
+                         "made-up words ('cryptocurrencybilt','houseophobic') directly.")
+    ap.add_argument("--lm_topk_filter", type=int, default=0,
+                    help="If >0, a substitution may only use a token the base model itself "
+                         "ranks in its top-N at that position. Makes PROPOSALS fluent instead "
+                         "of filtering afterwards -- the gradient alone proposes garbage.")
     ap.add_argument("--block_profanity", action="store_true",
                     help="Forbid taboo/harm-adjacent tokens. Without it GCG converges on "
                          "lexical triggers (a stray 'blowjob' makes Llama refuse a data-warehouse "
@@ -178,22 +185,39 @@ def main():
     allowed = allowed.to(dev)
     print(f"[init] {int(allowed.sum())}/{V} allowed", flush=True)
 
-    def loss_from_embeds(adv_e):
-        """adv_e: [B, L, H] -> refusal loss per row [B] (lower = more refusal-y)."""
-        B = adv_e.shape[0]
+    P = len(pre_ids)
+
+    def score_batch(adv_e, adv_ids=None, want_nll=False, want_lmlogits=False):
+        """adv_e: [B, L, H]. Returns (refusal_loss[B], nll[B] or None, lm_logits or None).
+
+        The prompt's own NLL comes out of the SAME forward pass that computes the refusal
+        loss -- logits at positions P-1 .. P+L-2 predict the prompt tokens -- so fluency
+        costs essentially nothing extra.
+        """
+        B, Ln = adv_e.shape[0], adv_e.shape[1]
         parts = [pre_e.unsqueeze(0).expand(B, -1, -1), adv_e, post_e.unsqueeze(0).expand(B, -1, -1)]
         if args.objective == "icannot":
             parts.append(W[tgt_ids].unsqueeze(0).expand(B, -1, -1))
         E = torch.cat(parts, 1)
         M = torch.ones(E.shape[:2], dtype=torch.long, device=dev)
+        out = model(inputs_embeds=E, attention_mask=M, use_cache=False,
+                    output_hidden_states=(args.objective == "direction"))
+        lg = out.logits
         if args.objective == "direction":
-            hs = model(inputs_embeds=E, attention_mask=M, output_hidden_states=True,
-                       use_cache=False).hidden_states
-            return -(hs[args.layer][:, -1, :].float() * d_obj).sum(-1)
-        lg = model(inputs_embeds=E, attention_mask=M, use_cache=False).logits
-        lp = torch.log_softmax(lg[:, -(T + 1):-1, :].float(), dim=-1)
-        t = tgt_ids.view(1, T).expand(B, T)
-        return -lp.gather(-1, t.unsqueeze(-1)).squeeze(-1).sum(-1)
+            rl = -(out.hidden_states[args.layer][:, -1, :].float() * d_obj).sum(-1)
+        else:
+            lp = torch.log_softmax(lg[:, -(T + 1):-1, :].float(), dim=-1)
+            t = tgt_ids.view(1, T).expand(B, T)
+            rl = -lp.gather(-1, t.unsqueeze(-1)).squeeze(-1).sum(-1)
+        nll = None
+        if want_nll and adv_ids is not None:
+            plp = torch.log_softmax(lg[:, P - 1:P + Ln - 1, :].float(), dim=-1)
+            ids = adv_ids if adv_ids.dim() == 2 else adv_ids.unsqueeze(0).expand(B, -1)
+            nll = -plp.gather(-1, ids.unsqueeze(-1)).squeeze(-1).mean(-1)
+        return rl, nll, (lg[:, P - 1:P + Ln - 1, :] if want_lmlogits else None)
+
+    def loss_from_embeds(adv_e):
+        return score_batch(adv_e)[0]
 
     def generate(prompts, bs=16):
         out = []
@@ -219,10 +243,16 @@ def main():
         for step in range(args.steps):
             oh = F.one_hot(adv, V).to(W.dtype)
             oh.requires_grad_(True)
-            base_loss = loss_from_embeds((oh @ W).unsqueeze(0)).mean()
-            base_loss.backward()
+            rl0, _, lm_lg = score_batch((oh @ W).unsqueeze(0), want_lmlogits=args.lm_topk_filter > 0)
+            rl0.mean().backward()
             g = oh.grad.detach().float()
             g[:, ~allowed] = float("inf")
+            if args.lm_topk_filter > 0:
+                # only let the search use tokens the model itself finds plausible here
+                keep_lm = torch.zeros_like(g, dtype=torch.bool)
+                idx = lm_lg[0].float().topk(args.lm_topk_filter, dim=-1).indices
+                keep_lm.scatter_(1, idx, True)
+                g[~keep_lm] = float("inf")
             top = (-g).topk(args.topk, dim=1).indices
 
             pos = torch.randint(0, L, (args.n_cand,), device=dev)
@@ -233,16 +263,19 @@ def main():
             texts = [tok.decode(c) for c in cands]
             sims = (embed(texts) @ oe.T).squeeze(-1)          # [n_cand]
             with torch.no_grad():
-                rl = loss_from_embeds(W[cands])
+                rl, nll, _ = score_batch(W[cands], adv_ids=cands, want_nll=args.fluency_weight > 0)
             total = rl + args.lam * torch.relu(args.sim_floor - sims)
+            if nll is not None:
+                total = total + args.fluency_weight * nll
             k = int(total.argmin())
             if float(total[k]) < best["loss"]:
                 best = {"loss": float(total[k]), "ids": cands[k].clone(),
-                        "sim": float(sims[k]), "refusal_loss": float(rl[k])}
+                        "sim": float(sims[k]), "refusal_loss": float(rl[k]),
+                        "nll": float(nll[k]) if nll is not None else None}
             adv = cands[k].clone()
         rw = tok.decode(best["ids"])
         results.append({"original": orig, "rewrite": rw, "similarity": best.get("sim"),
-                        "refusal_loss": best.get("refusal_loss")})
+                        "refusal_loss": best.get("refusal_loss"), "nll": best.get("nll")})
         if pi % 5 == 0:
             print(f"  [{pi+1}/{len(picked)}] sim {best.get('sim', float('nan')):.3f} "
                   f"loss {best.get('refusal_loss', float('nan')):.3f} ({time.time()-t0:.0f}s)", flush=True)

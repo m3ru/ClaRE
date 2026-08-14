@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH -t 12:00:00
-#SBATCH --array=0-2
+#SBATCH --array=0-3
 #SBATCH --output=slurm-%x-%A_%a.out
 #SBATCH --error=slurm-%x-%A_%a.err
 set -euo pipefail
@@ -24,17 +24,26 @@ DIR="${HOME}/ClaRE/research/refusal_vector"; cd "${DIR}"
 OUT="${SCRATCH_BASE}/prompt_opt"; mkdir -p "${OUT}"
 PAIRS="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
 
+# FLU=1 turns on the fluency penalty + LM-constrained proposals
+FW=0; LMK=0; FSUF=""
 case "${SLURM_ARRAY_TASK_ID}" in
   0) OBJ=icannot;   L=12 ;;
   1) OBJ=direction; L=12 ;;
   2) OBJ=direction; L=17 ;;
+  3) OBJ=icannot;   L=12; FW=4.0; LMK=128; FSUF="_hard" ;;
   *) echo "bad cfg"; exit 2 ;;
 esac
+if [ "${FLU:-0}" = "1" ]; then
+  [ "${FW}" = "0" ] && { FW=1.0; LMK=512; }
+  FSUF="_flu${FSUF}"
+else
+  FW=0; LMK=0; FSUF=""
+fi
 # BLOCK=1 forbids taboo/harm-adjacent tokens, forcing NON-lexical over-refusal
 BLOCK="${BLOCK:-0}"
 EXTRA=""; TAGSUF=""
 if [ "${BLOCK}" = "1" ]; then EXTRA="--block_profanity"; TAGSUF="_noTaboo"; fi
-TAG="rw_${OBJ}_L${L}${TAGSUF}"
+TAG="rw_${OBJ}_L${L}${TAGSUF}${FSUF}"
 echo "[cfg] ${TAG}"
 
 python -u prompt_rewrite_opt.py \
@@ -42,8 +51,9 @@ python -u prompt_rewrite_opt.py \
   --dirs_npz "${OUT}/harmful_dirs_all_layers.npz" \
   --out "${OUT}/${TAG}.json" \
   --objective "${OBJ}" --layer "${L}" \
-  --n_prompts 60 --steps 100 --topk 256 --n_cand 96 \
-  --sim_floor 0.85 --lam 20.0 ${EXTRA}
+  --n_prompts 60 --steps 150 --topk 256 --n_cand 96 \
+  --sim_floor 0.85 --lam 20.0 ${EXTRA} \
+  --fluency_weight ${FW} --lm_topk_filter ${LMK}
 
 python -u score_llamaguard_flags.py \
   --in_json "${OUT}/${TAG}.json" --out "${OUT}/${TAG}_flagged.json"
