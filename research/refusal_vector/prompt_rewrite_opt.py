@@ -81,6 +81,16 @@ def main():
                     help="If >0, a substitution may only use a token the base model itself "
                          "ranks in its top-N at that position. Makes PROPOSALS fluent instead "
                          "of filtering afterwards -- the gradient alone proposes garbage.")
+    ap.add_argument("--extra_tokens", type=int, default=0,
+                    help="Append N optimizable slots after the original. GCG can only SUBSTITUTE, "
+                         "never insert, so a fixed length forces phrases to trail off mid-thought "
+                         "('...counter the success of a company by'). Extra slots let them finish.")
+    ap.add_argument("--whole_word_only", action="store_true",
+                    help="Only substitute word-initial tokens (BPE space-prefix) or punctuation. "
+                         "Bare continuation pieces are what produce 'fals', 'ofs', 'saferificial'.")
+    ap.add_argument("--nll_max_weight", type=float, default=0.0,
+                    help="Weight on the WORST single-token NLL. Mean NLL lets one jarring token "
+                         "hide among many fluent ones; this penalises it directly.")
     ap.add_argument("--block_profanity", action="store_true",
                     help="Forbid taboo/harm-adjacent tokens. Without it GCG converges on "
                          "lexical triggers (a stray 'blowjob' makes Llama refuse a data-warehouse "
@@ -182,6 +192,18 @@ def main():
                 allowed[i] = False
                 nb += 1
         print(f"[init] blocked {nb} taboo/harm-adjacent tokens", flush=True)
+    if args.whole_word_only:
+        import string
+        nw = 0
+        for i in torch.nonzero(allowed).squeeze(-1).tolist():
+            t = tok.convert_ids_to_tokens(i) or ""
+            d = tok.decode([i])
+            word_initial = t.startswith("\u0120") or d.startswith(" ")
+            punct = d.strip() and all(c in string.punctuation for c in d.strip())
+            if not (word_initial or punct):
+                allowed[i] = False
+                nw += 1
+        print(f"[init] whole-word filter removed {nw} continuation tokens", flush=True)
     allowed = allowed.to(dev)
     print(f"[init] {int(allowed.sum())}/{V} allowed", flush=True)
 
@@ -213,7 +235,8 @@ def main():
         if want_nll and adv_ids is not None:
             plp = torch.log_softmax(lg[:, P - 1:P + Ln - 1, :].float(), dim=-1)
             ids = adv_ids if adv_ids.dim() == 2 else adv_ids.unsqueeze(0).expand(B, -1)
-            nll = -plp.gather(-1, ids.unsqueeze(-1)).squeeze(-1).mean(-1)
+            tokwise = -plp.gather(-1, ids.unsqueeze(-1)).squeeze(-1)      # [B, Ln]
+            nll = (tokwise.mean(-1), tokwise.max(-1).values)
         return rl, nll, (lg[:, P - 1:P + Ln - 1, :] if want_lmlogits else None)
 
     def loss_from_embeds(adv_e):
@@ -236,7 +259,11 @@ def main():
     results = []
     t0 = time.time()
     for pi, orig in enumerate(picked):
-        adv = torch.tensor(tok(orig, add_special_tokens=False).input_ids, device=dev)
+        base = tok(orig, add_special_tokens=False).input_ids
+        if args.extra_tokens > 0:
+            pad_tok = tok(" .", add_special_tokens=False).input_ids[-1]
+            base = base + [pad_tok] * args.extra_tokens
+        adv = torch.tensor(base, device=dev)
         L = adv.shape[0]
         oe = embed([orig])                                   # [1, D]
         best = {"loss": float("inf"), "ids": adv.clone()}
@@ -266,16 +293,18 @@ def main():
                 rl, nll, _ = score_batch(W[cands], adv_ids=cands, want_nll=args.fluency_weight > 0)
             total = rl + args.lam * torch.relu(args.sim_floor - sims)
             if nll is not None:
-                total = total + args.fluency_weight * nll
+                total = total + args.fluency_weight * nll[0] + args.nll_max_weight * nll[1]
             k = int(total.argmin())
             if float(total[k]) < best["loss"]:
                 best = {"loss": float(total[k]), "ids": cands[k].clone(),
                         "sim": float(sims[k]), "refusal_loss": float(rl[k]),
-                        "nll": float(nll[k]) if nll is not None else None}
+                        "nll": float(nll[0][k]) if nll is not None else None,
+                        "nll_max": float(nll[1][k]) if nll is not None else None}
             adv = cands[k].clone()
         rw = tok.decode(best["ids"])
         results.append({"original": orig, "rewrite": rw, "similarity": best.get("sim"),
-                        "refusal_loss": best.get("refusal_loss"), "nll": best.get("nll")})
+                        "refusal_loss": best.get("refusal_loss"), "nll": best.get("nll"),
+                        "nll_max": best.get("nll_max")})
         if pi % 5 == 0:
             print(f"  [{pi+1}/{len(picked)}] sim {best.get('sim', float('nan')):.3f} "
                   f"loss {best.get('refusal_loss', float('nan')):.3f} ({time.time()-t0:.0f}s)", flush=True)
