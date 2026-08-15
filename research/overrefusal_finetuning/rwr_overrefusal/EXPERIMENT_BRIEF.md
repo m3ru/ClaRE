@@ -33,6 +33,25 @@ samples = 800 rewrites per arm** (Qwen's 200 are a subset of its 599-prompt comm
 
 ---
 
+## Methodology note — reading the cross-signal comparison
+
+The per-attacker **induced-refusal rates** (§5, §9) answer "which signal is the best *reward for
+training an attacker*" — a pipeline-level question confounded by trainable-pool size (Llama: logit
+22.6k / vector 18.7k / probe 9.5k pairs) and bin scheme. Do **not** read the cross-signal *ranking*
+of attacker rates as a clean "which internal signal is better" result; the robust attacker claim is
+absolute (the logit attacker beats its own baseline and reproduces at scale — §5, §8), not the
+head-to-head ordering.
+
+"Which internal signal best *indicates* over-refusal" is answered confound-free by the separation
+AUCs in §8 (no training involved): logit 0.988 > probe 0.971 > vector 0.953. The logit is partly
+circular with the refusal label (both measure refusal onset), so the clean non-circular contrast is
+**probe 0.971 > vector 0.953**.
+
+For Qwen, vector and probe are the same signal up to an affine rescale (Pearson 1.000), so their
+attacker-rate gap (2.8% vs 11.8%) reflects only where the `delta>0` keep-gate lands (52% vs 3.8% of
+the pool), not signal quality — the only real Qwen contrast is logit vs the shared vector/probe
+direction.
+
 ## 0. Bottom line (numbers only)
 
 - **Llama.** Of the three signals, only the **logit**-trained attacker had an induced refusal rate
