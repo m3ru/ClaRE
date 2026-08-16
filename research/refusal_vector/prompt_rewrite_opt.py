@@ -67,13 +67,21 @@ def main():
     ap.add_argument("--base_model", default="meta-llama/Meta-Llama-3-8B-Instruct")
     ap.add_argument("--minilm", default="sentence-transformers/all-MiniLM-L6-v2")
     ap.add_argument("--n_prompts", type=int, default=30)
+    ap.add_argument("--shard_id", type=int, default=0)
+    ap.add_argument("--n_shards", type=int, default=1,
+                    help="Strided disjoint sharding of the prompt pool. WITHOUT this every array "
+                         "task uses the same seed and therefore optimises the SAME prompts.")
+    ap.add_argument("--holdout_frac", type=float, default=0.0,
+                    help="Reserve this fraction of originals, never optimised, for the prospective "
+                         "transfer test (apply discovered triggers to prompts GCG never saw).")
+    ap.add_argument("--dump_holdout", default=None)
     ap.add_argument("--steps", type=int, default=100)
     ap.add_argument("--topk", type=int, default=256)
     ap.add_argument("--n_cand", type=int, default=96)
     ap.add_argument("--sim_floor", type=float, default=0.85)
     ap.add_argument("--lam", type=float, default=20.0)
     ap.add_argument("--max_prompt_tok", type=int, default=48)
-    ap.add_argument("--max_new_tokens", type=int, default=48)
+    ap.add_argument("--max_new_tokens", type=int, default=128)
     ap.add_argument("--fluency_weight", type=float, default=0.0,
                     help="Weight on the prompt's own NLL under the base model. Penalises "
                          "made-up words ('cryptocurrencybilt','houseophobic') directly.")
@@ -150,15 +158,24 @@ def main():
                     seen.add(o)
                     originals.append(o)
     rng = np.random.RandomState(args.seed)
-    order = rng.permutation(len(originals))
+    order = list(rng.permutation(len(originals)))
+    n_hold = int(len(order) * args.holdout_frac)
+    holdout = [originals[i] for i in order[len(order) - n_hold:]] if n_hold else []
+    usable = order[:len(order) - n_hold]
+    if args.dump_holdout and holdout:
+        with open(args.dump_holdout, "w") as f:
+            json.dump({"n": len(holdout), "originals": holdout}, f, indent=2)
+    # strided => disjoint across shards
+    mine = usable[args.shard_id::args.n_shards]
     picked = []
-    for i in order:
+    for i in mine:
         o = originals[i]
         if len(tok(o, add_special_tokens=False).input_ids) <= args.max_prompt_tok:
             picked.append(o)
         if len(picked) >= args.n_prompts:
             break
-    print(f"[data] {len(originals)} unique benign originals; optimizing {len(picked)}", flush=True)
+    print(f"[data] {len(originals)} unique originals | holdout {len(holdout)} | "
+          f"shard {args.shard_id}/{args.n_shards} -> optimizing {len(picked)}", flush=True)
 
     tmpl = tok.apply_chat_template([{"role": "system", "content": SYS},
                                     {"role": "user", "content": PH}],
