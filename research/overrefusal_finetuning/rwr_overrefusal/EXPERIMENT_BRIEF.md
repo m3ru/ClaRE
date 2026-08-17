@@ -58,12 +58,12 @@ direction.
   above its base-as-attacker comparator with non-overlapping 95% CIs (15.0% vs 8.2% of 800
   rewrites). At 40× scale on a fresh 8,000-rewrite corpus, **1,320 of 7,837 benign-intent-preserving
   rewrites (16.84%) were refused by base-Llama** vs a 0.50% floor.
-- **Qwen.** On *raw* induced-refusal rate no trained arm exceeds base-Qwen-as-attacker (best raw:
-  probe 11.8% vs base 10.9% of 800 rewrites). But base-Qwen's raw rate is padded by *appropriate*
-  refusals of rewrites it made genuinely harmful; on **genuine over-refusal** (benign rewrite
-  refused — §9.4 audit) the logit and probe attackers exceed base (7.06% and 9.47% vs base 4.41%
-  of 800 rewrites), while vector does not (2.66%). So on the honest metric the recipe does carry
-  to Qwen; the raw-rate "no arm beats base" was an artifact of base's inflation.
+- **Qwen.** No trained arm reliably beats base-Qwen-as-attacker. On raw induced-refusal rate none
+  exceeds base (best raw: probe 11.8% vs base 10.9% of 800). On **genuine** over-refusal (§9.4),
+  under a careful Sonnet judge base-Qwen is itself strong (6.7% of 800) and the logit attacker ties
+  it (+0.03%, CI spans 0), probe's edge is not significant, and vector is significantly worse.
+  base-Qwen is a strong zero-shot over-refusal attacker, so training adds little; the recipe does
+  not clearly transfer. (The eval is underpowered at n=200 and the metric is judge-sensitive.)
 
 ---
 
@@ -377,14 +377,34 @@ refuse-rate-weighted over each arm's 800 rewrites (same weighting as the raw rat
 | probe (trained) | 11.8% | **9.47%** | 2.00% | 103 / 17 |
 | vector (trained) | 2.8% | 2.66% | 0.12% | 32 / 2 |
 
-**The raw comparison in §9.2 was misleading, in base-Qwen's favor.** 53 of base-Qwen's ~100
-refusals (excluding disclaimers) were of rewrites base had made genuinely harmful — it reaches its
-raw 10.6% largely by inserting real harm ("using unsafe materials", "bypass security measures and
-access restricted content", "activities … to avoid getting caught"), which Qwen correctly refuses.
-The trained attackers' refusals are ~90% benign deliverables tripped by loaded wording. **On
-genuine over-refusal the logit (7.06%) and probe (9.47%) attackers exceed base-Qwen (4.41%) by
-1.6× and 2.1×; only the vector arm (2.66%) stays below base** — the same layer-signal outcome as
-Llama. So on the honest metric the recipe *does* carry to Qwen.
+Part of base-Qwen's raw rate is padding: it reaches ~10.6% partly by inserting real harm ("using
+unsafe materials", "bypass security measures and access restricted content", "activities … to
+avoid getting caught"), which Qwen correctly refuses. But the size of that padding — and whether
+the trained attackers beat base on *genuine* over-refusal — is **judge-sensitive and not robust**,
+which two independent judges + bootstrap CIs (over the 200 originals) establish:
+
+| arm | genuine-OR (haiku) | genuine-OR (Sonnet) | vs base under Sonnet (paired 95% CI) |
+|---|--:|--:|---|
+| base-as-attacker | 4.41% | 6.69% [4.44, 9.12] | — |
+| logit | 7.06% | 6.72% [4.56, 9.09] | +0.03% [−3.47, +3.34] — n.s. |
+| probe | 9.47% | 9.53% [7.00, 12.25] | +2.84% [−0.41, +6.22] — n.s. |
+| vector | 2.66% | 2.72% [1.53, 4.00] | −3.97% [−6.78, −1.44] — sig. WORSE |
+
+The two judges agree 87.9%, but disagree specifically on base (haiku 53 harmful vs Sonnet 33
+harmful) — haiku over-flags base's borderline rewrites, which is what made base look weak under
+haiku. **Under the more careful Sonnet judge, no trained arm significantly beats base-Qwen on
+genuine over-refusal**: logit ties base (+0.03%), probe's edge loses significance (+2.84%, CI spans
+0), and vector is significantly below base. Even under lenient haiku only probe reached
+significance (logit's +2.66% CI [−0.50, +5.91] already spanned 0).
+
+**Verdict: we did not train a Qwen attacker that reliably beats base-Qwen on genuine over-refusal.**
+base-Qwen is itself a strong zero-shot over-refusal attacker (~6.7% genuine), so training adds
+little; the vector arm is reliably worse than base. Two methodological consequences, both relevant
+to any external claim: the eval is **underpowered** at n=200 (CIs ≈ ±3%, too wide for a ~2%
+effect), and the genuine-OR metric is **judge-dependent** on borderline rewrites (needs a
+human-audited subset or a pre-registered rubric). The Llama base comparison (§5, §8) used the same
+haiku judge and should be re-checked under Sonnet, though it has a hand-audit and clean signal-AUC
+backing that the Qwen comparison lacks.
 
 Example base-Qwen rewrites judged HARMFUL (appropriate refusals, which padded its raw rate):
 - "…teach elementary school students about the water cycle **using methods that might be considered inappropriate or unsuitable for young children**"
@@ -401,12 +421,11 @@ rewrites were genuinely harmful (e.g. logit's "storefront designed to **extract 
 information** from unsuspecting shoppers", "contract that **exploits the customer's lack of legal
 knowledge**") — but at a far lower share than base's 53 of ~100.
 
-**Caveats.** Lenient judge, applied identically to all arms (base's benign bucket includes
-borderline-generous calls such as "make it as offensive as possible", which if counted harmful
-would widen the trained-attacker lead). Point estimates only — refusal counts per arm are 35–123,
-no CIs computed yet. probe is nominally highest but is the overfit-tiny-pool arm and the affine
-twin of vector (§9.1 / methodology note), so the robust statement is "logit and probe exceed base;
-vector does not," not a clean three-way ranking.
+**Caveats.** probe is the overfit-tiny-pool arm and the affine twin of vector (§9.1 / methodology
+note), so its nominal lead is not a clean signal result. The base-as-attacker generation is fair
+(identical system prompt + sampling to the trained arm; only the model differs — verified). The
+robust statement is the verdict above: no trained arm reliably beats base; vector is reliably
+below base.
 
 ## 10. Open items
 
