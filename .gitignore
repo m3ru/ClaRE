@@ -107,3 +107,8 @@ archive/
 research/overrefusal_finetuning/paraphrases_api/
 **/batch_requests_*.jsonl
 **/batch_results_*.jsonl
+
+# Sharded scoring intermediates: merged into probe_or/results/corpus2/<att>_<tgt>.json
+research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/corpus2/shards/
+# Resumable batch-id sidecars (API job handles, not data)
+**/*.batch_id

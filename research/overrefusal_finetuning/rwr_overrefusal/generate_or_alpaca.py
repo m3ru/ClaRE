@@ -67,6 +67,7 @@ def remaining_prompts(ds):
 
 def main():
     ap = argparse.ArgumentParser()
+    # "none" -> generate with the untrained base model (base-as-attacker control arm)
     ap.add_argument("--adapter_dir", required=True)
     ap.add_argument("--base_model", default="meta-llama/Meta-Llama-3-8B-Instruct")
     ap.add_argument("--output_dir", required=True)
@@ -123,7 +124,10 @@ def main():
         tok.pad_token = tok.eos_token
     model = AutoModelForCausalLM.from_pretrained(
         args.base_model, token=hf, device_map="auto", torch_dtype=torch.bfloat16)
-    model = PeftModel.from_pretrained(model, args.adapter_dir)
+    if args.adapter_dir.lower() == "none":
+        print("[gen] BASE-as-attacker: no LoRA adapter loaded", flush=True)
+    else:
+        model = PeftModel.from_pretrained(model, args.adapter_dir)
     model.eval()
     dev = model.device
 
