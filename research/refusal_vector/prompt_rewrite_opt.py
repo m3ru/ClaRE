@@ -65,14 +65,28 @@ def main():
     source.add_argument("--prompts_csv", nargs="+", help="CSV files containing direct prompts")
     ap.add_argument("--prompt_column", default="prompt",
                     help="Prompt column used with --prompts_csv")
-    ap.add_argument("--dirs_npz", required=True)
+    ap.add_argument("--dirs_npz",
+                    help="Refusal-direction npz; required only for --objective direction")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--objective", choices=["direction", "icannot", "anti_icannot"],
+    ap.add_argument("--objective",
+                    choices=["direction", "icannot", "anti_icannot", "openers", "anti_openers"],
                     default="icannot",
                     help="anti_icannot minimizes the bounded probability of the existing "
-                         "'I cannot' continuation")
+                         "'I cannot' continuation; openers/anti_openers optimize the exact union "
+                         "probability of a model-specific refusal-opener set")
+    ap.add_argument("--opener_json",
+                    help="JSON containing per-model refusal opener sets; required for "
+                         "openers/anti_openers")
+    ap.add_argument("--model_key", choices=["llama", "qwen"],
+                    help="Entry in --opener_json used by openers/anti_openers")
     ap.add_argument("--layer", type=int, default=12)
     ap.add_argument("--base_model", default="meta-llama/Meta-Llama-3-8B-Instruct")
+    ap.add_argument("--load_in_4bit", action="store_true",
+                    help="Load the target in NF4 4-bit mode (needed for Qwen3-32B on one H100)")
+    ap.add_argument("--disable_thinking", action="store_true",
+                    help="Pass enable_thinking=False to the chat template (required for Qwen3)")
+    ap.add_argument("--attn_implementation", default=None,
+                    help="Optional transformers attention backend, e.g. eager")
     ap.add_argument("--minilm", default="sentence-transformers/all-MiniLM-L6-v2")
     ap.add_argument("--n_prompts", type=int, default=30)
     ap.add_argument("--shard_id", type=int, default=0)
@@ -86,10 +100,13 @@ def main():
     ap.add_argument("--steps", type=int, default=100)
     ap.add_argument("--topk", type=int, default=256)
     ap.add_argument("--n_cand", type=int, default=96)
+    ap.add_argument("--candidate_batch_size", type=int, default=0,
+                    help="Microbatch discrete candidate scoring (0 = score all candidates together)")
     ap.add_argument("--sim_floor", type=float, default=0.85)
     ap.add_argument("--lam", type=float, default=20.0)
     ap.add_argument("--max_prompt_tok", type=int, default=48)
     ap.add_argument("--max_new_tokens", type=int, default=128)
+    ap.add_argument("--generation_batch_size", type=int, default=16)
     ap.add_argument("--fluency_weight", type=float, default=0.0,
                     help="Weight on the prompt's own NLL under the base model. Penalises "
                          "made-up words ('cryptocurrencybilt','houseophobic') directly.")
@@ -128,6 +145,10 @@ def main():
     args = ap.parse_args()
     if args.editable_single_token_words_only and args.extra_tokens:
         ap.error("--editable_single_token_words_only requires --extra_tokens 0")
+    if args.objective == "direction" and not args.dirs_npz:
+        ap.error("--objective direction requires --dirs_npz")
+    if args.objective in ("openers", "anti_openers") and not (args.opener_json and args.model_key):
+        ap.error("openers/anti_openers require --opener_json and --model_key")
 
     import torch
     import torch.nn.functional as F
@@ -141,8 +162,15 @@ def main():
     tok.padding_side = "left"
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
-    model = AutoModelForCausalLM.from_pretrained(args.base_model, token=hf, device_map="auto",
-                                                 torch_dtype=torch.bfloat16)
+    load_kwargs = {"token": hf, "device_map": "auto", "torch_dtype": torch.bfloat16}
+    if args.attn_implementation:
+        load_kwargs["attn_implementation"] = args.attn_implementation
+    if args.load_in_4bit:
+        from transformers import BitsAndBytesConfig
+        load_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_use_double_quant=True,
+            bnb_4bit_compute_dtype=torch.bfloat16)
+    model = AutoModelForCausalLM.from_pretrained(args.base_model, **load_kwargs)
     model.eval()
     model.requires_grad_(False)
     dev = model.device
@@ -166,9 +194,11 @@ def main():
             outs.append(F.normalize(v.float(), dim=-1))
         return torch.cat(outs, 0)
 
-    z = np.load(args.dirs_npz)
-    d_all = torch.tensor(z["d_hat"], dtype=torch.float32, device=dev)
-    d_obj = d_all[args.layer]
+    d_obj = None
+    if args.objective == "direction":
+        z = np.load(args.dirs_npz)
+        d_all = torch.tensor(z["d_hat"], dtype=torch.float32, device=dev)
+        d_obj = d_all[args.layer]
 
     # Load either the established benign-pairs substrate or an explicit prompt dataset.
     seen, originals, metadata_by_original = set(), [], {}
@@ -204,15 +234,32 @@ def main():
     print(f"[data] {len(originals)} unique originals | holdout {len(holdout)} | "
           f"shard {args.shard_id}/{args.n_shards} -> optimizing {len(picked)}", flush=True)
 
+    template_kwargs = {"tokenize": False, "add_generation_prompt": True}
+    if args.disable_thinking:
+        template_kwargs["enable_thinking"] = False
     tmpl = tok.apply_chat_template([{"role": "system", "content": SYS},
-                                    {"role": "user", "content": PH}],
-                                   tokenize=False, add_generation_prompt=True)
+                                    {"role": "user", "content": PH}], **template_kwargs)
     pre_s, post_s = tmpl.split(PH)
     pre_ids = tok(pre_s, add_special_tokens=False).input_ids
     post_ids = tok(post_s, add_special_tokens=False).input_ids
     pre_e, post_e = W[torch.tensor(pre_ids, device=dev)], W[torch.tensor(post_ids, device=dev)]
-    tgt_ids = torch.tensor(tok.encode("I cannot", add_special_tokens=False), device=dev)
-    T = tgt_ids.shape[0]
+    opener_names = ["I cannot"]
+    if args.objective in ("openers", "anti_openers"):
+        opener_meta = json.load(open(args.opener_json))[args.model_key]
+        expected_model = opener_meta.get("model")
+        if expected_model and expected_model != args.base_model:
+            raise SystemExit(f"opener set {args.model_key!r} expects {expected_model!r}, "
+                             f"not {args.base_model!r}")
+        opener_names = opener_meta["openers"]
+    target_ids = [torch.tensor(tok.encode(o, add_special_tokens=False), device=dev)
+                  for o in opener_names]
+    for opener, ids in zip(opener_names, target_ids):
+        print(f"[opener] {opener!r} -> {ids.tolist()}", flush=True)
+    for a, ids_a in enumerate(target_ids):
+        for b, ids_b in enumerate(target_ids):
+            if a != b and ids_b[:len(ids_a)].tolist() == ids_a.tolist():
+                raise SystemExit(f"opener {opener_names[a]!r} is a token-prefix of "
+                                 f"{opener_names[b]!r}; union probability would double-count")
 
     print("[init] allowed-token mask", flush=True)
     allowed = torch.zeros(V, dtype=torch.bool)
@@ -267,6 +314,32 @@ def main():
 
     P = len(pre_ids)
 
+    def forward_prompt(adv_e, use_cache=False, output_hidden_states=False):
+        """Run the chat prefix once; refusal openers branch from its KV cache."""
+        B = adv_e.shape[0]
+        parts = [pre_e.unsqueeze(0).expand(B, -1, -1), adv_e,
+                 post_e.unsqueeze(0).expand(B, -1, -1)]
+        E = torch.cat(parts, 1)
+        M = torch.ones(E.shape[:2], dtype=torch.long, device=dev)
+        return model(inputs_embeds=E, attention_mask=M, use_cache=use_cache,
+                     output_hidden_states=output_hidden_states)
+
+    def target_nll_from_cache(prefix_out, prefix_cache, target, prefix_len, batch_size):
+        """Exact teacher-forced opener NLL, reusing the expensive prompt forward."""
+        T = len(target)
+        first_lp = torch.log_softmax(prefix_out.logits[:, -1, :].float(), dim=-1)
+        nll = -first_lp[:, target[0]]
+        if T > 1:
+            continuation = target[:-1].view(1, T - 1).expand(batch_size, T - 1)
+            attn = torch.ones((batch_size, prefix_len + T - 1), dtype=torch.long, device=dev)
+            cont_out = model(input_ids=continuation, attention_mask=attn,
+                             past_key_values=prefix_cache,
+                             use_cache=False)
+            lp = torch.log_softmax(cont_out.logits.float(), dim=-1)
+            wanted = target[1:].view(1, T - 1).expand(batch_size, T - 1)
+            nll = nll - lp.gather(-1, wanted.unsqueeze(-1)).squeeze(-1).sum(-1)
+        return nll
+
     def score_batch(adv_e, adv_ids=None, want_nll=False, want_lmlogits=False):
         """adv_e: [B, L, H]. Returns (refusal_loss[B], nll[B] or None, lm_logits or None).
 
@@ -275,24 +348,30 @@ def main():
         costs essentially nothing extra.
         """
         B, Ln = adv_e.shape[0], adv_e.shape[1]
-        parts = [pre_e.unsqueeze(0).expand(B, -1, -1), adv_e, post_e.unsqueeze(0).expand(B, -1, -1)]
-        if args.objective in ("icannot", "anti_icannot"):
-            parts.append(W[tgt_ids].unsqueeze(0).expand(B, -1, -1))
-        E = torch.cat(parts, 1)
-        M = torch.ones(E.shape[:2], dtype=torch.long, device=dev)
-        out = model(inputs_embeds=E, attention_mask=M, use_cache=False,
-                    output_hidden_states=(args.objective == "direction"))
-        lg = out.logits
         if args.objective == "direction":
+            out = forward_prompt(adv_e, output_hidden_states=True)
+            lg = out.logits
             rl = -(out.hidden_states[args.layer][:, -1, :].float() * d_obj).sum(-1)
         else:
-            lp = torch.log_softmax(lg[:, -(T + 1):-1, :].float(), dim=-1)
-            t = tgt_ids.view(1, T).expand(B, T)
-            phrase_nll = -lp.gather(-1, t.unsqueeze(-1)).squeeze(-1).sum(-1)
-            # A raw sign flip (-NLL) is unbounded and can overwhelm the finite
-            # similarity penalty.  Sequence probability is bounded in [0, 1], so
-            # minimizing it gives a symmetric, similarity-compatible anti objective.
-            rl = phrase_nll if args.objective == "icannot" else torch.exp(-phrase_nll)
+            prefix_len = P + Ln + len(post_ids)
+            out = forward_prompt(adv_e, use_cache=True)
+            lg = out.logits
+            prefix_cache = out.past_key_values
+            # A legacy tuple is immutable. Reusing a mutable DynamicCache across
+            # opener branches can accidentally append the first opener to the next.
+            if hasattr(prefix_cache, "to_legacy_cache"):
+                prefix_cache = prefix_cache.to_legacy_cache()
+            phrase_nlls = [target_nll_from_cache(out, prefix_cache, target, prefix_len, B)
+                           for target in target_ids]
+            if args.objective in ("icannot", "anti_icannot"):
+                phrase_nll = phrase_nlls[0]
+                # A raw sign flip (-NLL) is unbounded and can overwhelm the finite
+                # similarity penalty. Sequence probability is bounded in [0, 1].
+                rl = phrase_nll if args.objective == "icannot" else torch.exp(-phrase_nll)
+            else:
+                probs = [torch.exp(-x) for x in phrase_nlls]
+                union_p = torch.stack(probs).sum(0).clamp(min=1e-30, max=1.0)
+                rl = -torch.log(union_p) if args.objective == "openers" else union_p
         nll = None
         if want_nll and adv_ids is not None:
             plp = torch.log_softmax(lg[:, P - 1:P + Ln - 1, :].float(), dim=-1)
@@ -301,10 +380,22 @@ def main():
             nll = (tokwise.mean(-1), tokwise.max(-1).values)
         return rl, nll, (lg[:, P - 1:P + Ln - 1, :] if want_lmlogits else None)
 
-    def loss_from_embeds(adv_e):
-        return score_batch(adv_e)[0]
+    def score_candidates(cands, want_nll):
+        bs = args.candidate_batch_size or len(cands)
+        rls, means, maxima = [], [], []
+        for start in range(0, len(cands), bs):
+            ids = cands[start:start + bs]
+            rl, nll, _ = score_batch(W[ids], adv_ids=ids, want_nll=want_nll)
+            rls.append(rl)
+            if nll is not None:
+                means.append(nll[0])
+                maxima.append(nll[1])
+        rl = torch.cat(rls)
+        nll = (torch.cat(means), torch.cat(maxima)) if means else None
+        return rl, nll
 
-    def generate(prompts, bs=16):
+    def generate(prompts, bs=None):
+        bs = bs or args.generation_batch_size
         out = []
         for i in range(0, len(prompts), bs):
             b = prompts[i:i + bs]
@@ -381,7 +472,9 @@ def main():
                 break
             oh = F.one_hot(adv, V).to(W.dtype)
             oh.requires_grad_(True)
-            rl0, _, lm_lg = score_batch((oh @ W).unsqueeze(0), want_lmlogits=args.lm_topk_filter > 0)
+            adv_e = (oh @ W).unsqueeze(0)
+            rl0, _, lm_lg = score_batch(
+                adv_e, want_lmlogits=args.lm_topk_filter > 0)
             rl0.mean().backward()
             g = oh.grad.detach().float()
             g[:, ~allowed] = float("inf")
@@ -417,7 +510,7 @@ def main():
             texts = [tok.decode(c) for c in cands]
             sims = (embed(texts) @ oe.T).squeeze(-1)          # [n_cand]
             with torch.no_grad():
-                rl, nll, _ = score_batch(W[cands], adv_ids=cands, want_nll=need_nll)
+                rl, nll = score_candidates(cands, want_nll=need_nll)
             total = rl + args.lam * torch.relu(args.sim_floor - sims)
             if nll is not None:
                 total = total + args.fluency_weight * nll[0] + args.nll_max_weight * nll[1]
@@ -462,7 +555,9 @@ def main():
     sims = [r["similarity"] for r in results if r["similarity"] is not None]
     kept = [r for r in results if (r["similarity"] or 0) >= args.sim_floor]
     summary = {
-        "objective": args.objective, "layer": args.layer, "n": n, "steps": args.steps,
+        "objective": args.objective, "base_model": args.base_model,
+        "load_in_4bit": args.load_in_4bit, "disable_thinking": args.disable_thinking,
+        "refusal_openers": opener_names, "layer": args.layer, "n": n, "steps": args.steps,
         "sim_floor": args.sim_floor, "lam": args.lam,
         "max_edits": args.max_edits, "max_nll_increase": args.max_nll_increase,
         "max_nll_max_increase": args.max_nll_max_increase,
