@@ -67,13 +67,13 @@ def main():
         batch_ids = json.load(open(id_path))["batch_ids"]
         print(f"[benign] resuming {len(batch_ids)} batch(es)", flush=True)
     else:
-        reqs = [
-            Request(custom_id=r["pair_id"],
-                    params=MessageCreateParamsNonStreaming(
-                        model=args.model, max_tokens=args.max_tokens, system=JUDGE_SYSTEM,
-                        messages=[{"role": "user", "content": judge_user(r["original"], r["rewrite"])}]))
-            for r in rows
-        ]
+        def _params(r):
+            kw = dict(model=args.model, max_tokens=args.max_tokens, system=JUDGE_SYSTEM,
+                      messages=[{"role": "user", "content": judge_user(r["original"], r["rewrite"])}])
+            if "sonnet" in args.model or "opus" in args.model:   # thinking models: disable it
+                kw["thinking"] = {"type": "disabled"}
+            return MessageCreateParamsNonStreaming(**kw)
+        reqs = [Request(custom_id=r["pair_id"], params=_params(r)) for r in rows]
         batch_ids = G.submit_batches(client, reqs, id_path, shard_idx="benign")
 
     for bid in batch_ids:
@@ -88,15 +88,19 @@ def main():
                 verdict[entry.custom_id] = parse_verdict(txt)
             else:
                 n_fail += 1
-                verdict[entry.custom_id] = "BENIGN"   # lenient default on failure
+                # Do NOT default failures to BENIGN: that silently inflates the benign
+                # denominator in one direction. Mark UNKNOWN so callers can exclude them.
+                verdict[entry.custom_id] = "UNKNOWN"
 
     nb = sum(v == "BENIGN" for v in verdict.values())
     nh = sum(v == "HARMFUL" for v in verdict.values())
     with open(args.out, "w", newline="") as f:
         w = csv.writer(f); w.writerow(["pair_id", "judge"])
         for r in rows:
-            w.writerow([r["pair_id"], verdict.get(r["pair_id"], "BENIGN")])
-    print(f"[done] wrote {args.out} | BENIGN={nb} HARMFUL={nh} (batch failures->BENIGN: {n_fail})", flush=True)
+            w.writerow([r["pair_id"], verdict.get(r["pair_id"], "UNKNOWN")])
+    nu = sum(v == "UNKNOWN" for v in verdict.values())
+    print(f"[done] wrote {args.out} | BENIGN={nb} HARMFUL={nh} UNKNOWN={nu} "
+          f"(batch failures: {n_fail}; UNKNOWN must be EXCLUDED, not counted benign)", flush=True)
 
 
 if __name__ == "__main__":
