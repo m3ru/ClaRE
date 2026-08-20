@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gradient REWRITING of benign prompts (not suffix-appending) to trigger refusal.
+"""Gradient rewriting of prompts to either trigger or suppress refusal.
 
 Why rewrite instead of append a suffix: the suffix runs were degenerate -- the optimizer
 appended an explicit harmful request to an untouched benign prompt, which is correct
@@ -26,6 +26,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import time
 
 import numpy as np
@@ -59,10 +60,17 @@ def is_refusal(text):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--pairs_csv", nargs="+", required=True)   # source of benign 'original'
+    source = ap.add_mutually_exclusive_group(required=True)
+    source.add_argument("--pairs_csv", nargs="+", help="CSV files with an 'original' column")
+    source.add_argument("--prompts_csv", nargs="+", help="CSV files containing direct prompts")
+    ap.add_argument("--prompt_column", default="prompt",
+                    help="Prompt column used with --prompts_csv")
     ap.add_argument("--dirs_npz", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--objective", choices=["direction", "icannot"], default="icannot")
+    ap.add_argument("--objective", choices=["direction", "icannot", "anti_icannot"],
+                    default="icannot",
+                    help="anti_icannot minimizes the bounded probability of the existing "
+                         "'I cannot' continuation")
     ap.add_argument("--layer", type=int, default=12)
     ap.add_argument("--base_model", default="meta-llama/Meta-Llama-3-8B-Instruct")
     ap.add_argument("--minilm", default="sentence-transformers/all-MiniLM-L6-v2")
@@ -104,8 +112,22 @@ def main():
                          "lexical triggers (a stray 'blowjob' makes Llama refuse a data-warehouse "
                          "question) which is real but trivial over-refusal. With it, any refusal "
                          "must come from something other than a dirty word.")
+    ap.add_argument("--editable_single_token_words_only", action="store_true",
+                    help="Only edit lexical words represented by one complete tokenizer token. "
+                         "This freezes punctuation, function words, and multi-token word pieces, "
+                         "avoiding punctuation churn and partial-word corruption.")
+    ap.add_argument("--max_edits", type=int, default=0,
+                    help="Hard cap on positions differing from the tokenized original (0 = no cap).")
+    ap.add_argument("--max_nll_increase", type=float, default=-1.0,
+                    help="Hard fluency gate: candidate mean prompt NLL may exceed the original by "
+                         "at most this amount (<0 disables the gate).")
+    ap.add_argument("--max_nll_max_increase", type=float, default=-1.0,
+                    help="Hard fluency gate on the worst single-token NLL relative to the original "
+                         "(<0 disables the gate).")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
+    if args.editable_single_token_words_only and args.extra_tokens:
+        ap.error("--editable_single_token_words_only requires --extra_tokens 0")
 
     import torch
     import torch.nn.functional as F
@@ -148,15 +170,20 @@ def main():
     d_all = torch.tensor(z["d_hat"], dtype=torch.float32, device=dev)
     d_obj = d_all[args.layer]
 
-    # ---------- the SAME benign originals the Claude/Sonnet rewriters worked from ----------
-    seen, originals = set(), []
-    for p in args.pairs_csv:
+    # Load either the established benign-pairs substrate or an explicit prompt dataset.
+    seen, originals, metadata_by_original = set(), [], {}
+    input_paths = args.pairs_csv or args.prompts_csv
+    prompt_column = "original" if args.pairs_csv else args.prompt_column
+    for p in input_paths:
         with open(p, newline="") as f:
             for row in csv.DictReader(f):
-                o = (row.get("original") or "").strip()
+                o = (row.get(prompt_column) or "").strip()
                 if o and o not in seen:
                     seen.add(o)
                     originals.append(o)
+                    metadata_by_original[o] = {
+                        k: v for k, v in row.items() if k != prompt_column and v not in (None, "")
+                    }
     rng = np.random.RandomState(args.seed)
     order = list(rng.permutation(len(originals)))
     n_hold = int(len(order) * args.holdout_frac)
@@ -221,6 +248,20 @@ def main():
                 allowed[i] = False
                 nw += 1
         print(f"[init] whole-word filter removed {nw} continuation tokens", flush=True)
+    if args.editable_single_token_words_only:
+        # Apply the same conservative rule to replacements as to editable positions.
+        # Llama's byte-BPE marks word-initial tokens with Ġ; requiring it prevents a
+        # content word from becoming punctuation or a bare continuation fragment.
+        nr = 0
+        for i in torch.nonzero(allowed).squeeze(-1).tolist():
+            t = tok.convert_ids_to_tokens(i) or ""
+            d = tok.decode([i]).strip()
+            lexical_word = (t.startswith("\u0120") and
+                            bool(re.fullmatch(r"[A-Za-z]+(?:'[A-Za-z]+)?", d)))
+            if not lexical_word:
+                allowed[i] = False
+                nr += 1
+        print(f"[init] lexical replacement filter removed {nr} non-word tokens", flush=True)
     allowed = allowed.to(dev)
     print(f"[init] {int(allowed.sum())}/{V} allowed", flush=True)
 
@@ -235,7 +276,7 @@ def main():
         """
         B, Ln = adv_e.shape[0], adv_e.shape[1]
         parts = [pre_e.unsqueeze(0).expand(B, -1, -1), adv_e, post_e.unsqueeze(0).expand(B, -1, -1)]
-        if args.objective == "icannot":
+        if args.objective in ("icannot", "anti_icannot"):
             parts.append(W[tgt_ids].unsqueeze(0).expand(B, -1, -1))
         E = torch.cat(parts, 1)
         M = torch.ones(E.shape[:2], dtype=torch.long, device=dev)
@@ -247,7 +288,11 @@ def main():
         else:
             lp = torch.log_softmax(lg[:, -(T + 1):-1, :].float(), dim=-1)
             t = tgt_ids.view(1, T).expand(B, T)
-            rl = -lp.gather(-1, t.unsqueeze(-1)).squeeze(-1).sum(-1)
+            phrase_nll = -lp.gather(-1, t.unsqueeze(-1)).squeeze(-1).sum(-1)
+            # A raw sign flip (-NLL) is unbounded and can overwhelm the finite
+            # similarity penalty.  Sequence probability is bounded in [0, 1], so
+            # minimizing it gives a symmetric, similarity-compatible anti objective.
+            rl = phrase_nll if args.objective == "icannot" else torch.exp(-phrase_nll)
         nll = None
         if want_nll and adv_ids is not None:
             plp = torch.log_softmax(lg[:, P - 1:P + Ln - 1, :].float(), dim=-1)
@@ -281,10 +326,59 @@ def main():
             pad_tok = tok(" .", add_special_tokens=False).input_ids[-1]
             base = base + [pad_tok] * args.extra_tokens
         adv = torch.tensor(base, device=dev)
+        original_ids = adv.clone()
         L = adv.shape[0]
+        editable = torch.ones(L, dtype=torch.bool, device=dev)
+        if args.editable_single_token_words_only:
+            enc_offsets = tok(orig, add_special_tokens=False, return_offsets_mapping=True)
+            offsets = enc_offsets["offset_mapping"]
+            if len(offsets) != L or enc_offsets["input_ids"] != original_ids.tolist():
+                raise RuntimeError("tokenizer offsets do not align with the fixed-length prompt ids")
+            function_words = {
+                "a", "an", "the", "and", "or", "but", "if", "then", "than", "so", "yet",
+                "as", "at", "by", "for", "from", "in", "into", "of", "on", "onto", "to",
+                "up", "with", "about", "after", "before", "between", "during", "through",
+                "is", "am", "are", "was", "were", "be", "been", "being", "do", "does",
+                "did", "have", "has", "had", "can", "could", "may", "might", "must",
+                "shall", "should", "will", "would", "i", "you", "he", "she", "it", "we",
+                "they", "me", "him", "her", "us", "them", "my", "your", "his", "its",
+                "our", "their", "this", "that", "these", "those", "who", "whom", "whose",
+                "which", "what", "not", "no", "yes", "please"
+            }
+            flags = []
+            for start, end in offsets:
+                surface = orig[start:end]
+                word = surface.strip().lower()
+                # Fast-tokenizer offsets include the leading space for Ġ tokens. Test
+                # boundaries around the stripped lexical surface, not the raw span.
+                word_start = start + (len(surface) - len(surface.lstrip()))
+                word_end = end - (len(surface) - len(surface.rstrip()))
+                left_boundary = (word_start == 0 or
+                                 not (orig[word_start - 1].isalnum() or orig[word_start - 1] == "'"))
+                right_boundary = (word_end == len(orig) or
+                                  not (orig[word_end].isalnum() or orig[word_end] == "'"))
+                lexical = bool(re.fullmatch(r"[A-Za-z]+(?:'[A-Za-z]+)?", word))
+                flags.append(lexical and left_boundary and right_boundary and word not in function_words)
+            editable = torch.tensor(flags, dtype=torch.bool, device=dev)
+            if not bool(editable.any()):
+                # Rare very-short prompts should remain unchanged rather than bypassing the gate.
+                print(f"  [{pi+1}/{len(picked)}] no editable single-token content words", flush=True)
+        need_nll = (args.fluency_weight > 0 or args.nll_max_weight > 0 or
+                    args.max_nll_increase >= 0 or args.max_nll_max_increase >= 0)
+        base_nll = None
+        if need_nll:
+            with torch.no_grad():
+                _, base_nll_pair, _ = score_batch(W[original_ids].unsqueeze(0),
+                                                   adv_ids=original_ids.unsqueeze(0), want_nll=True)
+            base_nll = (float(base_nll_pair[0][0]), float(base_nll_pair[1][0]))
         oe = embed([orig])                                   # [1, D]
-        best = {"loss": float("inf"), "ids": adv.clone()}
+        best = {"loss": float("inf"), "ids": adv.clone(), "sim": 1.0,
+                "refusal_loss": None,
+                "nll": base_nll[0] if base_nll else None,
+                "nll_max": base_nll[1] if base_nll else None}
         for step in range(args.steps):
+            if not bool(editable.any()):
+                break
             oh = F.one_hot(adv, V).to(W.dtype)
             oh.requires_grad_(True)
             rl0, _, lm_lg = score_batch((oh @ W).unsqueeze(0), want_lmlogits=args.lm_topk_filter > 0)
@@ -297,20 +391,42 @@ def main():
                 idx = lm_lg[0].float().topk(args.lm_topk_filter, dim=-1).indices
                 keep_lm.scatter_(1, idx, True)
                 g[~keep_lm] = float("inf")
-            top = (-g).topk(args.topk, dim=1).indices
+            search_k = min(args.topk, V)
+            top = (-g).topk(search_k, dim=1).indices
+            finite_top = torch.isfinite(g.gather(1, top))
+            n_valid = finite_top.sum(-1)
 
-            pos = torch.randint(0, L, (args.n_cand,), device=dev)
-            pick = torch.randint(0, args.topk, (args.n_cand,), device=dev)
+            candidate_positions = torch.nonzero(editable & (n_valid > 0)).squeeze(-1)
+            if args.max_edits > 0 and int((adv != original_ids).sum()) >= args.max_edits:
+                # Once the budget is full, refine existing edits. The explicit identity
+                # candidate below also lets search step back without violating the cap.
+                candidate_positions = torch.nonzero(editable & (adv != original_ids) &
+                                                       (n_valid > 0)).squeeze(-1)
+            if len(candidate_positions) == 0:
+                break
+            pos = candidate_positions[torch.randint(0, len(candidate_positions),
+                                                     (args.n_cand,), device=dev)]
+            # Finite proposals are sorted before the +inf-masked entries in each row.
+            pick = (torch.rand(args.n_cand, device=dev) * n_valid[pos].float()).long()
             cands = adv.repeat(args.n_cand, 1)
             cands[torch.arange(args.n_cand, device=dev), pos] = top[pos, pick]
+            # Always retain a feasible no-op candidate. This is important when hard gates
+            # reject every sampled mutation in a step.
+            cands[0] = adv
 
             texts = [tok.decode(c) for c in cands]
             sims = (embed(texts) @ oe.T).squeeze(-1)          # [n_cand]
             with torch.no_grad():
-                rl, nll, _ = score_batch(W[cands], adv_ids=cands, want_nll=args.fluency_weight > 0)
+                rl, nll, _ = score_batch(W[cands], adv_ids=cands, want_nll=need_nll)
             total = rl + args.lam * torch.relu(args.sim_floor - sims)
             if nll is not None:
                 total = total + args.fluency_weight * nll[0] + args.nll_max_weight * nll[1]
+                if args.max_nll_increase >= 0:
+                    total[nll[0] > base_nll[0] + args.max_nll_increase] = float("inf")
+                if args.max_nll_max_increase >= 0:
+                    total[nll[1] > base_nll[1] + args.max_nll_max_increase] = float("inf")
+            if args.max_edits > 0:
+                total[(cands != original_ids).sum(-1) > args.max_edits] = float("inf")
             k = int(total.argmin())
             if float(total[k]) < best["loss"]:
                 best = {"loss": float(total[k]), "ids": cands[k].clone(),
@@ -319,12 +435,20 @@ def main():
                         "nll_max": float(nll[1][k]) if nll is not None else None}
             adv = cands[k].clone()
         rw = tok.decode(best["ids"])
-        results.append({"original": orig, "rewrite": rw, "similarity": best.get("sim"),
+        results.append({"original": orig, "rewrite": rw,
+                        "dataset_metadata": metadata_by_original.get(orig, {}),
+                        "similarity": best.get("sim"),
                         "refusal_loss": best.get("refusal_loss"), "nll": best.get("nll"),
-                        "nll_max": best.get("nll_max")})
+                        "nll_max": best.get("nll_max"), "original_nll": base_nll[0] if base_nll else None,
+                        "original_nll_max": base_nll[1] if base_nll else None,
+                        "n_edits": int((best["ids"] != original_ids).sum())})
         if pi % 5 == 0:
-            print(f"  [{pi+1}/{len(picked)}] sim {best.get('sim', float('nan')):.3f} "
-                  f"loss {best.get('refusal_loss', float('nan')):.3f} ({time.time()-t0:.0f}s)", flush=True)
+            sim_report = best.get("sim")
+            loss_report = best.get("refusal_loss")
+            print(f"  [{pi+1}/{len(picked)}] sim "
+                  f"{sim_report if sim_report is not None else float('nan'):.3f} loss "
+                  f"{loss_report if loss_report is not None else float('nan'):.3f} "
+                  f"({time.time()-t0:.0f}s)", flush=True)
 
     # ---------- evaluate: original vs rewrite, behaviour + signals ----------
     origs = [r["original"] for r in results]
@@ -340,11 +464,16 @@ def main():
     summary = {
         "objective": args.objective, "layer": args.layer, "n": n, "steps": args.steps,
         "sim_floor": args.sim_floor, "lam": args.lam,
+        "max_edits": args.max_edits, "max_nll_increase": args.max_nll_increase,
+        "max_nll_max_increase": args.max_nll_max_increase,
         "orig_refusal_pct": 100.0 * sum(r["orig_refused"] for r in results) / n,
         "rewrite_refusal_pct": 100.0 * sum(r["rewrite_refused"] for r in results) / n,
+        "orig_nonrefusal_pct": 100.0 * sum(not r["orig_refused"] for r in results) / n,
+        "rewrite_nonrefusal_pct": 100.0 * sum(not r["rewrite_refused"] for r in results) / n,
         "mean_similarity": float(np.mean(sims)) if sims else None,
         "n_above_sim_floor": len(kept),
         "rewrite_refusal_pct_above_floor": (100.0 * sum(r["rewrite_refused"] for r in kept) / len(kept)) if kept else None,
+        "rewrite_nonrefusal_pct_above_floor": (100.0 * sum(not r["rewrite_refused"] for r in kept) / len(kept)) if kept else None,
         "results": results,
     }
     with open(args.out, "w") as f:
