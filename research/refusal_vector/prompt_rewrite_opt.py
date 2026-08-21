@@ -153,6 +153,10 @@ def main():
     import torch
     import torch.nn.functional as F
     from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer
+    try:  # transformers >= 4.36; older builds still accept legacy tuples directly
+        from transformers import DynamicCache
+    except ImportError:
+        DynamicCache = None
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
@@ -332,8 +336,14 @@ def main():
         if T > 1:
             continuation = target[:-1].view(1, T - 1).expand(batch_size, T - 1)
             attn = torch.ones((batch_size, prefix_len + T - 1), dtype=torch.long, device=dev)
+            # transformers >= 4.54 no longer accepts a legacy tuple here, but a shared
+            # DynamicCache would append this opener's KV to the prefix the next opener
+            # reuses. Rewrapping the tuple per call keeps the old immutable-prefix
+            # semantics: `update` writes into this throwaway Cache, tuple stays clean.
+            branch_cache = (DynamicCache.from_legacy_cache(prefix_cache)
+                            if DynamicCache is not None else prefix_cache)
             cont_out = model(input_ids=continuation, attention_mask=attn,
-                             past_key_values=prefix_cache,
+                             past_key_values=branch_cache,
                              use_cache=False)
             lp = torch.log_softmax(cont_out.logits.float(), dim=-1)
             wanted = target[1:].view(1, T - 1).expand(batch_size, T - 1)
@@ -357,8 +367,9 @@ def main():
             out = forward_prompt(adv_e, use_cache=True)
             lg = out.logits
             prefix_cache = out.past_key_values
-            # A legacy tuple is immutable. Reusing a mutable DynamicCache across
-            # opener branches can accidentally append the first opener to the next.
+            # A legacy tuple is immutable, so it is the snapshot each opener branches
+            # from. Reusing a mutable DynamicCache across opener branches would
+            # accidentally append the first opener to the next.
             if hasattr(prefix_cache, "to_legacy_cache"):
                 prefix_cache = prefix_cache.to_legacy_cache()
             phrase_nlls = [target_nll_from_cache(out, prefix_cache, target, prefix_len, B)
