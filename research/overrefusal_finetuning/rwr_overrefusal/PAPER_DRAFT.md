@@ -471,20 +471,24 @@ cell reported.
 Llama's do not reproduce. Rows are comparable because decoding is identical throughout; the absolute
 baseline is a property of that choice and we report it as such.
 
-**Results, symmetric basis, each model using directions fitted on its own corpus and evaluated on
-its own attacker's held-out rewrites.** ($\Delta$OR = over-refusal points removed; $\Delta$harm =
-harmful-refusal points lost. Random null 95th pct: $+3.5$ Llama, $+1.5$ Qwen.)
+**Results, symmetric basis. Each model uses directions fitted on its own corpus and is evaluated
+on its own attacker's held-out rewrites.** Both columns are **drops in refusal rate**, in
+percentage points: ablating a refusal direction makes the model refuse less of everything. A
+positive number is a drop; a negative number means refusal went *up*. We want a large drop in
+over-refusal and no drop in harmful-prompt refusal. Random-direction null (95th pct of the
+over-refusal drop): 3.5 Llama, 1.5 Qwen.
 
-| direction removed | Llama $\Delta$OR | Llama $\Delta$harm | Qwen $\Delta$OR | Qwen $\Delta$harm |
+| direction removed | Llama: over-refusal drop | Llama: harmful-refusal drop | Qwen: over-refusal drop | Qwen: harmful-refusal drop |
 |---|--:|--:|--:|--:|
-| weaponisation | **−38.2** | +0.5 | −12.8 | +1.0 |
-| exfiltration | −9.8 | 0.0 | **−60.2** | **0.0** |
-| concealment | −22.0 | −0.5 | −45.0 | −21.0 |
-| exploitation | −5.2 | 0.0 | −8.0 | +1.0 |
-| intrusion | −22.0 | −0.5 | — | — |
-| overall refusal direction ($d_1$) | −34.2 | +3.0 | −94.2 | **−95.5** |
-| published refusal vector | −47.8 | **−12.5** | −51.5 | **−67.0** |
-| random ($\times12$) | ~0 | ~0 | −0.8 to +2.0 | ~0 |
+| weaponization | 38.2 | 0.5 | 12.8 | 1.0 |
+| concealment | 22.0 | -0.5 | 45.0 | 21.0 |
+| exfiltration | 9.8 | 0.0 | 60.2 | 0.0 |
+| exploitation | 5.2 | 0.0 | 8.0 | 1.0 |
+| intrusion | 22.0 | -0.5 | — | — |
+| coercion | — | — | 4.2 | 0.0 |
+| fabrication | — | — | 0.5 | 1.0 |
+| overall refusal direction | 34.2 | 3.0 | 94.2 | 95.5 |
+| published refusal vector | 47.8 | 12.5 | 51.5 | 67.0 |
 
 `[FIGURE 8]` **The paper's central figure.** Scatter with $\Delta$OR on $x$ and $\Delta$harm on
 $y$, one point per ablated direction, two panels (Llama, Qwen). Shade the random-null region.
