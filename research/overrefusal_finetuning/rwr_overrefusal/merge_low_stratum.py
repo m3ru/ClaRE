@@ -28,6 +28,10 @@ def main():
     ap.add_argument("--judge_input", default="probe_or/results/low_power/judge_input.csv")
     ap.add_argument("--verdicts", default="probe_or/results/low_power/verdicts.csv")
     ap.add_argument("--out", default="probe_or/results/edit_strata/or_low_stratum_v7.csv")
+    ap.add_argument("--tag_attacker", default="", help="attacker/target tag for NEW rows. "
+                    "Defaults to --attacker_only, because a power-up run scores its own "
+                    "attacker against its own target; hardcoding llamaAtt silently mislabels "
+                    "a Qwen run and downstream --attacker filters then drop every new pair.")
     ap.add_argument("--attacker_only", default="llamaAtt",
                     help="keep only this attacker from the OLD stratum; over-refusal was "
                          "confirmed per-target, so qwenAtt pairs are not Llama evidence")
@@ -55,7 +59,9 @@ def main():
         m = pair_metrics(src["original"], src["rewrite"])
         row = {k: "" for k in SCHEMA}
         row.update(m)
-        row.update(attacker="llamaAtt", target="llamaTgt", pair_id=src["pair_id"],
+        _att = a.tag_attacker or a.attacker_only or "llamaAtt"
+        _tgt = {"llamaAtt": "llamaTgt", "qwenAtt": "qwenTgt"}.get(_att, "llamaTgt")
+        row.update(attacker=_att, target=_tgt, pair_id=src["pair_id"],
                    orig_idx=src.get("orig_idx", ""), stratum="LOW",
                    refuse_rate=src.get("refuse_rate", ""), refused="1",
                    intent=v.get("intent", ""), harm=v.get("harm", ""), is_or="1",
