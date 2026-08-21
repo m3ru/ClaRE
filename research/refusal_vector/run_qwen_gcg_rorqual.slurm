@@ -2,6 +2,12 @@
 # Submit one array per arm, for example:
 #   sbatch --export=ALL,ARM=or_loose run_qwen_gcg_rorqual.slurm
 #   sbatch --export=ALL,ARM=jb_loose --array=0-7 run_qwen_gcg_rorqual.slurm
+#
+# OR_NPROMPTS sets the prompts per OR shard (default 80 => 3,200 total). Lower it
+# to trade statistical power for wall clock when the cluster is contended, e.g.
+# OR_NPROMPTS=24 gives 960 prompts per arm (+-3.2% vs +-1.7% at 95%) in ~2.7 h
+# per shard instead of ~9.1 h:
+#   sbatch --export=ALL,ARM=or_loose,OR_NPROMPTS=24 run_qwen_gcg_rorqual.slurm
 # Valid ARM values: or_loose, or_strict, jb_loose, jb_strict.
 #
 # Measured on a rorqual H100: ~386 s/prompt loose, ~334 s/prompt strict at
@@ -29,6 +35,7 @@ case "${ARM}" in
   *) echo "invalid ARM=${ARM}" >&2; exit 2 ;;
 esac
 
+echo "[cfg] ARM=${ARM} OR_NPROMPTS=${OR_NPROMPTS:-80} shard=${SLURM_ARRAY_TASK_ID}"
 cd "${SLURM_SUBMIT_DIR}"
 mkdir -p logs
 module load cuda scipy-stack/2024b
@@ -58,7 +65,7 @@ COMMON=(
 if [[ "${ARM}" == or_* ]]; then
   COMMON+=(
     --pairs_csv "${PAIR_ROOT}/pairs.csv" "${PAIR_ROOT}/pairs_sonnet.csv"
-    --objective openers --n_shards 40 --n_prompts 80
+    --objective openers --n_shards 40 --n_prompts "${OR_NPROMPTS:-80}"
     --holdout_frac 0.30 --max_prompt_tok 48
     --dump_holdout "${OUT}/holdout_s${S}.json"
   )
