@@ -112,3 +112,18 @@ research/overrefusal_finetuning/paraphrases_api/
 research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/corpus2/shards/
 # Resumable batch-id sidecars (API job handles, not data)
 **/*.batch_id
+
+# --- high/low edit-distance analysis (added this session) ---
+# Fitted direction vectors are SMALL and back the causal claims; the 2GB acts.npy they came
+# from are not committed, so these npz are the only reproducible record — keep them.
+!research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/delta/*.npz
+!research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/delta_qwen/*.npz
+# Raw generation shards: large intermediates, regeneratable from the run_gen_low_*.slurm seed.
+research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/gen_low_llama_logit/
+research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/gen_low_qwen_probe/
+# Retired under-refusal scratch (arm handed to a teammate).
+research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/_retired/
+
+# Claude Code local state / worktrees
+.claude/
+*.py.bak

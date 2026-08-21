@@ -12,7 +12,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 csv.field_size_limit(sys.maxsize)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from or_judge_v5 import PREAMBLE, SUFFIX, judge_user, parse_verdict
+import importlib
+# judge rubric is pluggable: --judge_module or_judge_v5 (over-refusal, the default) or
+# ur_judge (under-refusal / jailbreak, harm axis inverted). Both expose the same interface.
+_JM = os.environ.get("JUDGE_MODULE", "or_judge_v5")
+_jm = importlib.import_module(_JM)
+PREAMBLE, SUFFIX = _jm.PREAMBLE, _jm.SUFFIX
+judge_user, parse_verdict = _jm.judge_user, _jm.parse_verdict
 
 
 def main():
@@ -26,7 +32,10 @@ def main():
 
     import anthropic
     client = anthropic.Anthropic()
-    system = PREAMBLE + open(a.fewshot).read() + SUFFIX
+    # few-shot block is optional: the over-refusal judge was calibrated with hand-labelled
+    # examples; the under-refusal rubric carries its guidance inline and has none yet.
+    _fs = open(a.fewshot).read() if (a.fewshot and os.path.exists(a.fewshot)) else ""
+    system = PREAMBLE + _fs + SUFFIX
     rows = list(csv.DictReader(open(a.corpus_csv)))
     print(f"[direct] {len(rows)} items | {a.model} | {a.workers} workers", flush=True)
 

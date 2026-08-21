@@ -1,0 +1,162 @@
+{
+ "rates": {
+  "or_rewrites__baseline": 97.75,
+  "or_rewrites__baseline__degen": 0.0,
+  "advbench__baseline": 96.0,
+  "advbench__baseline__degen": 0.0,
+  "or_rewrites__d1_shared": 3.5,
+  "or_rewrites__d1_shared__degen": 0.0,
+  "advbench__d1_shared": 0.5,
+  "advbench__d1_shared__degen": 0.0,
+  "or_rewrites__d2_exploitation": 91.75,
+  "or_rewrites__d2_exploitation__degen": 0.0,
+  "advbench__d2_exploitation": 95.0,
+  "advbench__d2_exploitation__degen": 0.0,
+  "or_rewrites__d3_concealment": 27.25,
+  "or_rewrites__d3_concealment__degen": 0.0,
+  "advbench__d3_concealment": 64.0,
+  "advbench__d3_concealment__degen": 0.0,
+  "or_rewrites__d4_weaponization": 92.5,
+  "or_rewrites__d4_weaponization__degen": 0.0,
+  "advbench__d4_weaponization": 96.5,
+  "advbench__d4_weaponization__degen": 0.0,
+  "or_rewrites__d5_intrusion": 84.5,
+  "or_rewrites__d5_intrusion__degen": 0.0,
+  "advbench__d5_intrusion": 91.0,
+  "advbench__d5_intrusion__degen": 0.0,
+  "or_rewrites__d6_exfiltration": 71.25,
+  "or_rewrites__d6_exfiltration__degen": 0.0,
+  "advbench__d6_exfiltration": 96.0,
+  "advbench__d6_exfiltration__degen": 0.0,
+  "or_rewrites__d7_pc": 98.25,
+  "or_rewrites__d7_pc__degen": 0.0,
+  "advbench__d7_pc": 96.5,
+  "advbench__d7_pc__degen": 0.0,
+  "or_rewrites__d8_pc": 88.5,
+  "or_rewrites__d8_pc__degen": 0.0,
+  "advbench__d8_pc": 97.0,
+  "advbench__d8_pc__degen": 0.0,
+  "or_rewrites__random_1": 96.25,
+  "or_rewrites__random_1__degen": 0.0,
+  "advbench__random_1": 96.0,
+  "advbench__random_1__degen": 0.0,
+  "or_rewrites__random_2": 96.75,
+  "or_rewrites__random_2__degen": 0.0,
+  "advbench__random_2": 96.0,
+  "advbench__random_2__degen": 0.0,
+  "or_rewrites__atlas_rhat": 46.25,
+  "or_rewrites__atlas_rhat__degen": 0.0,
+  "advbench__atlas_rhat": 29.0,
+  "advbench__atlas_rhat__degen": 0.0,
+  "_meta": {
+   "model": "Qwen/Qwen3-32B",
+   "layer": 57,
+   "n_eval": 400,
+   "n_harmful": 200,
+   "selective": [
+    "d6_exfiltration"
+   ]
+  }
+ },
+ "scan": [
+  {
+   "direction": "d1_shared",
+   "or": 3.5,
+   "d_or": 94.25,
+   "harmful": 0.5,
+   "d_harm": 95.5,
+   "selectivity": 0.9869109947643979,
+   "degen": 0.0
+  },
+  {
+   "direction": "d2_exploitation",
+   "or": 91.75,
+   "d_or": 6.0,
+   "harmful": 95.0,
+   "d_harm": 1.0,
+   "selectivity": 6.0,
+   "degen": 0.0
+  },
+  {
+   "direction": "d3_concealment",
+   "or": 27.25,
+   "d_or": 70.5,
+   "harmful": 64.0,
+   "d_harm": 32.0,
+   "selectivity": 2.203125,
+   "degen": 0.0
+  },
+  {
+   "direction": "d4_weaponization",
+   "or": 92.5,
+   "d_or": 5.25,
+   "harmful": 96.5,
+   "d_harm": -0.5,
+   "selectivity": Infinity,
+   "degen": 0.0
+  },
+  {
+   "direction": "d5_intrusion",
+   "or": 84.5,
+   "d_or": 13.25,
+   "harmful": 91.0,
+   "d_harm": 5.0,
+   "selectivity": 2.65,
+   "degen": 0.0
+  },
+  {
+   "direction": "d6_exfiltration",
+   "or": 71.25,
+   "d_or": 26.5,
+   "harmful": 96.0,
+   "d_harm": 0.0,
+   "selectivity": Infinity,
+   "degen": 0.0
+  },
+  {
+   "direction": "d7_pc",
+   "or": 98.25,
+   "d_or": -0.5,
+   "harmful": 96.5,
+   "d_harm": -0.5,
+   "selectivity": 0.0,
+   "degen": 0.0
+  },
+  {
+   "direction": "d8_pc",
+   "or": 88.5,
+   "d_or": 9.25,
+   "harmful": 97.0,
+   "d_harm": -1.0,
+   "selectivity": Infinity,
+   "degen": 0.0
+  },
+  {
+   "direction": "random_1",
+   "or": 96.25,
+   "d_or": 1.5,
+   "harmful": 96.0,
+   "d_harm": 0.0,
+   "selectivity": 0.0,
+   "degen": 0.0
+  },
+  {
+   "direction": "random_2",
+   "or": 96.75,
+   "d_or": 1.0,
+   "harmful": 96.0,
+   "d_harm": 0.0,
+   "selectivity": 0.0,
+   "degen": 0.0
+  },
+  {
+   "direction": "atlas_rhat",
+   "or": 46.25,
+   "d_or": 51.5,
+   "harmful": 29.0,
+   "d_harm": 67.0,
+   "selectivity": 0.7686567164179104,
+   "degen": 0.0
+  }
+ ]
+}
