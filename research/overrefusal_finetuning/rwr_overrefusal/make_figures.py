@@ -158,9 +158,9 @@ def fig3():
         y = np.arange(len(rows)); hgt = 0.36
 
         ax.barh(y + hgt / 2 + 0.02, np.nan_to_num(dor), height=hgt, color=LLAMA,
-                linewidth=0, label="over-refusal removed")
+                linewidth=0, label="over-refusal  (want a big drop)")
         ax.barh(y - hgt / 2 - 0.02, np.nan_to_num(dhm), height=hgt, color=QWEN,
-                linewidth=0, label="harmful refusal lost")
+                linewidth=0, label="harmful-prompt refusal  (want no drop)")
         ax.axvspan(0, nullmax, color=GREY, alpha=0.18, zorder=0)
 
         span = np.nanmax([np.nanmax(dor), np.nanmax(dhm)])
@@ -169,7 +169,7 @@ def fig3():
                 ax.text(v + span * 0.015, yi, f"{v:.1f}", va="center", fontsize=8.4, color=INK)
         for yi, v in zip(y - hgt / 2 - 0.02, dhm):
             if np.isfinite(v):
-                lab = f"{v:.1f}" + ("  \u2190 costs safety" if v >= 2 else "")
+                lab = f"{v:.1f}" + ("  \u2190 safety damage" if v >= 2 else "")
                 ax.text(max(v, 0) + span * 0.015, yi, lab, va="center", fontsize=8.4,
                         color=INK if v < 2 else QWEN)
         for yi, r in zip(y, rows):
@@ -179,7 +179,7 @@ def fig3():
         ax.set_yticks(y); ax.set_yticklabels(names, fontsize=9.5)
         ax.set_xlim(min(-2, np.nanmin(dhm) * 1.2), span * 1.32)
         ax.axvline(0, color=INK2, lw=1.0)
-        ax.set_xlabel("percentage points")
+        ax.set_xlabel("percentage-point DROP in refusal after ablation")
         ax.set_title(nm, loc="left", pad=8)
         ax.grid(axis="x", zorder=0); ax.set_axisbelow(True)
         ax.spines["left"].set_visible(False); ax.tick_params(axis="y", length=0)
@@ -194,7 +194,9 @@ def fig3():
     fig.text(0.012, 0.968, "\"Overall\" = the average difference between rewrites the model "
              "refused and rewrites it did not. \"Published\" = the refusal vector from prior "
              "work. The rest are\nthat same difference computed within one vocabulary group, "
-             "with the overall direction removed. Each ablated alone, at every layer; held-out "
+             "with the overall direction removed. Both bars are DROPS: the model refuses "
+             "less of both after ablation. A good direction drops over-refusal a lot and "
+             "harmful-prompt refusal not at all.\nEach ablated alone, at every layer; held-out "
              "originals: 400 confirmed over-refusals and 200 AdvBench harmful prompts. "
              "A good direction has a long blue bar and no orange one.",
              fontsize=8.8, color=INK2, ha="left", va="top")
