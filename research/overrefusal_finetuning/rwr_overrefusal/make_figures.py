@@ -456,6 +456,28 @@ def fig4():
     save(fig, "fig4_alarm_2x2")
 
 
+def _tex(t):
+    """LaTeX-escape caption prose, leaving existing $...$ math segments alone.
+
+    A bare % in a caption comments out the rest of the line and silently truncates
+    it -- "95% CI" ate everything after it before this existed.
+    """
+    subs = [("%", "\\%"), ("&", "\\&"), ("#", "\\#"),
+            ("\u2014", "---"), ("\u2013", "--"), ("\u2265", "$\\geq$"),
+            ("\u2264", "$\\leq$"), ("\u00b7", "$\\cdot$"), ("\u2192", "$\\to$")]
+    out, parts = [], t.split("$")
+    for i, seg in enumerate(parts):
+        if i % 2:                      # inside $...$: leave verbatim
+            out.append(seg); continue
+        for a, b in subs:
+            seg = seg.replace(a, b)
+        # straight double quotes -> LaTeX open/close pairs
+        while seg.count('"') >= 2:
+            seg = seg.replace('"', "``", 1).replace('"', "''", 1)
+        out.append(seg)
+    return "$".join(out)
+
+
 FIGS = {"1": ("fig1_edit_distance_distribution", lambda: fig1()),
         "2": ("fig2_triggers", lambda: fig2()),
         "3": ("fig3_causal_bars", lambda: fig3()),
@@ -481,7 +503,7 @@ if __name__ == "__main__":
                     continue
                 fh.write(f"\n\\begin{{figure}}[t]\n  \\centering\n"
                          f"  \\includegraphics[width=\\linewidth]{{figures/{name}.png}}\n"
-                         f"  \\caption{{\\textbf{{{c.get('headline','')}}} "
-                         f"{c.get('deck','')}}}\n"
+                         f"  \\caption{{\\textbf{{{_tex(c.get('headline',''))}}} "
+                         f"{_tex(c.get('deck',''))}}}\n"
                          f"  \\label{{fig:{name.split('_')[0]}}}\n\\end{{figure}}\n")
         print(f"  wrote {OUT}/captions.tex")
