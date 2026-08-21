@@ -19,7 +19,31 @@ LLAMA, QWEN, AQUA, GREY = "#2a78d6", "#eb6834", "#1baf7a", "#8a8a85"
 # model hues; aqua+violet validated separately (adjacent pairs, light mode).
 REFUSED, NOTREF = "#4a3aa7", "#1baf7a"
 SURF, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e6e6e3"
-OUT = "figures"; os.makedirs(OUT, exist_ok=True)
+BARE = "--bare" in sys.argv          # strip headline + deck; panel titles and data labels stay
+OUT = "figures/bare" if BARE else "figures"
+os.makedirs(OUT, exist_ok=True)
+
+# The headline (suptitle) and the deck line under it are CAPTION text that happens to be
+# rendered into the canvas. For LaTeX we want them out of the PNG and into \caption{}.
+# Both are intercepted here rather than at each call site so any future figure inherits it.
+# Decks are identified by their x anchor, which is 0.012 for every one of them.
+_CAPTIONS = {}
+_cur = {"name": None}
+_orig_suptitle, _orig_figtext = matplotlib.figure.Figure.suptitle, matplotlib.figure.Figure.text
+
+def _suptitle(self, t, *a, **k):
+    _CAPTIONS.setdefault(_cur["name"], {})["headline"] = " ".join(str(t).split())
+    return None if BARE else _orig_suptitle(self, t, *a, **k)
+
+def _figtext(self, x, y, t, *a, **k):
+    if abs(x - 0.012) < 1e-9:
+        _CAPTIONS.setdefault(_cur["name"], {})["deck"] = " ".join(str(t).split())
+        if BARE:
+            return None
+    return _orig_figtext(self, x, y, t, *a, **k)
+
+matplotlib.figure.Figure.suptitle = _suptitle
+matplotlib.figure.Figure.text = _figtext
 
 plt.rcParams.update({
     "figure.facecolor": SURF, "axes.facecolor": SURF, "savefig.facecolor": SURF,
@@ -32,8 +56,14 @@ plt.rcParams.update({
 })
 
 def save(fig, name):
+    # In bare mode the subplots_adjust(top=...) that reserved room for the headline would
+    # leave a white band, and bbox_inches="tight" alone does not reclaim it because the
+    # axes themselves were moved down. Push the axes back up before cropping.
+    if BARE:
+        fig.subplots_adjust(top=0.97)
     for ext in ("png", "pdf"):
-        fig.savefig(f"{OUT}/{name}.{ext}", dpi=200, bbox_inches="tight")
+        fig.savefig(f"{OUT}/{name}.{ext}", dpi=200, bbox_inches="tight",
+                    pad_inches=0.02 if BARE else 0.1)
     plt.close(fig); print(f"  wrote {OUT}/{name}.png/.pdf")
 
 # ---------------------------------------------------------------- Fig 1
@@ -188,7 +218,11 @@ def fig3():
     hs, ls = axes[0].get_legend_handles_labels()
     hs.append(Patch(facecolor=GREY, alpha=0.18))
     ls.append("random-direction null")
-    axes[0].legend(hs, ls, loc="lower right", fontsize=8.8)
+    # Figure-level, below the panels: an in-axes legend collides with the "not in this
+    # model's frame set" labels on the empty rows, and which rows are empty depends on
+    # the data, so no in-axes corner is reliably safe.
+    fig.legend(hs, ls, loc="upper center", bbox_to_anchor=(0.5, 0.035),
+               ncol=3, fontsize=8.8)
     fig.suptitle("A single direction removes over-refusal without costing safety",
                  x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.04)
     fig.text(0.012, 0.968, "\"Overall\" = the average difference between rewrites the model "
@@ -362,8 +396,11 @@ def fig2(top=14):
                       label="introduced by the edit  (causal candidate)"),
                Line2D([], [], marker="s", ls="", ms=9, color=GREY,
                       label="topic marker  (present in original too)")]
-    fig.legend(handles=handles, loc="upper left", ncol=2, fontsize=8.8,
-               bbox_to_anchor=(0.012, 0.945))
+    # Below the panels in bare mode: the deck is gone and the axes move up, so a
+    # top-anchored legend would land on the first row.
+    _loc, _anchor = (("upper center", (0.5, 0.045)) if BARE
+                     else ("upper left", (0.012, 0.945)))
+    fig.legend(handles=handles, loc=_loc, ncol=2, fontsize=8.8, bbox_to_anchor=_anchor)
     fig.suptitle("Only some over-represented words were actually introduced by the edit",
                  x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.06)
     fig.text(0.012, 0.968, "Refused rewrites contrasted against the same attacker's "
@@ -382,8 +419,10 @@ def fig4():
     not). That contrast is immediate as slopes and requires arithmetic as bars."""
     P = json.load(open("probe_or/results/d4_delta2x2.json"))
     proj, eff, null = P["projections"], P["effects"], P["null_p95"]
-    order = [("d4", "frame residual\n(weaponisation)"), ("d1", "shared axis $d_1$"),
-             ("r_atlas", "literature $\\hat{r}$")]
+    # Plain-English panel titles matching fig3's row labels -- no internal shorthand on
+    # the canvas; the formal definitions live in the caption.
+    order = [("d4", "weaponization direction"), ("d1", "overall refusal direction"),
+             ("r_atlas", "published refusal vector")]
     fig, axes = plt.subplots(1, 3, figsize=(11.4, 4.4))
     for ax, (key, title) in zip(axes, order):
         t = proj[key]
@@ -417,10 +456,32 @@ def fig4():
     save(fig, "fig4_alarm_2x2")
 
 
+FIGS = {"1": ("fig1_edit_distance_distribution", lambda: fig1()),
+        "2": ("fig2_triggers", lambda: fig2()),
+        "3": ("fig3_causal_bars", lambda: fig3()),
+        "4": ("fig4_alarm_2x2", lambda: fig4()),
+        "5": ("fig5_generalisation", lambda: fig5())}
+
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["1", "2", "3", "4", "5"]
-    if "1" in which: print("Fig 1:"); fig1()
-    if "2" in which: print("Fig 2:"); fig2()
-    if "3" in which: print("Fig 3:"); fig3()
-    if "4" in which: print("Fig 4:"); fig4()
-    if "5" in which: print("Fig 5:"); fig5()
+    which = [a for a in sys.argv[1:] if not a.startswith("-")] or list(FIGS)
+    for k in which:
+        name, fn = FIGS[k]
+        _cur["name"] = name
+        print(f"Fig {k}:"); fn()
+
+    # Emit the stripped text as ready-to-paste LaTeX captions.
+    if _CAPTIONS:
+        with open(f"{OUT}/captions.tex", "w") as fh:
+            fh.write("% Auto-generated by make_figures.py -- the headline and deck text that\n"
+                     "% bare-mode figures no longer render into the canvas.\n")
+            for k in which:
+                name, _ = FIGS[k]
+                c = _CAPTIONS.get(name)
+                if not c:
+                    continue
+                fh.write(f"\n\\begin{{figure}}[t]\n  \\centering\n"
+                         f"  \\includegraphics[width=\\linewidth]{{figures/{name}.png}}\n"
+                         f"  \\caption{{\\textbf{{{c.get('headline','')}}} "
+                         f"{c.get('deck','')}}}\n"
+                         f"  \\label{{fig:{name.split('_')[0]}}}\n\\end{{figure}}\n")
+        print(f"  wrote {OUT}/captions.tex")
