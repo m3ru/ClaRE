@@ -78,16 +78,8 @@ def fig1(shards=6):
         low = (v <= 2).mean() * 100
         ax.axvspan(-0.6, 2.5, color=INK, alpha=0.06, zorder=0)
         ax.axvline(2.5, color=INK2, lw=1.3, ls="--", zorder=3)
-        mode = int(xs[np.argmax(counts)])
-        ax.annotate(f"mode = {mode} edits", xy=(mode, counts.max()),
-                    xytext=(mode + 3.0, counts.max() * 0.90), fontsize=9, color=INK2,
-                    arrowprops=dict(arrowstyle="-", color=INK2, lw=0.8))
-        ax.annotate(f"$D_c\\leq2$: {low:.1f}% of generated rewrites\n"
-                    f"(only {NAT[nm]}% of confirmed over-refusals)",
-                    xy=(1.1, counts.max() * 0.30), xytext=(5.4, counts.max() * 0.52),
-                    fontsize=8.8, color=INK,
-                    arrowprops=dict(arrowstyle="->", color=INK2, lw=0.9))
-        ax.set_title(f"{nm}    (n = {len(v):,} generated rewrites)", loc="left")
+        ax.set_title(f"{nm}    (n = {len(v):,} generated rewrites\u2003\u00b7\u2003"
+                     f"$D_c\\leq2$: {low:.1f}%)", loc="left")
         ax.set_ylabel("rewrites")
         ax.grid(axis="y", zorder=0); ax.set_axisbelow(True)
     ticks = list(range(0, CAP + 1, 4)) + [CAP + 1]
@@ -107,7 +99,13 @@ def fig1(shards=6):
     save(fig, "fig1_edit_distance_distribution")
 
 # ---------------------------------------------------------------- Fig 3
-NICE = {"d1_shared": "shared axis $d_1$", "atlas_rhat": "literature $\\hat{r}$"}
+# Plain names. "shared axis d1" and "literature r-hat" are internal shorthand; a reader needs
+# to distinguish: the GENERAL direction common to all over-refusals, the FRAME-SPECIFIC
+# residuals, and the PUBLISHED refusal vector from prior work.
+NICE = {"d1_shared": "general alarm axis", "atlas_rhat": "published refusal vector"}
+# canonical row order, shared by both panels so the two models line up
+ROW_ORDER = ["general alarm axis", "published refusal vector", "weaponization", "concealment",
+             "exfiltration", "exploitation", "intrusion", "coercion", "fabrication"]
 
 def fig3():
     """Grouped horizontal bars, not a scatter.
@@ -137,42 +135,57 @@ def fig3():
     if os.path.exists("probe_or/results/dirsearch_qwen_ownframes.json"):
         panels.append(("Qwen3-32B", "probe_or/results/dirsearch_qwen_ownframes.json"))
 
-    fig, axes = plt.subplots(1, len(panels), figsize=(12.6, 5.6))
+    fig, axes = plt.subplots(1, len(panels), figsize=(12.8, 5.6), sharey=True)
     if len(panels) == 1:
         axes = [axes]
 
+    # rows are the union of both models' directions, in one fixed order, so the panels align
+    present = set()
+    for _, path in panels:
+        present |= {pretty(n) for n, _, _ in load(path)[0]}
+    rows = [r for r in ROW_ORDER if r in present] + sorted(present - set(ROW_ORDER))
+    rows = rows[::-1]                                      # first entry at the top
+
     for ax, (nm, path) in zip(axes, panels):
         pts, nullmax = load(path)
-        pts.sort(key=lambda t: t[1])                      # ascending, best at top after invert
-        names = [pretty(n) for n, _, _ in pts]
-        dor = np.array([o for _, o, _ in pts])
-        dhm = np.array([h for _, _, h in pts])
-        y = np.arange(len(pts)); hgt = 0.36
+        lut = {pretty(n): (o, h) for n, o, h in pts}
+        names = rows
+        dor = np.array([lut.get(r, (np.nan, np.nan))[0] for r in rows], dtype=float)
+        dhm = np.array([lut.get(r, (np.nan, np.nan))[1] for r in rows], dtype=float)
+        y = np.arange(len(rows)); hgt = 0.36
 
-        ax.barh(y + hgt / 2 + 0.02, dor, height=hgt, color=LLAMA, linewidth=0,
-                label="over-refusal removed")
-        ax.barh(y - hgt / 2 - 0.02, dhm, height=hgt, color=QWEN, linewidth=0,
-                label="harmful refusal lost")
+        ax.barh(y + hgt / 2 + 0.02, np.nan_to_num(dor), height=hgt, color=LLAMA,
+                linewidth=0, label="over-refusal removed")
+        ax.barh(y - hgt / 2 - 0.02, np.nan_to_num(dhm), height=hgt, color=QWEN,
+                linewidth=0, label="harmful refusal lost")
         ax.axvspan(0, nullmax, color=GREY, alpha=0.18, zorder=0)
-        ax.text(nullmax, len(pts) - 0.35, " random null", fontsize=8.2, color=INK2,
-                va="center", ha="left")
 
-        span = max(dor.max(), dhm.max())
+        span = np.nanmax([np.nanmax(dor), np.nanmax(dhm)])
         for yi, v in zip(y + hgt / 2 + 0.02, dor):
-            ax.text(v + span * 0.015, yi, f"{v:.1f}", va="center", fontsize=8.4, color=INK)
+            if np.isfinite(v):
+                ax.text(v + span * 0.015, yi, f"{v:.1f}", va="center", fontsize=8.4, color=INK)
         for yi, v in zip(y - hgt / 2 - 0.02, dhm):
-            lab = f"{v:.1f}" + ("  \u2190 costs safety" if v >= 2 else "")
-            ax.text(max(v, 0) + span * 0.015, yi, lab, va="center", fontsize=8.4,
-                    color=INK if v < 2 else QWEN)
+            if np.isfinite(v):
+                lab = f"{v:.1f}" + ("  \u2190 costs safety" if v >= 2 else "")
+                ax.text(max(v, 0) + span * 0.015, yi, lab, va="center", fontsize=8.4,
+                        color=INK if v < 2 else QWEN)
+        for yi, r in zip(y, rows):
+            if r not in lut:
+                ax.text(span * 0.02, yi, "not in this model's frame set", va="center",
+                        fontsize=7.8, color=GREY, style="italic")
         ax.set_yticks(y); ax.set_yticklabels(names, fontsize=9.5)
-        ax.set_xlim(min(-2, dhm.min() * 1.2), span * 1.30)
+        ax.set_xlim(min(-2, np.nanmin(dhm) * 1.2), span * 1.32)
         ax.axvline(0, color=INK2, lw=1.0)
         ax.set_xlabel("percentage points")
         ax.set_title(nm, loc="left", pad=8)
         ax.grid(axis="x", zorder=0); ax.set_axisbelow(True)
         ax.spines["left"].set_visible(False); ax.tick_params(axis="y", length=0)
 
-    axes[0].legend(loc="lower right", fontsize=9)
+    from matplotlib.patches import Patch
+    hs, ls = axes[0].get_legend_handles_labels()
+    hs.append(Patch(facecolor=GREY, alpha=0.18))
+    ls.append("random-direction null")
+    axes[0].legend(hs, ls, loc="lower right", fontsize=8.8)
     fig.suptitle("A single direction removes over-refusal without costing safety",
                  x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.04)
     fig.text(0.012, 0.968, "Each direction ablated alone, at every layer. Measured on held-out "
@@ -184,55 +197,59 @@ def fig3():
 
 # ---------------------------------------------------------------- Fig 5
 def fig5():
+    """Grouped bars, two per corpus: refusal rate before and after ablating the direction.
+
+    A dumbbell was tried first and read poorly — the four corpora have baselines from 7.6% to
+    82.2%, so the connecting lines were wildly different lengths and the short XSTest row
+    looked like an error. Two bars per corpus keeps both absolute rates legible at any
+    baseline. The random control is a tick on the baseline bar: it lands on the baseline in
+    every corpus, so drawing it as a third bar would add ink for a null result."""
     e = json.load(open("probe_or/results/external_bench.json"))["rates"]
     g = json.load(open("probe_or/results/gcg_transfer.json"))["rates"]
     rnd_g = [v for k, v in g.items()
              if k.startswith("gcg_rewrites__random") and not k.endswith("degen")][0]
     rows = [
-        ("our rewrites",  "RWR attacker (ours)",                     74.2, 41.0, 74.0),
-        ("GCG corpus",    "different attack method, disjoint vocab", g["gcg_rewrites__baseline"],
-                                                                     g["gcg_rewrites__ours_k1"], rnd_g),
-        ("XSTest safe",   "hand-written, n = 250",                   e["xstest_safe__baseline"],
-                                                                     e["xstest_safe__ablate_d4"],
-                                                                     e["xstest_safe__ablate_random"]),
-        ("OR-Bench Hard", "auto-generated from toxic seeds, n = 400", e["orbench_hard__baseline"],
-                                                                     e["orbench_hard__ablate_d4"],
-                                                                     e["orbench_hard__ablate_random"]),
+        ("our rewrites",  "RWR attacker (ours)",                      74.2, 41.0, 74.0),
+        ("GCG corpus",    "different attack method",                  g["gcg_rewrites__baseline"],
+                                                                      g["gcg_rewrites__ours_k1"], rnd_g),
+        ("XSTest safe",   "hand-written, n = 250",                    e["xstest_safe__baseline"],
+                                                                      e["xstest_safe__ablate_d4"],
+                                                                      e["xstest_safe__ablate_random"]),
+        ("OR-Bench Hard", "auto-generated, n = 400",                  e["orbench_hard__baseline"],
+                                                                      e["orbench_hard__ablate_d4"],
+                                                                      e["orbench_hard__ablate_random"]),
     ]
-    fig, ax = plt.subplots(figsize=(8.8, 4.6))
-    ys = np.arange(len(rows))[::-1].astype(float)
-    for y, (nm, how, b, a, r) in zip(ys, rows):
-        ax.plot([a, b], [y, y], color=LLAMA, lw=3.0, solid_capstyle="round", zorder=2)
-        ax.scatter([b], [y], s=110, color=LLAMA, zorder=4, edgecolors=SURF, linewidths=1.8)
-        ax.scatter([a], [y], s=110, color=LLAMA, zorder=4, marker="D",
-                   edgecolors=SURF, linewidths=1.8)
-        # random control: a tick, so coinciding with baseline reads as "no change" not overplot
-        ax.plot([r, r], [y - 0.17, y + 0.17], color=INK2, lw=2.0, zorder=5)
-        rel = (b - a) / b * 100 if b else 0
-        ax.annotate(f"\u2212{b-a:.1f} pp   ({rel:.0f}% relative)",
-                    xy=(max(b, r) + 2.2, y + 0.02), fontsize=9, color=INK, va="center")
-        ax.annotate(how, xy=(0.6, y - 0.27), fontsize=8.3, color=INK2, va="center")
-    ax.set_yticks(ys); ax.set_yticklabels([r[0] for r in rows], fontsize=10.5)
-    ax.set_ylim(-0.62, len(rows) - 0.30)
-    ax.set_xlim(-1, 116); ax.set_xlabel("refusal rate (%)")
+    fig, ax = plt.subplots(figsize=(8.2, 4.4))
+    y = np.arange(len(rows))[::-1].astype(float)
+    h = 0.34
+    for yi, (nm, how, b, a, r) in zip(y, rows):
+        ax.barh(yi + h / 2 + 0.02, b, height=h, color=GREY, alpha=0.55, linewidth=0, zorder=2)
+        ax.barh(yi - h / 2 - 0.02, a, height=h, color=LLAMA, linewidth=0, zorder=2)
+        ax.text(b + 1.4, yi + h / 2 + 0.02, f"{b:.1f}", va="center", fontsize=8.6, color=INK2)
+        ax.text(a + 1.4, yi - h / 2 - 0.02, f"{a:.1f}", va="center", fontsize=8.6,
+                color=LLAMA, fontweight="semibold")
+        ax.plot([r, r], [yi + h / 2 + 0.02 - h / 2, yi + h / 2 + 0.02 + h / 2],
+                color=INK, lw=1.8, zorder=4)
+    ax.set_yticks(y)
+    ax.set_yticklabels([f"{nm}\n{how}" for nm, how, *_ in rows], fontsize=9.5)
+    ax.set_xlim(0, 100); ax.set_xlabel("refusal rate (%)")
     ax.grid(axis="x", zorder=0); ax.set_axisbelow(True)
     ax.spines["left"].set_visible(False); ax.tick_params(axis="y", length=0)
-    handles = [Line2D([], [], marker="o", ls="", ms=9.5, color=LLAMA, label="baseline"),
-               Line2D([], [], marker="D", ls="", ms=8.5, color=LLAMA,
+    handles = [Line2D([], [], marker="s", ls="", ms=9, color=GREY, alpha=0.55, label="baseline"),
+               Line2D([], [], marker="s", ls="", ms=9, color=LLAMA,
                       label="after ablating the direction"),
-               Line2D([], [], marker="|", ls="", ms=11, mew=2.2, color=INK2,
+               Line2D([], [], marker="|", ls="", ms=11, mew=1.9, color=INK,
                       label="random direction (control)")]
-    ax.legend(handles=handles, loc="upper right", fontsize=8.8,
-              bbox_to_anchor=(1.005, 1.16), ncol=3, columnspacing=1.2, handletextpad=0.5)
+    ax.legend(handles=handles, loc="upper left", ncol=3, fontsize=8.7,
+              bbox_to_anchor=(0.0, 1.13), columnspacing=1.3, handletextpad=0.5)
     fig.suptitle("The direction generalises to corpora built by other methods",
-                 x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.07)
-    fig.text(0.012, 0.995, "Direction fitted only on our own attacker's rewrites (Llama). "
+                 x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.10)
+    fig.text(0.012, 1.04, "Direction fitted only on our own attacker's rewrites (Llama). "
              "The random control lands on the baseline in every corpus. GCG rates measure "
              "refusal, not judge-confirmed over-refusal.",
              fontsize=8.8, color=INK2, ha="left", va="top")
     fig.subplots_adjust(top=0.80)
     save(fig, "fig5_generalisation")
-
 
 # ---------------------------------------------------------------- Fig 2
 def _trigger_stats(low_csv, scored_paths, attacker, min_origs=3, a0=10.0):
