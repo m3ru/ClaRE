@@ -15,6 +15,9 @@ csv.field_size_limit(sys.maxsize)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 LLAMA, QWEN, AQUA, GREY = "#2a78d6", "#eb6834", "#1baf7a", "#8a8a85"
+# fig4 encodes refused/not-refused, NOT model identity, so it must not reuse the
+# model hues; aqua+violet validated separately (adjacent pairs, light mode).
+REFUSED, NOTREF = "#4a3aa7", "#1baf7a"
 SURF, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e6e6e3"
 OUT = "figures"; os.makedirs(OUT, exist_ok=True)
 
@@ -230,8 +233,169 @@ def fig5():
     fig.subplots_adjust(top=0.80)
     save(fig, "fig5_generalisation")
 
+
+# ---------------------------------------------------------------- Fig 2
+def _trigger_stats(low_csv, scored_paths, attacker, min_origs=3, a0=10.0):
+    """Weighted log-odds (Monroe et al.) of refused vs NOT-refused rewrites from the SAME
+    attacker in the SAME edit bin, computed at document level (each original counted once).
+
+    Also flags whether each word was INTRODUCED by the edit or is a topic marker present in
+    both original and rewrite — the distinction the figure exists to make."""
+    import math, glob
+    from collections import Counter, defaultdict
+    from analyze_edit_distance import pair_metrics, content_tokens
+    from recompute_v6 import refused_v6
+
+    low = [r for r in csv.DictReader(open(low_csv))
+           if r.get("attacker") in (None, "", attacker)]
+    or_df, intro_hits, tot_hits = defaultdict(set), Counter(), Counter()
+    for r in low:
+        o, w = r["original"].strip(), r["rewrite"].strip()
+        m = pair_metrics(o, w)
+        intro = set(content_tokens(m["introduced_words"]))
+        toks = set(content_tokens(w))
+        for t in toks:
+            if len(t) > 2:
+                or_df[t].add(o); tot_hits[t] += 1
+                if t in intro:
+                    intro_hits[t] += 1
+
+    cmp_df = defaultdict(set)
+    for sp in scored_paths:
+        if not os.path.exists(sp):
+            continue
+        for r in json.load(open(sp))["examples"]:
+            o, w = r["original"].strip(), r["rewrite"].strip()
+            ref, _, usable = refused_v6(r.get("samples", []))
+            if not usable or ref:
+                continue
+            d = pair_metrics(o, w)["wl_dist_content"]
+            if not isinstance(d, int) or d > 2:
+                continue
+            for t in set(content_tokens(w)):
+                if len(t) > 2:
+                    cmp_df[t].add(o)
+
+    A = {k: len(v) for k, v in or_df.items()}
+    B = {k: len(v) for k, v in cmp_df.items()}
+    nA, nB = sum(A.values()), sum(B.values())
+    bg_tot = sum(A.get(k, 0) + B.get(k, 0) for k in set(A) | set(B))
+    out = []
+    for wd in set(A) | set(B):
+        ya, yb = A.get(wd, 0), B.get(wd, 0)
+        if ya < min_origs:
+            continue
+        aw = a0 * (ya + yb) / bg_tot if bg_tot else 0.0
+        try:
+            la = math.log((ya + aw) / (nA + a0 - ya - aw))
+            lb = math.log((yb + aw) / (nB + a0 - yb - aw))
+            z = (la - lb) / math.sqrt(1.0 / (ya + aw) + 1.0 / (yb + aw))
+        except (ValueError, ZeroDivisionError):
+            continue
+        introduced = tot_hits[wd] and (intro_hits[wd] / tot_hits[wd]) >= 0.5
+        out.append((wd, z, ya, bool(introduced)))
+    out.sort(key=lambda t: -t[1])
+    return out
+
+
+def fig2(top=14):
+    specs = [("Llama-3-8B-Instruct", "probe_or/results/edit_strata/or_low_stratum_v7.csv",
+              ["probe_or/results/corpus2/llamaAtt_llamaTgt.json",
+               "probe_or/results/low_power/low_scored_llamaTgt.json"], "llamaAtt"),
+             ("Qwen3-32B", "probe_or/results/edit_strata/or_low_stratum_qwen_v7.csv",
+              ["probe_or/results/corpus2/qwenAtt_qwenTgt.json",
+               "probe_or/results/low_power_qwen/low_scored_qwenTgt.json"], "qwenAtt")]
+    panels = []
+    for nm, low, scored, att in specs:
+        if os.path.exists(low):
+            st = _trigger_stats(low, scored, att)
+            if st:
+                panels.append((nm, st[:top]))
+    if not panels:
+        print("  fig2: no data"); return
+
+    fig, axes = plt.subplots(1, len(panels), figsize=(12.4, 5.4))
+    if len(panels) == 1:
+        axes = [axes]
+    for ax, (nm, st) in zip(axes, panels):
+        st = st[::-1]                                  # largest at top after barh
+        y = np.arange(len(st))
+        vals = [z for _, z, _, _ in st]
+        cols = [LLAMA if intro else GREY for _, _, _, intro in st]
+        ax.barh(y, vals, height=0.68, color=cols, linewidth=0, zorder=2)
+        for yi, (wd, z, n, intro) in zip(y, st):
+            ax.text(z + max(vals) * 0.018, yi, f"{n} orig.", va="center",
+                    fontsize=8.1, color=INK2)
+        ax.set_yticks(y)
+        ax.set_yticklabels([f"$\\mathtt{{{wd}}}$" for wd, _, _, _ in st], fontsize=9.5)
+        ax.set_xlim(0, max(vals) * 1.22)
+        ax.set_xlabel("weighted log-odds $z_{\\mathrm{doc}}$   (refused vs not-refused)")
+        ax.set_title(nm, loc="left", pad=8)
+        ax.grid(axis="x", zorder=0); ax.set_axisbelow(True)
+        ax.spines["left"].set_visible(False); ax.tick_params(axis="y", length=0)
+    handles = [Line2D([], [], marker="s", ls="", ms=9, color=LLAMA,
+                      label="introduced by the edit  (causal candidate)"),
+               Line2D([], [], marker="s", ls="", ms=9, color=GREY,
+                      label="topic marker  (present in original too)")]
+    fig.legend(handles=handles, loc="upper left", ncol=2, fontsize=8.8,
+               bbox_to_anchor=(0.012, 0.945))
+    fig.suptitle("Only some over-represented words were actually introduced by the edit",
+                 x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.06)
+    fig.text(0.012, 0.968, "Refused rewrites contrasted against the same attacker's "
+             "NOT-refused rewrites in the same edit bin, so the contrast isolates refusal "
+             "rather than the attacker's style. Each original counted once; words in "
+             "\u22653 distinct originals.", fontsize=8.8, color=INK2, ha="left", va="top")
+    fig.subplots_adjust(top=0.80, wspace=0.40)
+    save(fig, "fig2_triggers")
+
+
+# ---------------------------------------------------------------- Fig 4
+def fig4():
+    """Slopes, not bars: the finding is a PATTERN of slopes. For the frame residual the two
+    lines nearly coincide and both rise with alarm (alarm matters, refusal does not); for d1
+    and the literature direction the lines are far apart and flat (refusal matters, alarm does
+    not). That contrast is immediate as slopes and requires arithmetic as bars."""
+    P = json.load(open("probe_or/results/d4_delta2x2.json"))
+    proj, eff, null = P["projections"], P["effects"], P["null_p95"]
+    order = [("d4", "frame residual\n(weaponisation)"), ("d1", "shared axis $d_1$"),
+             ("r_atlas", "literature $\\hat{r}$")]
+    fig, axes = plt.subplots(1, 3, figsize=(11.4, 4.4))
+    for ax, (key, title) in zip(axes, order):
+        t = proj[key]
+        xs = [0, 1]
+        for cells, col, lab, mk in ((("or_plain", "or_alarm"), REFUSED, "refused", "o"),
+                                    (("ctrl_plain", "ctrl_alarm"), NOTREF, "not refused", "D")):
+            ys = [t[cells[0]]["mean"], t[cells[1]]["mean"]]
+            lo = [t[c]["mean"] - t[c]["lo"] for c in cells]
+            hi = [t[c]["hi"] - t[c]["mean"] for c in cells]
+            ax.errorbar(xs, ys, yerr=[lo, hi], color=col, lw=2.2, marker=mk, ms=8,
+                        capsize=3, capthick=1.2, label=lab, zorder=3)
+        e = eff[key]
+        ax.set_xticks(xs); ax.set_xticklabels(["no alarm\nwords", "alarm\nwords"], fontsize=9)
+        ax.set_xlim(-0.32, 1.32)
+        ax.set_title(title, loc="left", pad=8, fontsize=10.5)
+        ax.grid(axis="y", zorder=0); ax.set_axisbelow(True)
+        ax.text(0.03, 0.97, f"ALARM  {e['alarm']:+.3f}\nREFUSAL {e['refusal']:+.3f}",
+                transform=ax.transAxes, fontsize=8.8, va="top", ha="left", color=INK,
+                bbox=dict(boxstyle="round,pad=0.36", fc=SURF, ec=GRID, lw=1))
+    axes[0].set_ylabel("mean projection of $\\Delta$ onto the direction")
+    axes[0].legend(loc="lower right", fontsize=8.8)
+    fig.suptitle("The effective direction tracks alarming wording, not the refusal decision",
+                 x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.05)
+    fig.text(0.012, 0.965, "Llama, held-out originals, cluster-bootstrapped over originals "
+             f"(95% CI). Random-direction null (50 dirs), 95th pct: ALARM {null['alarm']:.3f}, "
+             f"REFUSAL {null['refusal']:.3f}. For the frame residual the two lines nearly "
+             "coincide \u2014 alarming words move it whether or not the model refused.\n"
+             "Note the y-axes differ in range between panels.",
+             fontsize=8.8, color=INK2, ha="left", va="top")
+    fig.subplots_adjust(top=0.80, wspace=0.30)
+    save(fig, "fig4_alarm_2x2")
+
+
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["1", "3", "5"]
+    which = sys.argv[1:] or ["1", "2", "3", "4", "5"]
     if "1" in which: print("Fig 1:"); fig1()
+    if "2" in which: print("Fig 2:"); fig2()
     if "3" in which: print("Fig 3:"); fig3()
+    if "4" in which: print("Fig 4:"); fig4()
     if "5" in which: print("Fig 5:"); fig5()
