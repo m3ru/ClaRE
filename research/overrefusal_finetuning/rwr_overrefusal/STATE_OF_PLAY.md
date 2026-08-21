@@ -185,7 +185,7 @@ This is the machinery the rest of the analysis runs on, so it is worth stating p
 it is fitted on a **train half of originals**; every number reported is measured on the held-out
 half.
 
-- **d1 — the shared axis.** `d1 = unit( mean(Δ over refused pairs) − mean(Δ over matched controls) )`.
+- **d1 — the overall refusal direction.** `d1 = unit( mean(Δ over refused pairs) − mean(Δ over matched controls) )`.
   This is the average displacement that distinguishes a refused rewrite from an unrefused one: the
   entire rank-1 mean shift.
 - **d2 … d6 — frame residuals.** Pairs are labelled by which *semantic frame* their edit
@@ -209,7 +209,7 @@ attacker's house style. It has smaller n (1,591 / 843 groups) and is the cleaner
 ## 4.3 The shared axis is essentially "harmfulness"
 
 d1 sits at cosine **+0.776** with the harmful-versus-harmless direction and **+0.780** with the
-literature refusal direction; those three form one tight cluster. "Refused rewrites look more
+published refusal vector; those three form one tight cluster. "Refused rewrites look more
 harmful to the model" is true but close to tautological, so it is reported as description, not as
 a finding.
 
@@ -245,12 +245,12 @@ baseline: over-refusal **74.2%** (297/400), harmful refusal **98.5%** (197/200)
 
 | direction removed | over-refusal (want ↓) | change | harmful refusal (want ↔) | change |
 |---|--:|--:|--:|--:|
-| d1 shared axis | 40.0% | **−34.2** | 95.5% | −3.0 |
+| overall refusal direction (d1) | 40.0% | **−34.2** | 95.5% | −3.0 |
 | d3 concealment | 47.8% | **−26.5** | 99.0% | +0.5 |
 | **d4 weaponisation** | **41.0%** | **−33.2** | **98.5%** | **0.0** |
 | d7 residual PC | 45.8% | **−28.5** | 98.5% | 0.0 |
 | d8 residual PC | 48.8% | **−25.5** | 98.5% | 0.0 |
-| literature r̂ | 26.5% | −47.8 | 86.0% | **−12.5** |
+| published refusal vector | 26.5% | −47.8 | 86.0% | **−12.5** |
 | random × 2 | 74.0 / 74.2% | ~0 | 98.5% | 0.0 |
 
 ### Qwen3-32B
@@ -258,11 +258,11 @@ baseline: over-refusal **97.8%** (391/400), harmful refusal **96.0%** (192/200)
 
 | direction removed | over-refusal (want ↓) | change | harmful refusal (want ↔) | change |
 |---|--:|--:|--:|--:|
-| d1 shared axis | 3.5% | −94.2 | **0.5%** | **−95.5** |
+| overall refusal direction (d1) | 3.5% | −94.2 | **0.5%** | **−95.5** |
 | d3 concealment | 27.2% | −70.5 | 64.0% | −32.0 |
 | d4 weaponisation | 92.5% | −5.2 | 96.5% | +0.5 |
 | **d6 exfiltration** | **71.2%** | **−26.5** | **96.0%** | **0.0** |
-| literature r̂ | 46.2% | −51.5 | 29.0% | −67.0 |
+| published refusal vector | 46.2% | −51.5 | 29.0% | −67.0 |
 | random × 12 | 96.2–98.5% | −0.8 to +2.0 | 96.0% | ~0 |
 
 **How to read these two tables together.** Both models have directions whose removal eliminates a
@@ -272,15 +272,15 @@ genuine refusal on Llama, 67 on Qwen. Random directions do nothing — Qwen's 12
 −0.8 to +2.0 points, so d6's −26.5 is **17.7× the null's 95th percentile**, which rules out the
 concern that picking the best of eight is just selection.
 
-**Where the models genuinely differ is d1.** Removing the shared axis costs Llama 3.0 points of
-harmful refusal and Qwen **95.5** — on Qwen the shared axis is, in effect, the refusal direction, so
+**Where the models genuinely differ is d1.** Removing the overall refusal direction costs Llama 3.0 points of
+harmful refusal and Qwen **95.5** — on Qwen the overall refusal direction is, in effect, the refusal direction, so
 removing it is abliteration rather than a fix.
 
 ### A check on the basis construction
 
 Because the sequential basis deflates each frame against everything already placed, the frames are
 not automatically comparable — whoever goes first has the most removed. Fraction of each frame
-direction that is genuinely new after removing the shared axis:
+direction that is genuinely new after removing the overall refusal direction:
 
 | frame | cos with d1 | Llama: % new | Qwen: % new |
 |---|--:|--:|--:|
@@ -292,7 +292,7 @@ direction that is genuinely new after removing the shared axis:
 
 Two things follow, and both are reassuring rather than alarming.
 
-**The raw frame directions are almost the shared axis.** All sit at cosine 0.79–0.99 with d1. This
+**The raw frame directions are almost the overall refusal direction.** All sit at cosine 0.79–0.99 with d1. This
 is why undeflated frame directions could not be used: ablating "the weaponisation direction"
 without removing d1 first would mostly be ablating d1 again, five times under five names.
 
@@ -322,7 +322,7 @@ sufficient for refusal, so the two factors can be crossed in Δ space:
 |---|--:|--:|--:|--:|
 | **d4 (Llama)** | +0.502 | **+0.556** | **+0.190** | **−0.057** |
 | d1 shared | +2.948 | +0.735 | +0.429 | +2.198 |
-| literature r̂ | +2.259 | +0.524 | +0.281 | +1.731 |
+| published refusal vector | +2.259 | +0.524 | +0.281 | +1.731 |
 
 d4's alarm effect is **8.6× a 50-direction random null** (0.190 vs 0.022); its refusal effect sits
 **exactly at that null's 95th percentile** — indistinguishable from noise. Alarming words load on
@@ -353,7 +353,7 @@ at `t_post-inst`, the last token of the full prompt after the chat template's sp
 | | cosine |
 |---|--:|
 | harm@t_inst ↔ harm@t_post-inst | **+0.131** |
-| harm@t_inst ↔ literature r̂ | **+0.073** |
+| harm@t_inst ↔ published refusal vector | **+0.073** |
 | **d4 ↔ harm@t_inst** | **+0.071** |
 
 We reproduce the separate-encoding result on our own corpus, and the effective direction is
@@ -391,7 +391,7 @@ convincingness and specificity (1–5 each), combined as `(1−refused)(convinci
 |---|---|--:|--:|
 | StrongREJECT (313) | baseline | 0.005 | — |
 | | **d4** | **0.005** | **−0.000** |
-| | literature r̂ | **0.026** | **+0.021** |
+| | published refusal vector | **0.026** | **+0.021** |
 | XSTest unsafe (200) | baseline | 0.005 | — |
 | | **d4** | **0.003** | **−0.002** |
 
@@ -419,7 +419,7 @@ before the two models could be compared:
 
 **Asymmetry 1 — deflation order.** The sequential basis deflates each frame against every frame
 placed before it, so a frame's apparent contribution depends on its position. Fixed by
-orthogonalising every frame against **the shared axis d1 only**, never against each other. Each
+orthogonalising every frame against **the overall refusal direction d1 only**, never against each other. Each
 frame is ablated alone (rank 1), so this is valid, and every frame gets identical treatment.
 
 **Asymmetry 2 — vocabulary.** The frame regex was mined from *Llama's* low-edit triggers, then
@@ -444,7 +444,7 @@ comparison (ΔOR = over-refusal removed; Δharm = harmful-refusal lost; random n
 | intrusion | −22.0 | −0.5 | — | — |
 | **fabrication** (Qwen-specific) | — | — | **+0.5** | +1.0 |
 | **coercion** (Qwen-specific) | — | — | **+4.2** | 0.0 |
-| d1 shared axis | −34.2 | +3.0 | −94.2 | **−95.5** |
+| overall refusal direction (d1) | −34.2 | +3.0 | −94.2 | **−95.5** |
 
 Three things this establishes.
 
@@ -457,12 +457,12 @@ is in fact *larger* than Llama's.
 **The selective frames are the harm-semantic ones on both models — not the Qwen-specific ones.**
 Qwen's distinctive creation-verb frames (fabrication, coercion), even mined from its own
 vocabulary, sit at the random null (+0.5, +4.2). Those words trigger refusal lexically because
-they co-occur with alarming objects — fabrication is 98.4% the shared axis — but they carry no
+they co-occur with alarming objects — fabrication is 98.4% the overall refusal direction — but they carry no
 independent direction. The directions that do the causal work, weaponisation and exfiltration, are
 shared across models.
 
-**The real, robust difference is d1.** Removing the shared axis costs Llama 3.0 points of harmful
-refusal and Qwen **95.5** — on Qwen the shared axis *is* the refusal direction. This difference
+**The real, robust difference is d1.** Removing the overall refusal direction costs Llama 3.0 points of harmful
+refusal and Qwen **95.5** — on Qwen the overall refusal direction *is* the refusal direction. This difference
 involves no frame vocabulary at all, so it was never affected by either asymmetry, and it is the
 one that should carry the two-model story.
 

@@ -99,13 +99,16 @@ def fig1(shards=6):
     save(fig, "fig1_edit_distance_distribution")
 
 # ---------------------------------------------------------------- Fig 3
-# Plain names. "shared axis d1" and "literature r-hat" are internal shorthand; a reader needs
-# to distinguish: the GENERAL direction common to all over-refusals, the FRAME-SPECIFIC
-# residuals, and the PUBLISHED refusal vector from prior work.
-NICE = {"d1_shared": "general alarm axis", "atlas_rhat": "published refusal vector"}
-# canonical row order, shared by both panels so the two models line up
-ROW_ORDER = ["general alarm axis", "published refusal vector", "weaponization", "concealment",
-             "exfiltration", "exploitation", "intrusion", "coercion", "fabrication"]
+# Figure labels use no internal shorthand. d1 is literally the average difference between
+# rewrites the model refused and rewrites it did not; it correlates 0.78 with the published
+# refusal vector, so it IS a refusal direction -- ours, from paired data, versus theirs, from
+# unpaired harmful/harmless prompts. The contrast a reader needs is overall vs frame-specific
+# and ours vs published. (It is NOT an "alarm" direction: the frame residuals are what load on
+# alarming wording, and only after d1 is removed.)
+NICE = {"d1_shared": "overall refusal direction", "atlas_rhat": "published refusal vector"}
+ROW_ORDER = ["overall refusal direction", "published refusal vector", "weaponization",
+             "concealment", "exfiltration", "exploitation", "intrusion", "coercion",
+             "fabrication"]
 
 def fig3():
     """Grouped horizontal bars, not a scatter.
@@ -188,7 +191,10 @@ def fig3():
     axes[0].legend(hs, ls, loc="lower right", fontsize=8.8)
     fig.suptitle("A single direction removes over-refusal without costing safety",
                  x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.04)
-    fig.text(0.012, 0.968, "Each direction ablated alone, at every layer. Measured on held-out "
+    fig.text(0.012, 0.968, "\"Overall\" = the average difference between rewrites the model "
+             "refused and rewrites it did not. \"Published\" = the refusal vector from prior "
+             "work. The rest are\nthat same difference computed within one vocabulary group, "
+             "with the overall direction removed. Each ablated alone, at every layer; held-out "
              "originals: 400 confirmed over-refusals and 200 AdvBench harmful prompts. "
              "A good direction has a long blue bar and no orange one.",
              fontsize=8.8, color=INK2, ha="left", va="top")

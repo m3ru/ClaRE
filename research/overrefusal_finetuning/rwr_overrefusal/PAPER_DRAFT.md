@@ -389,7 +389,7 @@ set of candidate directions built without touching the data we will test on.
 **How we operationalised it.** Split **originals** (never pairs) into train and held-out halves;
 fit everything below on train, measure everything in §6.3 on held-out.
 
-**$d_1$ — the shared axis.**
+**$d_1$ — the overall refusal direction.**
 $$d_1 \;=\; \widehat{\;\overline{\Delta}^{\,\text{OR}} - \overline{\Delta}^{\,\text{ctrl}}\;},\qquad \overline{\Delta}^{\,\text{OR}} = \frac{1}{|P^{+}|}\sum_{(o,r)\in P^{+}}\Delta(o,r),$$
 the normalised difference between the mean displacement of refused pairs and that of matched
 controls. This is the *entire* rank-1 mean shift between the two classes: the difference of two
@@ -482,8 +482,8 @@ harmful-refusal points lost. Random null 95th pct: $+3.5$ Llama, $+1.5$ Qwen.)
 | concealment | −22.0 | −0.5 | −45.0 | −21.0 |
 | exploitation | −5.2 | 0.0 | −8.0 | +1.0 |
 | intrusion | −22.0 | −0.5 | — | — |
-| $d_1$ shared axis | −34.2 | +3.0 | −94.2 | **−95.5** |
-| literature $\hat r$ | −47.8 | **−12.5** | −51.5 | **−67.0** |
+| overall refusal direction ($d_1$) | −34.2 | +3.0 | −94.2 | **−95.5** |
+| published refusal vector | −47.8 | **−12.5** | −51.5 | **−67.0** |
 | random ($\times12$) | ~0 | ~0 | −0.8 to +2.0 | ~0 |
 
 `[FIGURE 8]` **The paper's central figure.** Scatter with $\Delta$OR on $x$ and $\Delta$harm on
@@ -498,7 +498,7 @@ exfiltration ($-60.2$ at $0.0$, roughly $40\times$ its random null). The literat
 direction removes more over-refusal on both but costs 12.5 and 67 points of genuine refusal
 respectively.
 
-**The one robust cross-model difference is $d_1$.** Removing the shared axis costs Llama 3.0 points
+**The one robust cross-model difference is $d_1$.** Removing the overall refusal direction costs Llama 3.0 points
 of harmful refusal and Qwen 95.5. On Qwen the shared alarm axis is, to within measurement,
 *the refusal direction itself*, so removing it is abliteration rather than a targeted fix. This
 difference involves no frame vocabulary and is therefore immune to the basis and vocabulary
@@ -559,7 +559,7 @@ originals; compared against a **50-direction random null**.
 |---|--:|--:|--:|--:|
 | **weaponisation residual (Llama)** | +0.502 | **+0.556** | **+0.190** | **−0.057** |
 | $d_1$ shared | +2.948 | +0.735 | +0.429 | +2.198 |
-| literature $\hat r$ | +2.259 | +0.524 | +0.281 | +1.731 |
+| published refusal vector | +2.259 | +0.524 | +0.281 | +1.731 |
 
 The frame residual's ALARM effect is **8.6×** the random null ($0.190$ vs $0.022$); its REFUSAL
 effect lies **exactly at the null's 95th percentile**, i.e. indistinguishable from noise. Alarming
@@ -598,7 +598,7 @@ $t_{\text{post-inst}}$ throughout. Reading both:
 | | cosine |
 |---|--:|
 | harm@$t_{\text{inst}}$ ↔ harm@$t_{\text{post-inst}}$ | **+0.131** |
-| harm@$t_{\text{inst}}$ ↔ literature $\hat r$ | **+0.073** |
+| harm@$t_{\text{inst}}$ ↔ published refusal vector | **+0.073** |
 | frame residual ↔ harm@$t_{\text{inst}}$ | **+0.071** |
 
 We reproduce the separate-encoding result on our own corpus, and the effective direction is
@@ -649,7 +649,7 @@ so a refusal scores 0 and a fully convincing, fully specific compliance scores 1
 |---|---|--:|--:|
 | StrongREJECT (313) | baseline | 0.005 | — |
 | | frame residual | **0.005** | **−0.000** |
-| | literature $\hat r$ | **0.026** | **+0.021** |
+| | published refusal vector | **0.026** | **+0.021** |
 | XSTest unsafe (200) | baseline | 0.005 | — |
 | | frame residual | **0.003** | **−0.002** |
 
@@ -689,7 +689,7 @@ the argument for grading responses.
    Llama; $+0.515$ vs $+0.563$ Qwen), against $\approx+0.09$/$+0.22$ for matched controls. Claim
    restricted to the measured axis.
 3. **The dominant axis is essentially harmfulness** ($\cos\approx0.78$ with both the
-   harmful-vs-harmless and the literature refusal direction) and is reported as description rather
+   harmful-vs-harmless and the published refusal vector) and is reported as description rather
    than finding.
 4. **Beyond it, directions exist whose ablation removes a quarter to a half of over-refusal at no
    measurable harm cost**, on both models, against a 12-direction random null and with degeneracy

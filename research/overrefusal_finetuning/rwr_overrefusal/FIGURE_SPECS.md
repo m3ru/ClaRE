@@ -89,7 +89,7 @@ introduce these words and were not refused. The caption states this explicitly.
 **The claim.** Removing a single direction from the residual stream can eliminate a large share
 of over-refusal **without** reducing the model's refusal of genuinely harmful prompts — and the
 literature's refusal direction cannot: it removes more over-refusal but pays for it in safety.
-Both models have such a direction. Where the models differ is the shared axis.
+Both models have such a direction. Where the models differ is the overall refusal direction.
 
 **Data.** One point per ablated direction, per model, from the symmetric-basis single-direction
 scan. Axes: x = over-refusal removed (percentage points, held-out set of 400 confirmed
@@ -97,12 +97,12 @@ over-refusals); y = harmful refusal lost (percentage points, 200 AdvBench prompt
 
 Llama (baseline over-refusal 74.2%, harmful refusal 98.5%): weaponisation (38.2, 0.5),
 concealment (22.0, −0.5), intrusion (22.0, −0.5), exfiltration (9.8, 0.0), exploitation
-(5.2, 0.0), shared axis d1 (34.2, 3.0), literature r̂ (47.8, 12.5), 12 random directions
+(5.2, 0.0), shared axis d1 (34.2, 3.0), published refusal vector (47.8, 12.5), 12 random directions
 spanning x ∈ [−1.0, 8.5], y ≈ 0.
 
 Qwen — **pending rerun on the corrected low-bin basis; do not finalise this panel until those
 numbers land.** Prior values, for layout only: exfiltration (60.2, 0.0), concealment
-(45.0, 21.0), weaponisation (12.8, −1.0), shared axis d1 (94.2, 95.5), literature r̂
+(45.0, 21.0), weaponisation (12.8, −1.0), shared axis d1 (94.2, 95.5), published refusal vector
 (51.5, 67.0), randoms x ∈ [−0.8, 2.0].
 
 **Encoding.** Two panels side by side, one per model, **sharing both axis scales** so the
@@ -142,7 +142,7 @@ originals. Llama:
 |---|--:|--:|--:|--:|
 | frame residual (weaponisation) | +0.502 | +0.556 | +0.309 | +0.369 |
 | shared axis d1 | +2.948 | +0.735 | +2.504 | +0.321 |
-| literature r̂ | +2.259 | +0.524 | +1.974 | +0.247 |
+| published refusal vector | +2.259 | +0.524 | +1.974 | +0.247 |
 
 Cell n: 997 / 695 / 261 / 613. Main effects — frame residual: ALARM +0.190, REFUSAL −0.057;
 d1: ALARM +0.429, REFUSAL +2.198; r̂: ALARM +0.281, REFUSAL +1.731. Random-direction null (50
