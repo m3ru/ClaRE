@@ -1,7 +1,15 @@
 #!/bin/bash
 # Submit one array per arm, for example:
 #   sbatch --export=ALL,ARM=or_loose run_qwen_gcg_rorqual.slurm
+#   sbatch --export=ALL,ARM=jb_loose --array=0-7 run_qwen_gcg_rorqual.slurm
 # Valid ARM values: or_loose, or_strict, jb_loose, jb_strict.
+#
+# Measured on a rorqual H100: ~386 s/prompt loose, ~334 s/prompt strict at
+# these search settings, and ~65 GB of the 80 GB card. prompt_rewrite_opt.py
+# writes its JSON only after the last prompt, so a shard that overruns its wall
+# clock loses the whole shard -- hence 80 prompts (~8.6 h) against a 12 h limit.
+# The OR arms therefore use the default 40 x 80 array; submit the jailbreak arms
+# with --array=0-7 (eight shards covering all 221 StrongREJECT prompts).
 #SBATCH --job-name=qwen-gcg
 #SBATCH --account=def-vganesh
 #SBATCH --nodes=1
@@ -9,8 +17,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=96G
 #SBATCH --gpus-per-node=h100:1
-#SBATCH --time=1-00:00:00
-#SBATCH --array=0-15
+#SBATCH --time=0-12:00:00
+#SBATCH --array=0-39
 #SBATCH --output=logs/qwen_gcg_%A_%a.out
 #SBATCH --error=logs/qwen_gcg_%A_%a.err
 
@@ -41,7 +49,7 @@ mkdir -p "${OUT}"
 COMMON=(
   --base_model Qwen/Qwen3-32B --disable_thinking --attn_implementation eager
   --opener_json "${OPENER_JSON}" --model_key qwen
-  --shard_id "${S}" --n_shards 16 --steps 150 --n_cand 96 --candidate_batch_size 16
+  --shard_id "${S}" --steps 150 --n_cand 96 --candidate_batch_size 16
   --sim_floor 0.85 --lam 20.0 --block_profanity
   --fluency_weight 1.0 --nll_max_weight 0.5
   --max_new_tokens 128 --generation_batch_size 8
@@ -50,7 +58,8 @@ COMMON=(
 if [[ "${ARM}" == or_* ]]; then
   COMMON+=(
     --pairs_csv "${PAIR_ROOT}/pairs.csv" "${PAIR_ROOT}/pairs_sonnet.csv"
-    --objective openers --holdout_frac 0.30 --n_prompts 200 --max_prompt_tok 48
+    --objective openers --n_shards 40 --n_prompts 80
+    --holdout_frac 0.30 --max_prompt_tok 48
     --dump_holdout "${OUT}/holdout_s${S}.json"
   )
   STEM=qwen_or
@@ -58,7 +67,7 @@ else
   [[ -s "${HARMFUL_CSV}" ]] || { echo "missing ${HARMFUL_CSV}" >&2; exit 2; }
   COMMON+=(
     --prompts_csv "${HARMFUL_CSV}" --prompt_column prompt
-    --objective anti_openers --n_prompts 20 --max_prompt_tok 96
+    --objective anti_openers --n_shards 8 --n_prompts 28 --max_prompt_tok 96
   )
   STEM=qwen_jb
 fi
