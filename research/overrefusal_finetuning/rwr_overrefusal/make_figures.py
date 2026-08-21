@@ -109,13 +109,13 @@ def fig1(shards=6):
         ax.axvspan(-0.6, 2.5, color=INK, alpha=0.06, zorder=0)
         ax.axvline(2.5, color=INK2, lw=1.3, ls="--", zorder=3)
         ax.set_title(f"{nm}    (n = {len(v):,} generated rewrites\u2003\u00b7\u2003"
-                     f"$D_c\\leq2$: {low:.1f}%)", loc="left")
+                     f"$D\\leq2$: {low:.1f}%)", loc="left")
         ax.set_ylabel("rewrites")
         ax.grid(axis="y", zorder=0); ax.set_axisbelow(True)
     ticks = list(range(0, CAP + 1, 4)) + [CAP + 1]
     axes[1].set_xticks(ticks)
     axes[1].set_xticklabels([str(t) for t in ticks[:-1]] + [f">{CAP}"])
-    axes[1].set_xlabel("content-word edit distance $D_c$")
+    axes[1].set_xlabel("content-word edit distance $D$")
     axes[0].text(2.35, 0.97, "bin cut $\\tau=2$", transform=axes[0].get_xaxis_transform(),
                  fontsize=8.5, color=INK2, rotation=90, va="top", ha="right")
     fig.suptitle("The attacker rewords wholesale, so minimal-edit pairs are scarce",
@@ -123,7 +123,7 @@ def fig1(shards=6):
     fig.text(0.012, 0.968, "Median normalised distance 0.92 \u2014 a typical rewrite changes "
              "about as many content words as the original contains. This follows from the "
              "reward, which gates on semantic\nsimilarity and charges nothing for lexical "
-             "change. Populating the $D_c\\leq2$ bin therefore required generating 32,000 "
+             "change. Populating the $D\\leq2$ bin therefore required generating 32,000 "
              "additional prompts.", fontsize=8.8, color=INK2, ha="left", va="top")
     fig.subplots_adjust(top=0.85, hspace=0.28)
     save(fig, "fig1_edit_distance_distribution")

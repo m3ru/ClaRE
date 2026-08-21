@@ -166,10 +166,10 @@ more interpretable — phenomenon than a wholesale paraphrase that happens to tr
 Let $T(p)$ be the lowercased word tokens of $p$ and $C(p) = T(p)\setminus S$ with $S$ a fixed
 English stopword list. The content-edit distance is
 
-$$D_c(o,r) \;=\; \mathrm{Lev}\big(C(o),\,C(r)\big),$$
+$$D(o,r) \;=\; \mathrm{Lev}\big(C(o),\,C(r)\big),$$
 
 the minimum number of single-word insertions, deletions and substitutions converting $C(o)$ into
-$C(r)$, each of unit cost. We also store the normalised distance $D_c/|C(o)|$, because originals
+$C(r)$, each of unit cost. We also store the normalised distance $D/|C(o)|$, because originals
 range from 3 to 202 tokens.
 
 **Why word-level and not character-level.** We are asking how many *lexical choices* changed. At
@@ -186,20 +186,20 @@ Normalised distance is the right quantity for comparing *across prompt lengths* 
 but it is the wrong knob for this cut.
 
 **The threshold is derived, not chosen.** We take the smallest $\tau$ such that the low bin
-$\{(o,r) : D_c(o,r)\le\tau\}$ contains at least 50 confirmed over-refusal pairs over at least 40
+$\{(o,r) : D(o,r)\le\tau\}$ contains at least 50 confirmed over-refusal pairs over at least 40
 distinct originals — an estimability floor below which the weighted log-odds statistic of §5 has
 no power. That yields $\tau = 2$.
 
 ### 4.2 The distribution is itself the first result
 
 `[FIGURE 4]` *Edit-distance distribution.* **This is the paper's first substantive figure.**
-Histogram of $D_c$ over confirmed over-refusal pairs, Llama and Qwen overlaid or side-by-side,
+Histogram of $D$ over confirmed over-refusal pairs, Llama and Qwen overlaid or side-by-side,
 with the $\tau=2$ cut marked and the low-bin mass annotated. Inset: normalised distance
 distribution. The shape *is* the finding.
 
 The distribution is **unimodal with mode at 6–7 content-word edits**, median normalised distance
 **0.92** — the typical rewrite changes about as many content words as the original contains. Only
-**4.2%** of rewrites satisfy $D_c \le 2$.
+**4.2%** of rewrites satisfy $D \le 2$.
 
 This is a direct and predictable consequence of §2: the reward gates on semantic similarity and
 imposes no edit-distance cost, so wholesale rewording is not merely permitted but is the path of
@@ -208,7 +208,7 @@ of minimal-edit over-refusals therefore requires either a modified reward or a m
 
 ### 4.3 Powering the low bin
 
-**What we wanted.** Enough $D_c\le 2$ pairs to estimate lexical statistics with power comparable
+**What we wanted.** Enough $D\le 2$ pairs to estimate lexical statistics with power comparable
 to the high bin.
 
 **How we operationalised it, and the arithmetic that made it affordable.** The key observation is
@@ -219,7 +219,7 @@ spend GPU only on the survivors. The measured funnel, from the existing 24,000-r
 |---|--:|--:|
 | rewrites generated ($4$ per original) | — | 128,000 |
 | unique after dedup | — | 124,413 |
-| pass the CPU edit filter $D_c\le 2$ | 3.78% | **4,702** |
+| pass the CPU edit filter $D\le 2$ | 3.78% | **4,702** |
 | refused by the target | 4.49% of candidates | 211 |
 | survive the two-axis judge | 81% | **171** |
 
@@ -239,8 +239,8 @@ stage. Makes the cost argument in one glance.
 
 | | Llama-3-8B | Qwen3-32B |
 |---|--:|--:|
-| high-edit bin ($D_c>2$) | 2,372 pairs / 1,481 originals | 1,246 / 849 |
-| low-edit bin ($D_c\le2$) | 208 / 183 | 217 / 200 |
+| high-edit bin ($D>2$) | 2,372 pairs / 1,481 originals | 1,246 / 849 |
+| low-edit bin ($D\le2$) | 208 / 183 | 217 / 200 |
 | matched controls | 1:1 | 1:1 |
 | within-original $\Delta'$ groups | 1,591 | 843 |
 
@@ -363,10 +363,10 @@ $$\cos\big(\Delta(o,r),\,\hat r\big).$$
 
 | group | Llama | Qwen |
 |---|--:|--:|
-| over-refusals, $D_c>2$ | **+0.399** | **+0.563** |
-| over-refusals, $D_c\le2$ | **+0.362** | **+0.515** |
-| matched controls, $D_c>2$ | +0.092 | +0.225 |
-| matched controls, $D_c\le2$ | +0.058 | +0.102 |
+| over-refusals, $D>2$ | **+0.399** | **+0.563** |
+| over-refusals, $D\le2$ | **+0.362** | **+0.515** |
+| matched controls, $D>2$ | +0.092 | +0.225 |
+| matched controls, $D\le2$ | +0.058 | +0.102 |
 
 Over-refusals are displaced roughly **4×** further along $\hat r$ than matched controls, and the two
 bins are close to indistinguishable — on both models.

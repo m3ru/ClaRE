@@ -26,7 +26,7 @@ than minimal perturbation, so near-minimal rewrites are rare in the corpus by co
 motivates both the two-bin split and the extra generation needed to populate the small bin. The
 shape of the distribution is itself the result — this is not a descriptive warm-up figure.
 
-**Data.** Word-level content-token Levenshtein distance $D_c$ computed for every confirmed
+**Data.** Word-level content-token Levenshtein distance $D$ computed for every confirmed
 over-refusal pair, per model. Llama n = 2,580 pairs; Qwen n = 1,463 pairs. Distances are
 integers ≥ 0; plot the range 0–20 and fold everything above 20 into a final ">20" bin so the
 tail does not stretch the axis.
@@ -37,7 +37,7 @@ overlaid histograms invite a false density comparison. Bars in the model colour,
 between adjacent bars. x = content-word edits; y = number of pairs.
 
 **Required annotations.**
-- A vertical rule at $D_c = 2$ marking the low/high bin boundary, labelled "bin cut τ = 2".
+- A vertical rule at $D = 2$ marking the low/high bin boundary, labelled "bin cut τ = 2".
 - The low-bin mass called out directly: "≤2 edits: 4.2% of rewrites" with a leader line to the
   shaded region left of the cut. Shade that region lightly (5% ink) — it is the interpretable
   stratum and it is nearly empty.

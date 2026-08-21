@@ -4,28 +4,28 @@
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig1_edit_distance_distribution.png}
-  \caption{\textbf{The attacker rewords wholesale, so minimal-edit pairs are scarce} Median normalised distance 0.92 — a typical rewrite changes about as many content words as the original contains. This follows from the reward, which gates on semantic similarity and charges nothing for lexical change. Populating the $D_c\leq2$ bin therefore required generating 32,000 additional prompts.}
+  \caption{\textbf{The attacker rewords wholesale, so minimal-edit pairs are scarce} Median normalised distance 0.92 --- a typical rewrite changes about as many content words as the original contains. This follows from the reward, which gates on semantic similarity and charges nothing for lexical change. Populating the $D\leq2$ bin therefore required generating 32,000 additional prompts.}
   \label{fig:fig1}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig2_triggers.png}
-  \caption{\textbf{Only some over-represented words were actually introduced by the edit} Refused rewrites contrasted against the same attacker's NOT-refused rewrites in the same edit bin, so the contrast isolates refusal rather than the attacker's style. Each original counted once; words in ≥3 distinct originals.}
+  \caption{\textbf{Only some over-represented words were actually introduced by the edit} Refused rewrites contrasted against the same attacker's NOT-refused rewrites in the same edit bin, so the contrast isolates refusal rather than the attacker's style. Each original counted once; words in $\geq$3 distinct originals.}
   \label{fig:fig2}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig3_causal_bars.png}
-  \caption{\textbf{A single direction removes over-refusal without costing safety} "Overall" = the average difference between rewrites the model refused and rewrites it did not. "Published" = the refusal vector from prior work. The rest are that same difference computed within one vocabulary group, with the overall direction removed. Both bars are DROPS: the model refuses less of both after ablation. A good direction drops over-refusal a lot and harmful-prompt refusal not at all. Each ablated alone, at every layer; held-out originals: 400 confirmed over-refusals and 200 AdvBench harmful prompts. A good direction has a long blue bar and no orange one.}
+  \caption{\textbf{A single direction removes over-refusal without costing safety} ``Overall'' = the average difference between rewrites the model refused and rewrites it did not. ``Published'' = the refusal vector from prior work. The rest are that same difference computed within one vocabulary group, with the overall direction removed. Both bars are DROPS: the model refuses less of both after ablation. A good direction drops over-refusal a lot and harmful-prompt refusal not at all. Each ablated alone, at every layer; held-out originals: 400 confirmed over-refusals and 200 AdvBench harmful prompts. A good direction has a long blue bar and no orange one.}
   \label{fig:fig3}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig4_alarm_2x2.png}
-  \caption{\textbf{The effective direction tracks alarming wording, not the refusal decision} Llama, held-out originals, cluster-bootstrapped over originals (95% CI). Random-direction null (50 dirs), 95th pct: ALARM 0.022, REFUSAL 0.057. For the frame residual the two lines nearly coincide — alarming words move it whether or not the model refused. Note the y-axes differ in range between panels.}
+  \caption{\textbf{The effective direction tracks alarming wording, not the refusal decision} Llama, held-out originals, cluster-bootstrapped over originals (95\% CI). Random-direction null (50 dirs), 95th pct: ALARM 0.022, REFUSAL 0.057. For the frame residual the two lines nearly coincide --- alarming words move it whether or not the model refused. Note the y-axes differ in range between panels.}
   \label{fig:fig4}
 \end{figure}
 

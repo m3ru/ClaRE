@@ -176,10 +176,10 @@ last-real-token index. Any deviation invalidates comparability with the fitted d
 **Word-level unit-cost Levenshtein over content tokens.** T(p) = lowercased word tokens;
 C(p) = T(p) minus a fixed English stopword list.
 
-    D_c(o,r) = Lev(C(o), C(r))
+    D(o,r) = Lev(C(o), C(r))
 
 the minimum number of single-word insertions, deletions and substitutions converting C(o) into
-C(r), each unit cost. Normalised distance D_c/|C(o)| is stored because originals range 3–202
+C(r), each unit cost. Normalised distance D/|C(o)| is stored because originals range 3–202
 tokens.
 
 **Why word-level, not character-level:** we are counting *lexical choices*, and at character level
@@ -201,7 +201,7 @@ has no power. That yields **τ = 2**.
 Unimodal, **mode 6–7 content-word edits**, **median normalised distance 0.92** — the typical
 rewrite changes about as many content words as the original contains.
 
-Fraction with D_c ≤ 2, and **the denominator matters** (three different numbers exist; using the
+Fraction with D ≤ 2, and **the denominator matters** (three different numbers exist; using the
 wrong one is circular):
 
 | denominator | Llama | Qwen |
@@ -223,7 +223,7 @@ only on survivors. Measured funnel, Llama:
 |---|--:|--:|
 | rewrites generated (4 per original × 32,000 originals) | — | 128,000 |
 | unique after dedup | — | 124,413 |
-| pass CPU edit filter D_c ≤ 2 | 3.78% | **4,702** |
+| pass CPU edit filter D ≤ 2 | 3.78% | **4,702** |
 | refused by the target | 4.49% of candidates | 211 |
 | survive the two-axis judge | 81% | **171** |
 
@@ -234,8 +234,8 @@ bin from 37 → **208** pairs (Llama) and 45 → **217** (Qwen).
 
 | | Llama-3-8B | Qwen3-32B |
 |---|--:|--:|
-| high-edit bin (D_c > 2) | 2,372 pairs / 1,481 originals | 1,246 / 849 |
-| low-edit bin (D_c ≤ 2) | 208 / 183 | 217 / 200 |
+| high-edit bin (D > 2) | 2,372 pairs / 1,481 originals | 1,246 / 849 |
+| low-edit bin (D ≤ 2) | 208 / 183 | 217 / 200 |
 | matched controls | 1:1 | 1:1 |
 | within-original Δ′ groups | 1,591 | 863 |
 | held-out originals available | 815 | 523 |
@@ -334,10 +334,10 @@ Mean cosine between Δ and the model's reference refusal direction:
 
 | group | Llama | Qwen |
 |---|--:|--:|
-| over-refusals, D_c > 2 | **+0.399** | **+0.563** |
-| over-refusals, D_c ≤ 2 | **+0.362** | **+0.515** |
-| matched controls, D_c > 2 | +0.092 | +0.225 |
-| matched controls, D_c ≤ 2 | +0.058 | +0.102 |
+| over-refusals, D > 2 | **+0.399** | **+0.563** |
+| over-refusals, D ≤ 2 | **+0.362** | **+0.515** |
+| matched controls, D > 2 | +0.092 | +0.225 |
+| matched controls, D ≤ 2 | +0.058 | +0.102 |
 
 Over-refusals are displaced ~4× further than matched controls; the two bins are close to
 indistinguishable, on both models.
@@ -788,7 +788,7 @@ colour-vision deficiency.
 
 | file | what it shows |
 |---|---|
-| `fig1_edit_distance_distribution` | D_c histograms, both models, τ=2 cut, D_c≤2 share in the title. **Plots generated rewrites** (4.3%/6.2%) — not the analysis corpus, which is inflated by our own power-up |
+| `fig1_edit_distance_distribution` | D histograms, both models, τ=2 cut, D≤2 share in the title. **Plots generated rewrites** (4.3%/6.2%) — not the analysis corpus, which is inflated by our own power-up |
 | `fig2_triggers` | z_doc bars, both models, **coloured by introduced-by-edit vs topic marker** — the colour split is the argument |
 | `fig3_causal_bars` | the central causal result; both panels share one row order so the models line up; both bars are **drops**, axis says so |
 | `fig4_alarm_2x2` | slope panels — the frame residual's two lines nearly coincide and both rise with alarm; d₁ and the published vector are far apart and flat |

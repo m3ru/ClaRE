@@ -110,7 +110,7 @@ it is barely above chance. Its AdvBench effect is *exactly* the random control's
 drop it does produce is most likely residual overlap — Llama-Guard-3-8B is a Llama-3-family
 fine-tune, so the bases are not independent — amplified by ablating at all 33 sites.
 
-Result quarantined as `killswitch_r17_INVALID_crossmodel.json`. The script's `--vector_npz` now
+Result quarantined as `killswitch_r17_INVALIDrossmodel.json`. The script's `--vector_npz` now
 defaults to empty (refit), because none of the repo's npz files record which model they were fit
 on, and that is the field that makes them safe to load.
 
