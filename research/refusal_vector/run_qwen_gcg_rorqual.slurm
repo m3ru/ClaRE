@@ -35,7 +35,16 @@ case "${ARM}" in
   *) echo "invalid ARM=${ARM}" >&2; exit 2 ;;
 esac
 
-echo "[cfg] ARM=${ARM} OR_NPROMPTS=${OR_NPROMPTS:-80} shard=${SLURM_ARRAY_TASK_ID}"
+# The OR and JB arms shard the corpus differently, but one --array default has to
+# serve both. Indices past this arm's n_shards would re-run prompts that lower
+# shards already cover, so retire them instead of duplicating ~100 GPU-h of work.
+if [[ "${ARM}" == or_* ]]; then N_SHARDS=40; else N_SHARDS=8; fi
+if (( SLURM_ARRAY_TASK_ID >= N_SHARDS )); then
+  echo "[skip] ${ARM} uses ${N_SHARDS} shards; array index ${SLURM_ARRAY_TASK_ID} has no work"
+  exit 0
+fi
+
+echo "[cfg] ARM=${ARM} N_SHARDS=${N_SHARDS} OR_NPROMPTS=${OR_NPROMPTS:-80} shard=${SLURM_ARRAY_TASK_ID}"
 cd "${SLURM_SUBMIT_DIR}"
 mkdir -p logs
 module load cuda scipy-stack/2024b
@@ -65,7 +74,7 @@ COMMON=(
 if [[ "${ARM}" == or_* ]]; then
   COMMON+=(
     --pairs_csv "${PAIR_ROOT}/pairs.csv" "${PAIR_ROOT}/pairs_sonnet.csv"
-    --objective openers --n_shards 40 --n_prompts "${OR_NPROMPTS:-80}"
+    --objective openers --n_shards "${N_SHARDS}" --n_prompts "${OR_NPROMPTS:-80}"
     --holdout_frac 0.30 --max_prompt_tok 48
     --dump_holdout "${OUT}/holdout_s${S}.json"
   )
@@ -74,7 +83,7 @@ else
   [[ -s "${HARMFUL_CSV}" ]] || { echo "missing ${HARMFUL_CSV}" >&2; exit 2; }
   COMMON+=(
     --prompts_csv "${HARMFUL_CSV}" --prompt_column prompt
-    --objective anti_openers --n_shards 8 --n_prompts 28 --max_prompt_tok 96
+    --objective anti_openers --n_shards "${N_SHARDS}" --n_prompts 28 --max_prompt_tok 96
   )
   STEM=qwen_jb
 fi
