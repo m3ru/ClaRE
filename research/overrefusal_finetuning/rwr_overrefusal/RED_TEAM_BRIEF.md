@@ -36,7 +36,7 @@ Existing checkpoints, same hyperparameters, so new arms drop straight into the c
 | Llama | **vector (abliterated)** | **12** | **ablation argmin** | **← to run** |
 | Llama | logit | — | n/a | trained (current best) |
 | Qwen | vector | 58 | AUC | **trained** |
-| Qwen | **vector (abliterated)** | **TBD** | **ablation argmin** | **← to run** |
+| Qwen | **vector (abliterated)** | **60** | **ablation argmin** | **← to run** |
 | Qwen | logit | — | n/a | trained |
 
 **One new training arm per model.** Everything else is a comparator that already exists.
@@ -70,9 +70,15 @@ most useful thing you could push back on.
 1. **Is "the abliterated vector" the Arditi-construction direction at the ablation-selected
    layer, or our own construction at that layer?** We assume the former. The choice matters
    because at L12 the two differ (cos 0.50) far more than at late layers (cos 0.84 @L31).
-2. **Qwen's ablation-selected layer is not yet known.** Job 19396818 provides it (~20h queue).
-   Do we wait, or pick Qwen's layer by the depth-matched analogue of Llama's L12 (~L24 of 64)
-   and note the substitution?
+2. ~~Qwen's ablation-selected layer is not yet known.~~ **RESOLVED 2026-08-21.** Job 19396818
+   finished in 17 min. Qwen selects **L60** (val harmful refusal 91.4% → 0.0%; necessity
+   91.4 → 1.6% with harmless unmoved). Llama's mirror independently reproduces **L12** on our
+   instrument (9.4% argmin; necessity 100 → 5.5%; sufficiency 0 → 99.2% at coef 1).
+   *Still worth attacking:* Qwen's top is a flat plateau — L56 4.7%, L57 3.1%, L60 0.0% — so the
+   argmin is within noise of our existing AUC layer L57. Llama's surface is sharply
+   non-monotonic instead (L12 9.4, L14 82.8, L18 43.8). Is an argmin over a flat plateau a
+   meaningful selection, or should Qwen's arm use L57 so the layer is held constant against the
+   existing comparator?
 3. **Bin edges are re-derived per arm** from that signal's own OR distribution. This is
    necessary (distributions differ by orders of magnitude: Llama L17 edges 0.099/0.58/2.04 vs
    L31 0.37/2.21/8.14) but it means arms differ in *which* pairs land in the top bin, not just
@@ -93,6 +99,11 @@ most useful thing you could push back on.
   version (389/class from Qwen's own measured refusal rates, cos 0.805 with the old one at L57).
   Whether the Qwen arms use the old or new vector is **decision 6** — we propose the new one.
 - **Judge purity ~67%** corpus-wide on the final over-refusal rate, same for every arm.
+- **Qwen's sufficiency test is not clean.** Adding the direction to harmless prompts gives
+  32.8% refusal at coef 1 (14.8% degenerate) and 98.4% at coef 2 — but on a model that is
+  **84.4% degenerate**. Llama's is clean (0 → 99.2% at coef 1, 0% degenerate). So Qwen's
+  direction passes necessity but not sufficiency, and the brief's framing of it as "the"
+  refusal direction is weaker for Qwen than for Llama.
 
 ## Cost and status
 

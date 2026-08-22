@@ -889,3 +889,56 @@ alarming vocabulary (`invade`, `deception`, `manipulate`).
 | `LLAMA_VS_QWEN.md` | auto-generated parity tables |
 | `figures/`, `make_figures.py` | figures, regenerated from result files |
 | `probe_or/results/` | all result JSON/CSV: `dirsearch_*`, `causal_rank*`, `safety_power*`, `d4_delta2x2`, `external_bench`, `gcg_transfer`, `strongreject_graded*`, `induction/` |
+
+---
+
+# 18. Late additions (2026-08-21/22) — read this before using §7 or §12
+
+**The "whole-prompt refusal vector" row was previously mislabelled "published refusal vector".**
+`atlas_rhat` is `probe_absolute.npz["d"][L]` — this project's own refused-vs-complied
+diff-of-means, read at our own basis layer (17 Llama / 57 Qwen), on **both** panels. It is not
+prior work's direction, and no downloaded literature vector exists anywhere in the repo. Renamed
+throughout. **Any claim comparing "our direction" against "the literature's" was comparing ours
+against ours.**
+
+**Arditi's actual directions now exist, for the first time.** `arditi_layer_sweep.py` reproduces
+Arditi's selection procedure (diff-of-means harmful-vs-harmless at each candidate layer, ablate at
+every layer, pick argmin refusal) with three fixes the original lacked: degeneracy is measured per
+candidate and disqualifies a layer (the original's argmin would otherwise select the most
+destructive layer), the project's start-anchored classifier replaces a Llama-flavoured substring
+list, and `enable_thinking=False` for Qwen. Results:
+
+| model | selected layer | necessity | sufficiency |
+|---|--:|---|---|
+| Llama-3-8B | **12** | 100% → 5.5% harmful refusal, harmless unmoved | 0 → **99.2%** at coef 1, clean |
+| Qwen3-32B | **60** | 91.4% → 1.6%, harmless unmoved | 32.8% at coef 1 (**14.8% degenerate**); 98.4% at coef 2 on a model **84.4% degenerate** |
+
+Llama's L12 independently reproduces the original PACE selection on a different instrument.
+**Qwen passes necessity but not sufficiency** — worth stating if the paper calls either "the"
+refusal direction. Qwen's top is also a flat plateau (L56 4.7, L57 3.1, L60 0.0), so its argmin is
+within noise of the AUC layer already in use; Llama's surface is sharply non-monotonic instead.
+
+**Layer, not construction, is what separates the directions.** From `direction_comparison.json`
+(Spearman vs behavioural ΔP, 6,000 Llama pairs): at **matched** layers the two constructions are
+indistinguishable — ours 0.2615 vs arditi 0.2563 at L17, 0.2912 vs 0.2824 at L31. The
+often-quoted "0.261 vs 0.058" gap is a layer effect. **L12 is the worst layer for either
+construction.** Do not report construction as the operative variable.
+
+**Qwen's refusal vector was fit on Llama's labels.** Both models' diff-of-means directions read the
+same `final_refusals_prompts.csv` / `final_benign_prompts.csv`, built by running **Llama** over a
+Reddit/jailbreak pool and classifying **Llama's** responses; Qwen refuses 21% of the "benign" side.
+A Qwen-native replacement now exists (`probe_absolute_qwennative.npz`, 389/class from Qwen's own
+measured refusal rates, cos **0.805** with the old one at L57). **Scope: d1–d8 are unaffected** —
+`build_causal_dirs.py` reads paired Δ activations, never `probe_absolute.npz`. The causal ablation
+table, alarm 2×2, induction experiment and generalisation results all stand.
+
+**Every vector-reward RWR arm is at or below its untrained baseline**, on both models, at two
+layers each (Llama L17 −4.69, L31 −3.28; Qwen L58 −6.12). Only the logit arm beats base, and only
+on Llama (+6.78). Caveat when reading these: trained arms preserve semantics far better than base
+(similarity ~0.83 vs ~0.63), so base wins some refusals by drifting off-topic, which the two-axis
+judge would reject. Judge-confirmed rates are the number that settles it.
+
+**Running at time of writing:** one RWR arm per model using the abliterated direction as the OR
+reward (Llama L12, Qwen L60), same held-out split and hyperparameters as the existing arms so the
+reward layer is the only variable. Pre-registered prediction: both lose, because L12/L60 rank
+behaviour worst. A loss is the finding — *causally necessary is not the same as good reward*.
