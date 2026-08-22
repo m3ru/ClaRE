@@ -144,6 +144,10 @@ def main():
         conds.append((f"random_{r+1}", Q.T[0]))
     conds.append(("atlas_rhat", r_atlas))
 
+    # Stream to disk per condition. Writing only at the end means a walltime overrun loses
+    # every generation, which is how a GCG shard was lost earlier in this project.
+    gen_p = os.path.join(a.out_dir, "generations.jsonl")
+    gf = open(gen_p, "w", buffering=1)
     R, rows = {}, []
     for cname, M in conds:
         specs = [] if M is None else all_layer(M)
@@ -153,14 +157,15 @@ def main():
             R[f"{ename}__{cname}"] = 100.0 * sum(is_refusal(x) for x in reps) / len(reps)
             R[f"{ename}__{cname}__degen"] = 100.0 * sum(degenerate(x) for x in reps) / len(reps)
             for p, t in zip(prompts, reps):                 # SAVE EVERYTHING, both eval sets
-                rows.append({"condition": cname, "evalset": ename, "prompt": p, "response": t,
-                             "regex_refused": int(bool(is_refusal(t))), "degenerate": int(degenerate(t))})
+                rec = {"condition": cname, "evalset": ename, "prompt": p, "response": t,
+                       "regex_refused": int(bool(is_refusal(t))), "degenerate": int(degenerate(t))}
+                rows.append(rec)
+                gf.write(json.dumps(rec) + "\n")
+            gf.flush(); os.fsync(gf.fileno())               # survive a hard kill
             print(f"  {cname:18s} {ename:12s} regex-refusal {R[f'{ename}__{cname}']:6.2f}%  "
                   f"degen {R[f'{ename}__{cname}__degen']:5.2f}%  ({time.time()-t0:.0f}s)", flush=True)
 
-    with open(os.path.join(a.out_dir, "generations.jsonl"), "w") as f:
-        for r in rows:
-            f.write(json.dumps(r) + "\n")
+    gf.close()
     json.dump({"rates_regex": R, "layer": L, "model": a.base_model,
                "conditions": [c for c, _ in conds], "n_rows": len(rows),
                "max_new_tokens": a.max_new_tokens},
