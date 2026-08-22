@@ -1,0 +1,96 @@
+{
+ "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+ "evalset": "or_rewrites",
+ "layer": 17,
+ "judge_model": "claude-sonnet-5",
+ "per_condition": {
+  "baseline": {
+   "regex": 74.5,
+   "judged_lo": 73.62924281984334,
+   "judged_hi": 74.75,
+   "unjudged": 17,
+   "n": 400,
+   "garbage": 0.0
+  },
+  "d1_shared": {
+   "regex": 39.75,
+   "judged_lo": 66.02209944751381,
+   "judged_hi": 69.25,
+   "unjudged": 38,
+   "n": 400,
+   "garbage": 0.0
+  },
+  "sym_exploitation": {
+   "regex": 68.25,
+   "judged_lo": 68.9119170984456,
+   "judged_hi": 70.0,
+   "unjudged": 14,
+   "n": 400,
+   "garbage": 0.0
+  },
+  "sym_concealment": {
+   "regex": 52.0,
+   "judged_lo": 55.643044619422575,
+   "judged_hi": 57.75,
+   "unjudged": 19,
+   "n": 400,
+   "garbage": 0.0
+  },
+  "sym_weaponization": {
+   "regex": 35.75,
+   "judged_lo": 39.577836411609496,
+   "judged_hi": 42.75,
+   "unjudged": 21,
+   "n": 400,
+   "garbage": 0.0
+  },
+  "sym_intrusion": {
+   "regex": 52.0,
+   "judged_lo": 54.666666666666664,
+   "judged_hi": 57.5,
+   "unjudged": 25,
+   "n": 400,
+   "garbage": 0.25
+  },
+  "sym_exfiltration": {
+   "regex": 64.5,
+   "judged_lo": 65.33333333333333,
+   "judged_hi": 67.5,
+   "unjudged": 25,
+   "n": 400,
+   "garbage": 0.0
+  },
+  "random_1": {
+   "regex": 74.0,
+   "judged_lo": 74.40633245382585,
+   "judged_hi": 75.75,
+   "unjudged": 21,
+   "n": 400,
+   "garbage": 0.25
+  },
+  "random_2": {
+   "regex": 74.0,
+   "judged_lo": 73.87862796833772,
+   "judged_hi": 75.25,
+   "unjudged": 21,
+   "n": 400,
+   "garbage": 0.0
+  },
+  "random_3": {
+   "regex": 74.0,
+   "judged_lo": 73.05699481865285,
+   "judged_hi": 74.0,
+   "unjudged": 14,
+   "n": 400,
+   "garbage": 0.0
+  },
+  "atlas_rhat": {
+   "regex": 26.25,
+   "judged_lo": 43.013698630136986,
+   "judged_hi": 48.0,
+   "unjudged": 35,
+   "n": 400,
+   "garbage": 0.0
+  }
+ }
+}
