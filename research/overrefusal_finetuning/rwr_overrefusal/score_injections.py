@@ -89,7 +89,7 @@ def boot_delta(pairs_arm, pairs_base, n=4000, seed=0):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--tag", required=True, choices=["llama", "qwen"])
+    ap.add_argument("--tag", required=True, choices=["llama", "qwen", "qwenown"])
     ap.add_argument("--model", default="claude-sonnet-5")
     ap.add_argument("--poll_interval", type=int, default=20)
     ap.add_argument("--key_file", default="~/.anthropic_key")

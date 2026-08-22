@@ -112,7 +112,7 @@ def boot(arm_ind, base_ind, n=4000, seed=0):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--tag", default="llama", choices=["llama", "qwen"])
+    ap.add_argument("--tag", default="llama", choices=["llama", "qwen", "qwenown"])
     ap.add_argument("--model", default="claude-opus-5")
     ap.add_argument("--poll_interval", type=int, default=20)
     ap.add_argument("--key_file", default="~/.anthropic_key")
