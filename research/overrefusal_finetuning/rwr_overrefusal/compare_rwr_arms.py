@@ -31,14 +31,64 @@ ARMS = {
 }
 
 
-def wilson(k, n, z=1.96):
-    if not n:
-        return (float("nan"),) * 2
-    p = k / n
-    d = 1 + z * z / n
-    c = (p + z * z / (2 * n)) / d
-    h = z * sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
-    return (100 * (c - h), 100 * (c + h))
+def _by_orig(rows):
+    """Group refuse rates by the ORIGINAL they came from. The 4 rewrites of one original are
+    not independent draws -- they share a prompt -- so the resampling unit is the original."""
+    g = {}
+    for r in rows:
+        g.setdefault(r["orig_idx"], []).append(float(r["refuse_rate"]))
+    return list(g.values())
+
+
+def cluster_ci(rows, n_boot=10000, seed=0):
+    """Cluster bootstrap over originals, percentile interval.
+
+    NOT Wilson on the 800 rewrites: that treats 4 correlated rewrites of one prompt as 4
+    independent observations and returns an interval that is far too narrow. The v5 judge
+    pipeline already resamples originals for exactly this reason; this makes the raw-rate
+    table consistent with it.
+    """
+    import random
+    cl = _by_orig(rows)
+    if not cl:
+        return (float("nan"),) * 3
+    point = 100 * sum(sum(c) for c in cl) / sum(len(c) for c in cl)
+    rng = random.Random(seed)
+    n, out = len(cl), []
+    for _ in range(n_boot):
+        pick = [cl[rng.randrange(n)] for _ in range(n)]
+        tot = sum(len(c) for c in pick)
+        out.append(100 * sum(sum(c) for c in pick) / tot if tot else 0.0)
+    out.sort()
+    return point, out[int(0.025 * n_boot)], out[int(0.975 * n_boot)]
+
+
+def paired_cluster_ci(a_rows, b_rows, n_boot=10000, seed=0):
+    """Trained minus base, resampling the SAME originals for both arms.
+
+    The arms share the held-out originals, so the contrast is paired; resampling them
+    independently would throw away that pairing and inflate the interval.
+    """
+    import random
+    A, B = {}, {}
+    for r in a_rows:
+        A.setdefault(r["orig_idx"], []).append(float(r["refuse_rate"]))
+    for r in b_rows:
+        B.setdefault(r["orig_idx"], []).append(float(r["refuse_rate"]))
+    keys = sorted(set(A) & set(B))
+    if not keys:
+        return (float("nan"),) * 3
+    def rate(d, ks):
+        num = sum(sum(d[k]) for k in ks); den = sum(len(d[k]) for k in ks)
+        return 100 * num / den if den else 0.0
+    point = rate(A, keys) - rate(B, keys)
+    rng = random.Random(seed)
+    n, out = len(keys), []
+    for _ in range(n_boot):
+        ks = [keys[rng.randrange(n)] for _ in range(n)]
+        out.append(rate(A, ks) - rate(B, ks))
+    out.sort()
+    return point, out[int(0.025 * n_boot)], out[int(0.975 * n_boot)]
 
 
 def load(tag):
@@ -56,15 +106,16 @@ for model, arms in ARMS.items():
         if d is None:
             print(f"{label:34s} {'— not run —':>18s}")
             continue
-        r, b = d["arms"]["rwr"], d["arms"]["base"]
-        nr, nb = r["n_rewrites_total"], b["n_rewrites_total"]
-        rr, bb = 100 * r["mean_refuse_rate"], 100 * b["mean_refuse_rate"]
-        rl, rh = r.get("refuse_rate_ci95", [float("nan")] * 2)
-        bl, bh = b.get("refuse_rate_ci95", [float("nan")] * 2)
-        beats = "BEATS" if rl * 100 > bh * 100 else ("loses" if rh * 100 < bl * 100 else "ties")
-        print(f"{label:34s} {rr:6.2f} [{100*rl:5.2f},{100*rh:5.2f}] "
-              f"{bb:6.2f} [{100*bl:5.2f},{100*bh:5.2f}] {rr-bb:+7.2f}  {r['mean_similarity']:.3f}  {beats}")
-    print("  lift = trained minus its own untrained base. 'BEATS'/'loses' = non-overlapping 95% CIs.")
+        ex = d.get("examples", {})
+        rr, rl, rh = cluster_ci(ex.get("rwr", []))
+        bb, bl, bh = cluster_ci(ex.get("base", []))
+        dp, dl, dh = paired_cluster_ci(ex.get("rwr", []), ex.get("base", []))
+        sig = "**" if (dl > 0 or dh < 0) else "n.s."
+        print(f"{label:34s} {rr:6.2f} [{rl:5.2f},{rh:5.2f}] "
+              f"{bb:6.2f} [{bl:5.2f},{bh:5.2f}] {dp:+7.2f} [{dl:+.2f},{dh:+.2f}] {sig}")
+    print("  lift = trained minus its own base, PAIRED cluster bootstrap over the 200 originals\n"
+          "  (10k resamples). Not Wilson on 800 rewrites -- 4 rewrites of one prompt are not\n"
+          "  independent, and Wilson would report an interval roughly 2x too narrow.")
 
 print("\nNote: the trained arms hold semantics far better than base (sim ~0.83 vs ~0.63), so a\n"
       "lower refusal rate is not automatically worse -- base wins some refusals by drifting off\n"
