@@ -126,7 +126,51 @@ def fig_z(top=12):
     print("  wrote fig_gcg_vocab_z")
 
 
+def fig_categories(path="probe_or/results/gcg_categorized.json"):
+    """Share of each corpus in each Sonnet category. Colour encodes the model here, so
+    the house LLAMA/QWEN hues carry their usual meaning."""
+    LLAMA, QWEN = "#2a78d6", "#eb6834"
+    rows = json.load(open(path))
+    NICE = {
+        "fabricated_harmful_or_illegal_framing": "invented a harmful/illegal\nreading not in the prompt",
+        "perceived_explicit_or_offensive_content": "read it as explicit\nor offensive",
+        "explicit_negation_command_obeyed": "obeyed an injected\n'no' / 'do not answer'",
+        "genuine_over_refusal_no_visible_cause": "no visible cause",
+        "capability_or_format_misunderstanding": "thought it needed an image\n/ link / PDF",
+        "objection_to_inserted_derogatory_phrase": "declined an inserted\nderogatory phrase",
+    }
+    order = ["fabricated_harmful_or_illegal_framing", "explicit_negation_command_obeyed",
+             "perceived_explicit_or_offensive_content", "genuine_over_refusal_no_visible_cause",
+             "capability_or_format_misunderstanding", "objection_to_inserted_derogatory_phrase"]
+    sets = {c: [r for r in rows if r["corpus"] == c] for c in ("llama_gcg", "qwen_gcg")}
+    y = list(range(len(order)))[::-1]
+    fig, ax = plt.subplots(figsize=(8.8, 4.6))
+    h = 0.36
+    for off, (corpus, col, lab) in enumerate((("llama_gcg", LLAMA, "Llama GCG (n=1220)"),
+                                              ("qwen_gcg", QWEN, "Qwen GCG (n=359)"))):
+        sub = sets[corpus]
+        v = [100.0 * sum(1 for r in sub if r["category"] == k) / len(sub) for k in order]
+        pos = [yy + (h / 2 + 0.01 if off == 0 else -h / 2 - 0.01) for yy in y]
+        ax.barh(pos, v, height=h, color=col, linewidth=0, zorder=2, label=lab)
+        for p, vv in zip(pos, v):
+            ax.text(vv + 0.8, p, f"{vv:.1f}%", va="center", fontsize=8.4, color=INK)
+    ax.set_yticks(y)
+    ax.set_yticklabels([NICE[k] for k in order], fontsize=8.6)
+    ax.set_xlabel("% of that corpus")
+    ax.set_xlim(0, 63)
+    ax.grid(axis="x", zorder=0)
+    ax.set_axisbelow(True)
+    ax.set_title("Why the model refused, by corpus (Sonnet 5 categories)", loc="left", pad=8)
+    ax.legend(loc="lower right")
+    fig.tight_layout()
+    for ext in ("png", "pdf"):
+        fig.savefig(f"{OUT}/fig_gcg_categories.{ext}", dpi=200, bbox_inches="tight")
+    print("  wrote fig_gcg_categories")
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     fig_rates()
     fig_z()
+    if os.path.exists("probe_or/results/gcg_categorized.json"):
+        fig_categories()
