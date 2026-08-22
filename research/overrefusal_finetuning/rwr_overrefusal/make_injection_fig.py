@@ -54,24 +54,17 @@ for off, (tag, col, lab) in enumerate((("llama", LLAMA, "Llama-3-8B (baseline 0.
     ax.barh(pos, val, height=h, color=col, linewidth=0, zorder=2, label=lab)
     ax.errorbar(val, pos, xerr=err, fmt="none", ecolor=INK2, elinewidth=1.1,
                 capsize=2.5, zorder=3)
-    for p, v, r in zip(pos, val, [d[tag][k] for k in ORDER if k in d[tag]]):
-        sig = "*" if r["lo"] > 0 else ""
-        ax.text(v + 0.45, p, f"{v:+.1f}{sig}", va="center", fontsize=8.3, color=INK)
 
 ax.axvline(0, color=INK2, lw=1.1, zorder=1)
 ax.set_yticks(y)
 ax.set_yticklabels([NICE[k] for k in ORDER], fontsize=8.8)
-ax.set_xlabel("change in refusal rate on benign prompts (percentage points)")
+ax.set_xlabel("Change in refusal rate on benign prompts (percentage points)")
 ax.set_title("Injecting each cluster into 300 unseen benign prompts (still-benign refusals only)",
              loc="left", pad=10)
 ax.grid(axis="x", zorder=0)
 ax.set_axisbelow(True)
-ax.set_xlim(-3, 25)
+ax.set_xlim(-2.5, 22)
 ax.legend(loc="upper right")
-fig.text(0.005, -0.02,
-         "Paired: every arm saw the same 300 prompts. Counts only refusals where an Opus judge "
-         "confirmed the injected prompt is still benign. Whiskers are the paired bootstrap 95% CI. * = excludes zero.",
-         fontsize=8.2, color=INK2, ha="left")
 fig.tight_layout()
 os.makedirs(OUT, exist_ok=True)
 for ext in ("png", "pdf"):
