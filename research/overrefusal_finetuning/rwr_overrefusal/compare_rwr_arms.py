@@ -70,3 +70,39 @@ print("\nNote: the trained arms hold semantics far better than base (sim ~0.83 v
       "lower refusal rate is not automatically worse -- base wins some refusals by drifting off\n"
       "topic, which the judge would reject as intent-shifted. Judge-confirmed rates are the\n"
       "final word; these are refusal rates under the eval's own classifier.")
+
+# ---------------------------------------------------------------- judge-confirmed
+def judged():
+    """Judge-confirmed rates from the v5 pool -- the number that actually settles this.
+
+    Raw refusal rate is confounded: the untrained base wins refusals partly by drifting off
+    topic, which the two-axis judge rejects as intent-shifted. Measured base purity runs
+    18.8-66.1% against 42.4-94.1% for the trained arms, so the raw comparison understates
+    every trained arm -- on Qwen's vector arm by 6.6 points, which flips it from "loses" to
+    "ties". Never report the raw lift without this.
+    """
+    p = "probe_or/results/v5_judged/summary_v5.json"
+    if not os.path.exists(p):
+        print("\n(no v5 judge summary yet)")
+        return
+    d = json.load(open(p))["arms"]
+    print("\n=== JUDGE-CONFIRMED over-refusal (two-axis judge: intent preserved AND benign) ===")
+    print(f"{'arm':30s} {'trained':>20s} {'pur':>5s} | {'base':>20s} {'pur':>5s} | {'lift':>7s}")
+    seen = set()
+    for k in d:
+        arm = k.split("|")[0]
+        if arm in seen:
+            continue
+        seen.add(arm)
+        r, b = d.get(f"{arm}|rwr"), d.get(f"{arm}|base")
+        if not (r and b):
+            continue
+        tag = "BEATS" if r["lo"] > b["hi"] else ("loses" if r["hi"] < b["lo"] else "ties")
+        print(f"{arm:30s} {100*r['rate']:6.2f} [{100*r['lo']:5.2f},{100*r['hi']:5.2f}] {r['purity']:5.0%} | "
+              f"{100*b['rate']:6.2f} [{100*b['lo']:5.2f},{100*b['hi']:5.2f}] {b['purity']:5.0%} | "
+              f"{100*(r['rate']-b['rate']):+6.2f} {tag}")
+    print("  pur = purity, the fraction of flagged refusals the judge confirms as genuine\n"
+          "  over-refusal. Low base purity is why raw rates flatter the untrained model.")
+
+
+judged()
