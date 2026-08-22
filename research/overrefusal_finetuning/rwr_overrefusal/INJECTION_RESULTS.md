@@ -100,6 +100,13 @@ and larger on every arm that moves at all.
 - 36 of 3,000 Llama judgements and 76 of 3,000 Qwen judgements failed to parse and are
   counted as non-refusals.
 - Baseline refusal is 0.7%, so these are large relative changes on a small absolute floor.
+- The response judge is roughly 94% precise here. Screening the counted refusals for any
+  refusal phrase -- the substring detector has ~98.5% recall, so a refusal containing none
+  is suspect -- flags 9 of 150 on Llama and 3 of 51 on Qwen. They are concentrated in the
+  `action` arm (2 of 3, and 1 of 1 on Qwen), which the test already finds inert; the arms
+  carrying the result are clean, with 0 of 17 on `touchy` and 0 of 9 on `harmful_phrase`.
+  One such case reached a rendered example box before being caught, so the paper snippet
+  generator now requires an example's response to contain a refusal phrase.
 
 ## Reproducing
 
