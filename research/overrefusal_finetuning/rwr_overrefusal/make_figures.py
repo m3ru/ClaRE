@@ -447,11 +447,99 @@ def _tex(t):
     return "$".join(out)
 
 
+
+# ---------------------------------------------------------------- Fig 6 (section 2)
+def fig6():
+    """Why we mine openers per model, and why the logit signal is the one we trust.
+
+    Two methods choices the whole paper rests on, each justified by a measurement:
+
+    (a) Refusal openers are model-specific. "I cannot" opens 56.5% of Llama's refusals but
+        only 6.5% of Qwen's, whose dominant opener is "I'm sorry" (53.8%). A phrase detector
+        tuned on one model does not transfer.
+
+    (b) On the full evaluation set all three signals separate refused from complied at
+        AUC 0.97-0.99 and look interchangeable. Restricting to WITHIN-ORIGINAL comparisons --
+        rewrites of the same prompt, so topic is held constant -- separates them: the
+        activation signals degrade (Qwen's vector 0.969 -> 0.874) while the logit holds.
+        This is the same topic control the paired-Delta analysis uses, and it predicts the
+        reward result: the logit is the only signal that trains a better attacker.
+
+    Qwen's vector and probe coincide because its probe places all NNLS weight on one layer,
+    so the probe is the standardised vector; that is a property of the fit, not a duplicate.
+    """
+    OP = json.load(open("refusal_atlas/opener_sets.json"))
+    AU = json.load(open("refusal_atlas/results/figures_data.json"))["models"]
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(11.6, 3.9),
+                                   gridspec_kw={"width_ratios": [1.05, 1.0], "wspace": 0.30})
+
+    # (a) opener share, model-specific
+    openers = ["I cannot", "I apologize", "I'm sorry", "Sorry", "I can't", "As an AI"]
+    y = np.arange(len(openers))[::-1]; h = 0.36
+    for off, (mk, nm, col) in ((+h/2, ("llama", "Llama-3-8B", LLAMA)),
+                               (-h/2, ("qwen", "Qwen3-32B", QWEN))):
+        sh = OP[mk]["opener_shares"]
+        v = [100 * sh.get(o, 0.0) for o in openers]
+        axA.barh(y + off, v, height=h, color=col, label=nm, zorder=3)
+    for yi, o in zip(y, openers):
+        for mk, col, off in (("llama", LLAMA, +h/2), ("qwen", QWEN, -h/2)):
+            val = 100 * OP[mk]["opener_shares"].get(o, 0.0)
+            if val >= 3:
+                axA.text(val + 1.2, yi + off, f"{val:.1f}", va="center", fontsize=8,
+                         color=INK)
+    axA.set_yticks(y); axA.set_yticklabels([f'"{o}"' for o in openers], fontsize=9.2)
+    axA.set_xlabel("share of that model's refusals that begin with this phrase (%)")
+    axA.set_xlim(0, 68); axA.legend(loc="lower right", fontsize=8.8)
+    axA.set_title("Refusal openers are model-specific", loc="left", pad=8, fontsize=10.5)
+    axA.grid(axis="x", zorder=0); axA.set_axisbelow(True)
+    axA.spines["left"].set_visible(False); axA.tick_params(axis="y", length=0)
+
+    # (b) AUC full -> within-original, per signal per model
+    sigs = [("logit_sum", "refusal-opener logit"), ("probe", "multi-layer probe"),
+            ("vector", "refusal vector")]
+    rows, labs = [], []
+    for si, (sk, sn) in enumerate(sigs):
+        for mk, nm, col in (("llama", "Llama-3-8B", LLAMA), ("qwen", "Qwen3-32B", QWEN)):
+            rows.append((AU[mk]["auc"][sk]["full"], AU[mk]["auc"][sk]["within"], col))
+            labs.append(f"{sn}\n{nm}" if mk == "llama" else f"\n{nm}")
+    yy = np.arange(len(rows))[::-1]
+    for yi, (f_, w_, col) in zip(yy, rows):
+        axB.plot([w_, f_], [yi, yi], color=col, lw=2.0, alpha=0.55, zorder=2,
+                 solid_capstyle="round")
+        axB.plot(f_, yi, "o", ms=8, color=col, mec=SURF, mew=1.2, zorder=3)
+        axB.plot(w_, yi, "D", ms=7, color=SURF, mec=col, mew=2.0, zorder=3)
+        axB.text(w_ - 0.004, yi, f"{w_:.3f}", va="center", ha="right", fontsize=7.8, color=INK2)
+    axB.set_yticks(yy); axB.set_yticklabels(labs, fontsize=8.4)
+    axB.set_xlim(0.855, 1.005)
+    axB.set_xlabel("AUC, refused vs complied")
+    axB.set_title("Controlling for topic separates the signals", loc="left", pad=8, fontsize=10.5)
+    axB.grid(axis="x", zorder=0); axB.set_axisbelow(True)
+    axB.spines["left"].set_visible(False); axB.tick_params(axis="y", length=0)
+    axB.legend(handles=[Line2D([], [], marker="o", ls="", ms=8, color=GREY, label="full set"),
+                        Line2D([], [], marker="D", ls="", ms=7, color=SURF, mec=GREY, mew=2,
+                               label="within-original (topic controlled)")],
+               loc="upper left", fontsize=8.4)   # bottom-left is occupied by the Qwen vector row
+
+    fig.suptitle("Two measurement choices the rest of the paper depends on",
+                 x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.06)
+    fig.text(0.012, 0.995,
+             "Left: openers mined from 23,595 Llama and 19,952 Qwen generations. "
+             "\u201cI cannot\u201d opens 56.5% of Llama's refusals and 6.5% of Qwen's, so a "
+             "phrase detector\ndoes not transfer between models. Right: on the full set all "
+             "three signals look interchangeable; restricting to rewrites of the SAME original "
+             "degrades the\nactivation signals and leaves the logit intact. Qwen's probe "
+             "coincides with its vector because the fit places all weight on one layer.",
+             fontsize=8.8, color=INK2, ha="left", va="top")
+    fig.subplots_adjust(top=0.80)
+    save(fig, "fig6_refusal_signals")
+
+
 FIGS = {"1": ("fig1_edit_distance_distribution", lambda: fig1()),
         "2": ("fig2_triggers", lambda: fig2()),
         "3": ("fig3_causal_bars", lambda: fig3()),
         "4": ("fig4_alarm_2x2", lambda: fig4()),
-        "5": ("fig5_generalisation", lambda: fig5())}
+        "5": ("fig5_generalisation", lambda: fig5()),
+        "6": ("fig6_refusal_signals", lambda: fig6())}
 
 if __name__ == "__main__":
     which = [a for a in sys.argv[1:] if not a.startswith("-")] or list(FIGS)

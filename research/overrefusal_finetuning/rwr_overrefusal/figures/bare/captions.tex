@@ -3,7 +3,7 @@
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/fig3_causal_bars.png}
-  \caption{\textbf{Removing a single direction reduces over-refusal without costing safety} Both panels: percentage points of refusal REMOVED, so larger is more removed. Left is the goal, right is the cost. Shaded band on the left is the random-direction null; on the right it is ±1.5pp. Every direction on both models moves harmful refusal by at most 1.0pp. Rates are Sonnet-judged on substance; a start-anchored regex inflates the two output-aligned directions by up to 97pp and is not used here.}
-  \label{fig:fig3}
+  \includegraphics[width=\linewidth]{figures/fig6_refusal_signals.png}
+  \caption{\textbf{Two measurement choices the rest of the paper depends on} Left: openers mined from 23,595 Llama and 19,952 Qwen generations. “I cannot” opens 56.5\% of Llama's refusals and 6.5\% of Qwen's, so a phrase detector does not transfer between models. Right: on the full set all three signals look interchangeable; restricting to rewrites of the SAME original degrades the activation signals and leaves the logit intact. Qwen's probe coincides with its vector because the fit places all weight on one layer.}
+  \label{fig:fig6}
 \end{figure}
