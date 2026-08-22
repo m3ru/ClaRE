@@ -145,7 +145,28 @@ def main():
     lg = logit_openers(model, tok, uniq, openers, args.logit_bs, args.max_length)
 
     Dproj = np.array([proj[p["rewrite"]] - proj[p["original"]] for p in pairs])   # [n, nL]
-    assert np.isfinite(Dproj).all(), "non-finite projections -- check directions / dtype"
+    # A non-finite value at ANY layer used to abort the whole run, even though only
+    # Dproj[:, vector_layer] is consumed (and d_probe only where w > 0). A 48-minute Qwen
+    # scoring pass died this way. Report what is bad and where, then require finiteness
+    # only of the columns actually used -- so a numerically unstable layer we never read
+    # cannot destroy a run.
+    badmask = ~np.isfinite(Dproj)
+    if badmask.any():
+        bad_layers = sorted(set(np.where(badmask)[1].tolist()))
+        bad_rows = sorted(set(np.where(badmask)[0].tolist()))
+        print(f"[warn] non-finite projections at layers {bad_layers} "
+              f"across {len(bad_rows)} of {len(pairs)} pairs", flush=True)
+        for L in bad_layers[:5]:
+            n = int(badmask[:, L].sum())
+            print(f"[warn]   L{L}: {n} pairs; |d_L|={float(np.linalg.norm(d[L])):.3e} "
+                  f"dn_L={float(dn[L, 0]):.3e}", flush=True)
+    used = [args.vector_layer] + (np.where(w > 1e-4)[0].tolist() if (w > 1e-4).any() else [])
+    assert np.isfinite(Dproj[:, used]).all(), (
+        f"non-finite projections at a CONSUMED layer {used} -- check directions / dtype")
+    # Zero the unused non-finite entries: the consumed columns are asserted finite above, but
+    # zD @ w would still propagate NaN into d_probe (0 * nan = nan), poisoning the output CSV.
+    if badmask.any():
+        Dproj = np.where(badmask, 0.0, Dproj)
     zD = (Dproj - mu) / sd                       # stored fit-time delta standardization (PROBE only)
     d_vector = Dproj[:, args.vector_layer]       # RAW delta at the causal layer -- see header
     d_probe = zD @ w                             # w was fit on standardized deltas; must match
