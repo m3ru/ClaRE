@@ -129,113 +129,82 @@ def fig1(shards=6):
     save(fig, "fig1_edit_distance_distribution")
 
 # ---------------------------------------------------------------- Fig 3
-# Figure labels use no internal shorthand. d1 is literally the average difference between
-# rewrites the model refused and rewrites it did not; it correlates 0.78 with the published
-# refusal vector, so it IS a refusal direction -- ours, from paired data, versus theirs, from
-# unpaired harmful/harmless prompts. The contrast a reader needs is overall vs frame-specific
-# and ours vs published. (It is NOT an "alarm" direction: the frame residuals are what load on
-# alarming wording, and only after d1 is removed.)
-NICE = {"d1_shared": "overall refusal direction", "atlas_rhat": "whole-prompt refusal vector"}
-ROW_ORDER = ["overall refusal direction", "whole-prompt refusal vector", "weaponization",
-             "concealment", "exfiltration", "exploitation", "intrusion", "coercion",
-             "fabrication"]
-
 def fig3():
-    """Grouped horizontal bars, not a scatter.
+    """Single-direction ablation, JUDGED (not regex).
 
-    A scatter of (over-refusal removed, harmful refusal lost) is the natural encoding, but
-    Qwen has a 95pp outlier against a 0-21pp field, which either flattens the rest or needs a
-    broken axis, and the near-coincident low-effect points collide when labelled. Bars put the
-    direction names on the axis (collisions impossible), keep exact values readable, and let
-    the outlier simply be a long bar. The signature of a good direction is a long blue bar
-    beside a near-absent orange one."""
-    def load(p):
-        d = json.load(open(p))["scan"]
-        pts = [(x["direction"], x["d_or"], x["d_harm"]) for x in d
-               if not x["direction"].startswith("random")]
-        rnd = [x["d_or"] for x in d if x["direction"].startswith("random")]
-        return pts, (max(rnd) if rnd else 0.0)
+    Two measures at very different scales -- over-refusal removed (0-37pp) and harmful
+    refusal lost (within +/-1pp) -- so they get small multiples sharing a y-axis, never a
+    dual x-axis. The narrow right panel exists precisely because the safety result is a
+    NON-effect: on a shared axis with the left panel it would be invisible, and "invisible"
+    is not the same as "shown to be zero".
 
-    def pretty(n):
-        if n in NICE:
-            return NICE[n]
-        n = n.replace("sym_", "")
-        for pre in ("d1_", "d2_", "d3_", "d4_", "d5_", "d6_", "d7_", "d8_"):
-            n = n.replace(pre, "")
-        return n.replace("_", " ")
+    Sign convention is identical in both panels: bigger = more refusal removed. On the left
+    that is the goal; on the right it is the cost. Zero on the right means the ablation did
+    not touch harmful-prompt refusal.
 
-    panels = [("Llama-3-8B-Instruct", "probe_or/results/dirsearch_llama_sym.json")]
-    if os.path.exists("probe_or/results/dirsearch_qwen_ownframes.json"):
-        panels.append(("Qwen3-32B", "probe_or/results/dirsearch_qwen_ownframes.json"))
-
-    fig, axes = plt.subplots(1, len(panels), figsize=(12.8, 5.6), sharey=True)
-    if len(panels) == 1:
-        axes = [axes]
-
-    # rows are the union of both models' directions, in one fixed order, so the panels align
-    present = set()
-    for _, path in panels:
-        present |= {pretty(n) for n, _, _ in load(path)[0]}
-    rows = [r for r in ROW_ORDER if r in present] + sorted(present - set(ROW_ORDER))
-    rows = rows[::-1]                                      # first entry at the top
-
-    for ax, (nm, path) in zip(axes, panels):
-        pts, nullmax = load(path)
-        lut = {pretty(n): (o, h) for n, o, h in pts}
-        names = rows
-        dor = np.array([lut.get(r, (np.nan, np.nan))[0] for r in rows], dtype=float)
-        dhm = np.array([lut.get(r, (np.nan, np.nan))[1] for r in rows], dtype=float)
-        y = np.arange(len(rows)); hgt = 0.36
-
-        ax.barh(y + hgt / 2 + 0.02, np.nan_to_num(dor), height=hgt, color=LLAMA,
-                linewidth=0, label="over-refusal  (want a big drop)")
-        ax.barh(y - hgt / 2 - 0.02, np.nan_to_num(dhm), height=hgt, color=QWEN,
-                linewidth=0, label="harmful-prompt refusal  (want no drop)")
-        ax.axvspan(0, nullmax, color=GREY, alpha=0.18, zorder=0)
-
-        span = np.nanmax([np.nanmax(dor), np.nanmax(dhm)])
-        for yi, v in zip(y + hgt / 2 + 0.02, dor):
-            if np.isfinite(v):
-                ax.text(v + span * 0.015, yi, f"{v:.1f}", va="center", fontsize=8.4, color=INK)
-        for yi, v in zip(y - hgt / 2 - 0.02, dhm):
-            if np.isfinite(v):
-                lab = f"{v:.1f}" + ("  \u2190 safety damage" if v >= 2 else "")
-                ax.text(max(v, 0) + span * 0.015, yi, lab, va="center", fontsize=8.4,
-                        color=INK if v < 2 else QWEN)
-        for yi, r in zip(y, rows):
-            if r not in lut:
-                ax.text(span * 0.02, yi, "not in this model's frame set", va="center",
-                        fontsize=7.8, color=GREY, style="italic")
-        ax.set_yticks(y); ax.set_yticklabels(names, fontsize=9.5)
-        ax.set_xlim(min(-2, np.nanmin(dhm) * 1.2), span * 1.32)
-        ax.axvline(0, color=INK2, lw=1.0)
-        ax.set_xlabel("percentage-point DROP in refusal after ablation")
-        ax.set_title(nm, loc="left", pad=8)
-        ax.grid(axis="x", zorder=0); ax.set_axisbelow(True)
-        ax.spines["left"].set_visible(False); ax.tick_params(axis="y", length=0)
-
-    from matplotlib.patches import Patch
-    hs, ls = axes[0].get_legend_handles_labels()
-    hs.append(Patch(facecolor=GREY, alpha=0.18))
-    ls.append("random-direction null")
-    # Figure-level, below the panels: an in-axes legend collides with the "not in this
-    # model's frame set" labels on the empty rows, and which rows are empty depends on
-    # the data, so no in-axes corner is reliably safe.
-    fig.legend(hs, ls, loc="upper center", bbox_to_anchor=(0.5, 0.035),
-               ncol=3, fontsize=8.8)
-    fig.suptitle("A single direction removes over-refusal without costing safety",
-                 x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.04)
-    fig.text(0.012, 0.968, "\"Overall\" = the average difference between rewrites the model "
-             "refused and rewrites it did not. \"Whole-prompt\" = the same contrast fitted on "
-             "whole prompts rather than on edits. The rest are\nthat same difference computed within one vocabulary group, "
-             "with the overall direction removed. Both bars are DROPS: the model refuses "
-             "less of both after ablation. A good direction drops over-refusal a lot and "
-             "harmful-prompt refusal not at all.\nEach ablated alone, at every layer; held-out "
-             "originals: 400 confirmed over-refusals and 200 AdvBench harmful prompts. "
-             "A good direction has a long blue bar and no orange one.",
+    Rates are Sonnet-judged on substance, not the start-anchored regex. The regex reads a
+    moralising refusal as compliance, which inflated the two output-aligned directions by
+    up to 97pp; see judged_ablation_2model.json.
+    """
+    D = json.load(open("probe_or/results/judged_ablation_2model.json"))
+    order = ["overall direction", "whole-prompt refusal vector", "weaponization",
+             "concealment", "intrusion", "exfiltration", "exploitation",
+             "coercion", "fabrication"]
+    fig = plt.figure(figsize=(11.4, 6.4))
+    gs = fig.add_gridspec(2, 2, width_ratios=[3.1, 1.0], wspace=0.06, hspace=0.34)
+    for r, (mk, nm, col) in enumerate([("llama", "Llama-3-8B-Instruct", LLAMA),
+                                       ("qwen", "Qwen3-32B", QWEN)]):
+        d = D[mk]; rows = d["rows"]
+        y = np.arange(len(order))[::-1]
+        axL = fig.add_subplot(gs[r, 0]); axR = fig.add_subplot(gs[r, 1], sharey=axL)
+        # left: over-refusal removed
+        axL.axvspan(0, d["null_or_drop"], color=GREY, alpha=0.16, lw=0, zorder=0)
+        for yi, k in zip(y, order):
+            if k not in rows:
+                axL.text(0.7, yi, "not in this model's frame set", va="center",
+                         fontsize=7.6, color=GREY, style="italic", zorder=4); continue
+            v = rows[k]["or_drop"]
+            axL.barh(yi, v, height=0.52, color=col, zorder=3)
+            axL.text(v + 0.6 if v >= 0 else v - 0.6, yi, f"{v:+.1f}", va="center",
+                     ha="left" if v >= 0 else "right", fontsize=8.4, color=INK)
+        axL.set_yticks(y); axL.set_yticklabels(order, fontsize=9.2)
+        # pin the row range so BOTH models show all 9 rows in the same order -- otherwise
+        # matplotlib autoscales to the bars drawn and the two panels stop lining up.
+        axL.set_ylim(-0.7, len(order) - 0.3)
+        axL.set_xlim(-6, 42); axL.axvline(0, color=INK2, lw=1.0)
+        axL.set_title(nm, loc="left", pad=7)
+        axL.grid(axis="x", zorder=0); axL.set_axisbelow(True)
+        axL.spines["left"].set_visible(False); axL.tick_params(axis="y", length=0)
+        # right: harmful refusal lost -- same sign convention, far smaller scale
+        axR.axvspan(-1.5, 1.5, color=GREY, alpha=0.16, lw=0, zorder=0)
+        for yi, k in zip(y, order):
+            if k not in rows:
+                continue
+            axR.plot(rows[k]["harm_drop"], yi, "o", ms=7, color=col,
+                     mec=SURF, mew=1.2, zorder=3)
+        axR.set_xlim(-4, 4); axR.axvline(0, color=INK2, lw=1.0)
+        axR.grid(axis="x", zorder=0); axR.set_axisbelow(True)
+        axR.tick_params(labelleft=False, labelsize=8.4)
+        axR.spines["left"].set_visible(False); axR.tick_params(axis="y", length=0)
+        if r == 0:
+            axL.set_title(nm, loc="left", pad=7)
+            axR.set_title("safety cost", loc="left", pad=7, fontsize=9.6)
+        if r == 1:
+            axL.set_xlabel("over-refusal removed (percentage points)")
+            axR.set_xlabel("harmful refusal lost (pp)", fontsize=9)
+    fig.suptitle("Removing a single direction reduces over-refusal without costing safety",
+                 x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.02)
+    fig.text(0.012, 0.965,
+             "Both panels: percentage points of refusal REMOVED, so larger is more removed. "
+             "Left is the goal, right is the cost.\nShaded band on the left is the "
+             "random-direction null; on the right it is \u00b11.5pp. Every direction on both "
+             "models moves harmful\nrefusal by at most 1.0pp. Rates are Sonnet-judged on "
+             "substance; a start-anchored regex inflates the two output-aligned\ndirections "
+             "by up to 97pp and is not used here.",
              fontsize=8.8, color=INK2, ha="left", va="top")
-    fig.subplots_adjust(top=0.84, wspace=0.42)
+    fig.subplots_adjust(top=0.80)
     save(fig, "fig3_causal_bars")
+
 
 # ---------------------------------------------------------------- Fig 5
 def fig5():
