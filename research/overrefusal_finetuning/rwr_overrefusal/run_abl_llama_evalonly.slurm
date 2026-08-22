@@ -12,13 +12,25 @@
 # importing sentence_transformers because pyarrow needs `gcc arrow/23.0.1` (CLAUDE.md).
 # The adapter is on disk, so only the eval needs re-running.
 set -euo pipefail
-mkdir -p probe_or/results/eval_llama_vector_abl_L12
 cd "$SLURM_SUBMIT_DIR"
 module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
 export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
-python -c "import pyarrow, sentence_transformers; print('[pre-flight] pyarrow + sentence_transformers import OK')"
+OUT=probe_or/results/eval_llama_vector_abl_L12
+mkdir -p "$OUT"                       # eval_rwr_llama.py does NOT create its output dir
+# Pre-flight everything the run needs, so a 6-minute generation is never wasted on a
+# missing import or an unwritable path. Three runs died on exactly these.
+python - <<'PRE'
+import os, sys
+import pyarrow, sentence_transformers                      # noqa: F401
+for p in ("probe_or/results/rwr_llama_ckpt_vector_abl_L12/final/adapter_model.safetensors",
+          "probe_or/results/llama_scored/heldout_originals.json"):
+    assert os.path.exists(p), f"missing {p}"
+out = "probe_or/results/eval_llama_vector_abl_L12/eval_final.json"
+open(out + ".probe", "w").close(); os.remove(out + ".probe")   # writable?
+print("[pre-flight] imports, adapter, heldout split and output path all OK")
+PRE
 python -u eval_rwr_llama.py \
     --adapter_dir probe_or/results/rwr_llama_ckpt_vector_abl_L12/final \
     --heldout_json probe_or/results/llama_scored/heldout_originals.json \
