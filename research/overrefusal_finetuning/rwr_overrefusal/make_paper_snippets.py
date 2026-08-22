@@ -60,44 +60,66 @@ def trim(s, n):
 
 
 def marked(base, inj, n=300):
-    """Escaped rewrite with inserted regions wrapped in \\hl{}."""
+    """Escaped rewrite with changed words wrapped in \\ins{}.
+
+    Diffed at WORD level, not character level. A character diff renders a substitution like
+    "ways" -> "design" as \\ins{de}s\\ins{ign}, which is unreadable in print; at word level
+    it is simply \\ins{design}.
+    """
     inj = trim(inj, n)
-    sm = difflib.SequenceMatcher(None, base, inj, autojunk=False)
+    bw, iw = base.split(), inj.split()
+    sm = difflib.SequenceMatcher(None, bw, iw, autojunk=False)
     out = []
     for tag, _, _, j1, j2 in sm.get_opcodes():
-        seg = inj[j1:j2]
+        seg = iw[j1:j2]
         if not seg:
             continue
-        out.append(f"\\ins{{{esc(seg)}}}" if tag in ("insert", "replace") else esc(seg))
-    return "".join(out)
+        text = esc(" ".join(seg))
+        out.append(f"\\ins{{{text}}}" if tag in ("insert", "replace") else text)
+    return " ".join(out)
 
 
-# Boxes are drawn from the real accepted rewrites, not the injection run: the surrounding
-# prose describes the corpus, and the injection run had no valid `action` example because
-# both of its apparent ones were response-judge errors.
+# The examples in these boxes were chosen by the project owner from the labelled sample,
+# not selected by a rule. They are keyed on a distinctive substring of the rewrite so the
+# lookup is exact, and each carries the model it came from: three are Qwen3-32B and the
+# boxes sit under a table describing the Llama corpus, so the box title has to say which.
 #
-# Each key below names the original prompt of the example used for that category. Choosing
-# them by hand is a presentation decision, not an analytical one -- there are 74 to 361
-# qualifying candidates per category and the ones picked are simply the shortest and most
-# legible. Every pick still has to pass the automated filters: the category applies, the
-# over-refusal filter accepted it, and the response is an unambiguous refusal.
+# Two of the picks disagree with the automatic clustering, and the owner's call stands. The
+# Social Justice rewrite is clustered `chars`, missing that the inserted topic is the point.
+# The Georgia Bulldogs rewrite is clustered `harmful_phrase` and `touchy`; it is shown under
+# harmful-sounding phrase, matching the owner's own note on it, "bad sounding phrase".
 PICK = {
-    "chars": "Name 10 colors",
-    "negation": "What is Football?",
-    "touchy": "What is SaaS?",
-    "harmful_phrase": "What is geomorphometry?",
-    "action": "What is caffeine?",
+    "chars":          ("P ***", "Qwen3-32B"),
+    "negation":       ("Suggest 5 design to reduce energy", "Qwen3-32B"),
+    "touchy":         ("formulated to be important in this game world", "Llama3-8B"),
+    "harmful_phrase": ("totally DEST", "Llama3-8B"),
+    "action":         ("censor I - all references", "Llama3-8B"),
 }
-# The counter-example: an insertion that made the request genuinely objectionable, where
-# refusing is correct and the filter rejected it. Included so the boxes are not read as
-# claiming every rewrite is an over-refusal.
-PICK_SPOILED = "Why some people like spicy food?"
+PICK_SPOILED = ("stools inserted via", "Qwen3-32B")
 
 
-def render_box(w, title, r, colour="boxgrey"):
+def load_all_rewrites(clusters_path, qwen_path):
+    """Every rewrite from both corpora, so a pick can come from either."""
+    out = []
+    for r in json.load(open(clusters_path)):
+        out.append({"original": r["original"], "rewrite": r["rewrite"],
+                    "rewrite_response": r.get("rewrite_response")})
+    for r in json.load(open(qwen_path))["rows"]:
+        if r.get("arm") == "or_loose":
+            out.append({"original": r["original"], "rewrite": r["rewrite"],
+                        "rewrite_response": r.get("rewrite_response")})
+    return out
+
+
+def find(rewrites, needle):
+    hits = [r for r in rewrites if needle in (r.get("rewrite") or "")]
+    return hits[0] if hits else None
+
+
+def render_box(w, title, r, model, colour="boxgrey"):
     w("\\begin{tcolorbox}[colback=" + colour + ",colframe=black!25,boxrule=0.4pt,"
       "left=4pt,right=4pt,top=3pt,bottom=3pt,"
-      f"title={{\\small\\bfseries {title}}},fonttitle=\\small]")
+      f"title={{\\small\\bfseries {title}\\normalfont~---~{model}}},fonttitle=\\small]")
     w("\\small")
     w(f"\\textbf{{Original}}\\quad {esc(trim(r['original'], 200))}\\\\[2pt]")
     w(f"\\textbf{{Rewrite}}\\quad {marked(r['original'], r['rewrite'], 240)}\\\\[2pt]")
@@ -113,6 +135,7 @@ def main():
     ap.add_argument("--benign", default="probe_or/results/injections_llama_benign.json")
     ap.add_argument("--or_filter",
                     default="probe_or/results/or_filter_llama_gcg.json")
+    ap.add_argument("--qwen", default="incoming/qwen_gcg_all.json")
     ap.add_argument("--out", default="paper_section3.tex")
     a = ap.parse_args()
 
@@ -188,36 +211,26 @@ def main():
     w("")
 
     # ---- Example boxes --------------------------------------------------------
-    accepted = {(r["original"], r["rewrite"]): r.get("is_or")
-                for r in json.load(open(a.or_filter))} if os.path.exists(a.or_filter) else {}
-    by_orig = {}
-    for r in rows:
-        by_orig.setdefault(r["original"], []).append(r)
-
-    def qualifies(r, k):
-        return (k in r.get("clusters", [])
-                and accepted.get((r["original"], r["rewrite"]), "YES") == "YES"
-                and is_refusal(r.get("rewrite_response")))
-
+    allrw = load_all_rewrites(a.clusters, a.qwen)
     w("% ---- worked examples, one box per category --------------------------------")
     for k in CLUSTERS:
-        cands = [r for r in by_orig.get(PICK[k], []) if qualifies(r, k)]
-        if not cands:
-            cands = sorted([r for r in rows if qualifies(r, k)],
-                           key=lambda r: len(r["original"]))
-            print(f"  [warn] {k}: picked example did not qualify, fell back to shortest")
-        if not cands:
-            w(f"% no qualifying example for {k}")
+        needle, model = PICK[k]
+        r = find(allrw, needle)
+        if not r:
+            w(f"% MISSING: no rewrite matching {needle!r} for {k}")
+            print(f"  [warn] {k}: no rewrite matches {needle!r}")
             continue
-        render_box(w, LABEL[k], cands[0])
+        if not is_refusal(r.get("rewrite_response")):
+            print(f"  [warn] {k}: chosen response is not an unambiguous refusal")
+        render_box(w, LABEL[k], r, model)
 
     w("% ---- counter-example: the insertion spoiled the request -------------------")
-    sp = [r for r in by_orig.get(PICK_SPOILED, [])
-          if accepted.get((r["original"], r["rewrite"])) == "NO"]
-    if sp:
-        render_box(w, "Counter-example: not over-refusal", sp[0], colour="spoilbg")
+    needle, model = PICK_SPOILED
+    r = find(allrw, needle)
+    if r:
+        render_box(w, "Counter-example: not over-refusal", r, model, colour="spoilbg")
     else:
-        print("  [warn] no counter-example found")
+        print(f"  [warn] counter-example {needle!r} not found")
 
     # ---- Appendix table --------------------------------------------------------
     w("% ---- appendix: full per-arm injection results -----------------------------")
