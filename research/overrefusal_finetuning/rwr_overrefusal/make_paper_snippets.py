@@ -72,11 +72,47 @@ def marked(base, inj, n=300):
     return "".join(out)
 
 
+# Boxes are drawn from the real accepted rewrites, not the injection run: the surrounding
+# prose describes the corpus, and the injection run had no valid `action` example because
+# both of its apparent ones were response-judge errors.
+#
+# Each key below names the original prompt of the example used for that category. Choosing
+# them by hand is a presentation decision, not an analytical one -- there are 74 to 361
+# qualifying candidates per category and the ones picked are simply the shortest and most
+# legible. Every pick still has to pass the automated filters: the category applies, the
+# over-refusal filter accepted it, and the response is an unambiguous refusal.
+PICK = {
+    "chars": "Name 10 colors",
+    "negation": "What is Football?",
+    "touchy": "What is SaaS?",
+    "harmful_phrase": "What is geomorphometry?",
+    "action": "What is caffeine?",
+}
+# The counter-example: an insertion that made the request genuinely objectionable, where
+# refusing is correct and the filter rejected it. Included so the boxes are not read as
+# claiming every rewrite is an over-refusal.
+PICK_SPOILED = "Why some people like spicy food?"
+
+
+def render_box(w, title, r, colour="boxgrey"):
+    w("\\begin{tcolorbox}[colback=" + colour + ",colframe=black!25,boxrule=0.4pt,"
+      "left=4pt,right=4pt,top=3pt,bottom=3pt,"
+      f"title={{\\small\\bfseries {title}}},fonttitle=\\small]")
+    w("\\small")
+    w(f"\\textbf{{Original}}\\quad {esc(trim(r['original'], 200))}\\\\[2pt]")
+    w(f"\\textbf{{Rewrite}}\\quad {marked(r['original'], r['rewrite'], 240)}\\\\[2pt]")
+    w(f"\\textbf{{Response}}\\quad \\emph{{{esc(trim(r['rewrite_response'], 220))}}}")
+    w("\\end{tcolorbox}")
+    w("")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--clusters", default="probe_or/results/gcg_clusters_llama.json")
     ap.add_argument("--judged", default="probe_or/results/injections_llama_judged.json")
     ap.add_argument("--benign", default="probe_or/results/injections_llama_benign.json")
+    ap.add_argument("--or_filter",
+                    default="probe_or/results/or_filter_llama_gcg.json")
     ap.add_argument("--out", default="paper_section3.tex")
     a = ap.parse_args()
 
@@ -106,6 +142,7 @@ def main():
     w("%   \\newcommand{\\ins}[1]{\\textcolor{insred}{\\bfseries #1}}")
     w("%   \\definecolor{insred}{HTML}{C0392B}")
     w("%   \\definecolor{boxgrey}{HTML}{F7F7F5}")
+    w("%   \\definecolor{spoilbg}{HTML}{FBF0EE}")
     w("% ============================================================================")
     w("")
 
@@ -150,27 +187,37 @@ def main():
     w("\\end{figure}")
     w("")
 
-    # ---- Example boxes ---------------------------------------------------------
+    # ---- Example boxes --------------------------------------------------------
+    accepted = {(r["original"], r["rewrite"]): r.get("is_or")
+                for r in json.load(open(a.or_filter))} if os.path.exists(a.or_filter) else {}
+    by_orig = {}
+    for r in rows:
+        by_orig.setdefault(r["original"], []).append(r)
+
+    def qualifies(r, k):
+        return (k in r.get("clusters", [])
+                and accepted.get((r["original"], r["rewrite"]), "YES") == "YES"
+                and is_refusal(r.get("rewrite_response")))
+
     w("% ---- worked examples, one box per category --------------------------------")
     for k in CLUSTERS:
-        flips = [(i, r) for i, r in by.get(k, {}).items()
-                 if r["label"] == "REFUSE" and base.get(i, {}).get("label") == "COMPLY"
-                 and ben.get((k, i), "") != "SPOILED" and is_refusal(r["response"])]
-        if not flips:
-            w(f"% no example for {k}: no flip whose response is unambiguously a refusal")
-            print(f"  [skip] {k}: no box (no unambiguous refusal among its flips)")
+        cands = [r for r in by_orig.get(PICK[k], []) if qualifies(r, k)]
+        if not cands:
+            cands = sorted([r for r in rows if qualifies(r, k)],
+                           key=lambda r: len(r["original"]))
+            print(f"  [warn] {k}: picked example did not qualify, fell back to shortest")
+        if not cands:
+            w(f"% no qualifying example for {k}")
             continue
-        flips.sort(key=lambda x: len(x[1]["prompt"]))
-        i, r = flips[len(flips) // 4]
-        w("\\begin{tcolorbox}[colback=boxgrey,colframe=black!25,boxrule=0.4pt,"
-          "left=4pt,right=4pt,top=3pt,bottom=3pt,"
-          f"title={{\\small\\bfseries {LABEL[k]}}},fonttitle=\\small]")
-        w("\\small")
-        w(f"\\textbf{{Original}}\\quad {esc(trim(base[i]['prompt'], 200))}\\\\[2pt]")
-        w(f"\\textbf{{Rewrite}}\\quad {marked(base[i]['prompt'], r['prompt'], 240)}\\\\[2pt]")
-        w(f"\\textbf{{Response}}\\quad \\emph{{{esc(trim(r['response'], 220))}}}")
-        w("\\end{tcolorbox}")
-        w("")
+        render_box(w, LABEL[k], cands[0])
+
+    w("% ---- counter-example: the insertion spoiled the request -------------------")
+    sp = [r for r in by_orig.get(PICK_SPOILED, [])
+          if accepted.get((r["original"], r["rewrite"])) == "NO"]
+    if sp:
+        render_box(w, "Counter-example: not over-refusal", sp[0], colour="spoilbg")
+    else:
+        print("  [warn] no counter-example found")
 
     # ---- Appendix table --------------------------------------------------------
     w("% ---- appendix: full per-arm injection results -----------------------------")
