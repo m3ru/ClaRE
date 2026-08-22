@@ -5,8 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --gpus-per-node=nvidia_h100_80gb_hbm3_3g.40gb:1
-#SBATCH --time=0-11:00:00
+#SBATCH --gpus-per-node=h100:1
+#SBATCH --time=0-01:30:00
 #SBATCH --output=logs/abl_llama_%j.out
 #SBATCH --error=logs/abl_llama_%j.err
 #SBATCH --export=ALL
@@ -26,9 +26,9 @@
 # finding "causally necessary != good reward", a win overturns our layer choice.
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
-mkdir -p logs probe_or/results/llama_scored_abl
+mkdir -p logs probe_or/results/llama_scored_abl probe_or/results/eval_llama_vector_abl_L12
 
-module load cuda scipy-stack/2024b
+module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
 export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1

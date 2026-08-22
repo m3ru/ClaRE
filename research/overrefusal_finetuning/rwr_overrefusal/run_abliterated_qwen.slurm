@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=96G
 #SBATCH --gpus-per-node=h100:1
-#SBATCH --time=0-16:00:00
+#SBATCH --time=0-02:55:00
 #SBATCH --output=logs/abl_qwen_%j.out
 #SBATCH --error=logs/abl_qwen_%j.err
 #SBATCH --export=ALL
@@ -23,9 +23,9 @@
 # the existing Qwen vector arm exactly.
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
-mkdir -p logs probe_or/results/qwen_scored_abl
+mkdir -p logs probe_or/results/qwen_scored_abl probe_or/results/eval_qwen_vector_abl_L60
 
-module load cuda scipy-stack/2024b
+module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
 export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
