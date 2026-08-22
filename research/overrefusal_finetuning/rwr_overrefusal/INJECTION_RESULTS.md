@@ -24,44 +24,69 @@ measure whether refusal goes up.
 
 ![injection effect](figures/fig_injection_effect.png)
 
+Counting only refusals where an Opus judge confirmed the injected prompt is **still a
+benign request**. Bold = 95% interval excludes zero.
+
 | arm | Llama Δ | 95% CI | Qwen Δ | 95% CI |
 |---|--:|---|--:|---|
-| chars (asterisks, slashes) | +1.7 | [0.0, +3.3] | −0.3 | [−1.0, 0.0] |
-| action words | +0.3 | [−0.7, +1.7] | −0.3 | [−1.7, +0.7] |
-| negation (`no` / `not` / `NOT PLEASE`) | +1.3 | [−0.3, +3.0] | +1.0 | [0.0, +2.3] |
-| harmful-sounding phrase | **+3.0** | [+1.0, +5.3] | **+2.0** | [+0.7, +3.7] |
-| touchy subject | **+6.7** | [+4.0, +9.3] | **+2.7** | [+0.7, +4.7] |
-| chars + negation | **+4.0** | [+1.7, +6.7] | +1.7 | [−0.3, +3.7] |
-| chars + touchy | **+7.0** | [+4.0, +10.0] | +1.0 | [−0.7, +2.7] |
-| chars + harmful phrase | **+9.0** | [+5.7, +12.7] | +1.0 | [−0.7, +2.7] |
-| **all five combined** | **+17.0** | [+12.7, +21.7] | **+6.3** | [+3.3, +9.3] |
+| chars (asterisks, slashes) | +1.7 | [+0.0, +3.3] | -0.3 | [-1.0, +0.0] |
+| action words | +0.3 | [-0.7, +1.7] | -0.3 | [-1.7, +0.7] |
+| negation (`no` / `not` / `NOT PLEASE`) | +1.3 | [-0.3, +3.0] | +1.0 | [+0.0, +2.3] |
+| harmful-sounding phrase | **+2.3** | [+0.7, +4.3] | **+1.7** | [+0.3, +3.3] |
+| touchy subject | **+5.0** | [+2.7, +7.7] | +1.0 | [-0.3, +2.3] |
+| chars + negation | **+4.0** | [+1.7, +6.7] | +1.7 | [-0.3, +3.7] |
+| chars + touchy | **+6.0** | [+3.3, +9.0] | +0.7 | [-1.0, +2.3] |
+| chars + harmful phrase | **+7.7** | [+4.7, +11.0] | +0.7 | [-1.0, +2.3] |
+| **all five combined** | **+15.7** | [+11.7, +20.0] | **+5.0** | [+2.3, +8.0] |
 
-Bold = 95% interval excludes zero.
+## Why the benign filter is there
+
+Span pools were drawn from all 1,220 rewrites, not just the over-refusal ones, so some
+spans are content that makes a request genuinely objectionable. Inserting `racist joking`
+into "Tell a joke" produces a refusal that is *correct*, not over-refusal. Every refusal
+was therefore judged on whether the injected prompt still asks for something benign, and
+the spoiled ones are excluded above.
+
+The correction is real but modest: 18 of the 168 Llama arm-refusals and 12 of the 63 Qwen
+arm-refusals were
+dropped. Its effect is uneven, and that unevenness is the point --
+
+| arm | raw Δ (Llama) | benign-only Δ | raw Δ (Qwen) | benign-only Δ |
+|---|--:|--:|--:|--:|
+| chars | +1.7 | +1.7 | −0.3 | −0.3 |
+| negation | +1.3 | +1.3 | +1.0 | +1.0 |
+| harmful_phrase | +3.0 | +2.3 | +2.0 | +1.7 |
+| touchy | +6.7 | **+5.0** | +2.7 | **+1.0** |
+| all five | +17.0 | +15.7 | +6.3 | +5.0 |
+
+`chars` and `negation` are untouched -- punctuation and an appended `no` cannot make a
+request objectionable, so nothing is dropped. `touchy` takes the largest hit on both
+models, and on Qwen it loses significance entirely, from +2.7pp to +1.0pp with an interval
+spanning zero. Half of Qwen's touchy refusals were prompts the insertion had spoiled.
 
 ## What this says
 
-**The effect is real and it is about content, not disturbance.** `chars` — pure asterisks,
-slashes and punctuation runs — moves Llama +1.7pp with an interval touching zero, and moves
-Qwen not at all. `action` does nothing on either. So "any inserted junk raises refusal" is
-ruled out: two of the five clusters are inert, and they are the two with no semantic content.
-This was not a planned control, it fell out of the arm design, but it does the job.
+**The effect is real, and it is about content rather than disturbance.** `chars` -- pure
+asterisks, slashes and punctuation runs -- moves Llama +1.7pp with an interval touching
+zero and moves Qwen not at all. `action` does nothing on either. The two clusters with no
+semantic content are the two that do not work, which rules out "any inserted junk raises
+refusal". This was not a designed control; it fell out of the arm set.
 
-**Touchy subjects are the strongest single lever**, on both models: +6.7pp on Llama, +2.7pp
-on Qwen, against a 0.7% floor. Harmful-sounding-but-benign phrasing is second.
+**Touchy subjects are the strongest single lever on Llama** at +5.0pp against a 0.7%
+floor, roughly an eightfold relative increase. Harmful-sounding-but-benign phrasing follows
+at +2.3pp, and it is the only single cluster that survives on both models.
 
-**Negation is not significant on Llama** (+1.3pp, interval spans zero) and is marginal on
-Qwen. This is the surprise, because negation is the cluster with the cleanest replicated
-vocabulary in [CATEGORY_WORDS.md](CATEGORY_WORDS.md) and the dominant category of the Qwen
-GCG corpus. The substring screen makes it look stronger than it is — 5.0% against a judged
-1.7% on Qwen, a threefold inflation, because `no`-injected prompts draw apologetic openers
-on replies that then answer the question.
+**Negation does not work.** Not significant on Llama, marginal on Qwen, despite being the
+cluster with the cleanest replicated vocabulary and the dominant category of the Qwen GCG
+corpus. The substring screen overstates it threefold on Qwen (5.0% against a judged 1.7%),
+because an injected `no` draws an apologetic opener on a reply that then answers anyway --
+the same failure mode that inflated the original corpus rates.
 
-**Combining helps, and slightly more than additively on Llama.** The five single arms sum to
-+13.0pp; together they give +17.0. On Qwen the singles sum to +5.0 and together give +6.3,
-which is additive within the intervals.
+**Combining helps super-additively on Llama.** The five singles sum to +10.7pp on the
+benign-only measure; together they give +15.7pp.
 
-**Llama is markedly more susceptible than Qwen** — roughly 2.7x on the combined arm, and
-larger on every arm that moves at all.
+**Llama is markedly more susceptible than Qwen** -- roughly threefold on the combined arm,
+and larger on every arm that moves at all.
 
 ## Caveats
 

@@ -36,7 +36,7 @@ NICE = {"chars": "chars\n(asterisks, slashes)", "negation": "negation\n(no / not
 ORDER = ["chars", "action", "negation", "harmful_phrase", "touchy",
          "chars+negation", "chars+touchy", "chars+harmful_phrase", "all_five"]
 
-d = {t: json.load(open(f"probe_or/results/injections_{t}_summary.json"))
+d = {t: json.load(open(f"probe_or/results/injections_{t}_clean_summary.json"))
      for t in ("llama", "qwen")}
 y = list(range(len(ORDER)))[::-1]
 fig, ax = plt.subplots(figsize=(9.2, 5.6))
@@ -62,15 +62,15 @@ ax.axvline(0, color=INK2, lw=1.1, zorder=1)
 ax.set_yticks(y)
 ax.set_yticklabels([NICE[k] for k in ORDER], fontsize=8.8)
 ax.set_xlabel("change in refusal rate on benign prompts (percentage points)")
-ax.set_title("Injecting each cluster's spans into 300 unseen benign prompts",
+ax.set_title("Injecting each cluster into 300 unseen benign prompts (still-benign refusals only)",
              loc="left", pad=10)
 ax.grid(axis="x", zorder=0)
 ax.set_axisbelow(True)
 ax.set_xlim(-3, 25)
 ax.legend(loc="upper right")
 fig.text(0.005, -0.02,
-         "Paired: every arm saw the same 300 prompts. Bars are the judged refusal delta, "
-         "whiskers the paired bootstrap 95% CI. * = interval excludes zero.",
+         "Paired: every arm saw the same 300 prompts. Counts only refusals where an Opus judge "
+         "confirmed the injected prompt is still benign. Whiskers are the paired bootstrap 95% CI. * = excludes zero.",
          fontsize=8.2, color=INK2, ha="left")
 fig.tight_layout()
 os.makedirs(OUT, exist_ok=True)
