@@ -476,19 +476,19 @@ on its own attacker's held-out rewrites.** Both columns are **drops in refusal r
 percentage points: ablating a refusal direction makes the model refuse less of everything. A
 positive number is a drop; a negative number means refusal went *up*. We want a large drop in
 over-refusal and no drop in harmful-prompt refusal. Random-direction null (95th pct of the
-over-refusal drop): 3.5 Llama, 1.5 Qwen.
+over-refusal drop): 8.5 Llama, 2.0 Qwen.
 
 | direction removed | Llama: over-refusal drop | Llama: harmful-refusal drop | Qwen: over-refusal drop | Qwen: harmful-refusal drop |
 |---|--:|--:|--:|--:|
-| weaponization | 38.2 | 0.5 | 12.8 | 1.0 |
-| concealment | 22.0 | -0.5 | 45.0 | 21.0 |
-| exfiltration | 9.8 | 0.0 | 60.2 | 0.0 |
-| exploitation | 5.2 | 0.0 | 8.0 | 1.0 |
+| weaponization | 38.2 | 0.5 | 5.5 | 1.5 |
+| concealment | 22.0 | -0.5 | 20.8 | 4.5 |
+| exfiltration | 9.8 | 0.0 | 14.2 | 0.0 |
+| exploitation | 5.2 | 0.0 | 7.0 | -0.5 |
 | intrusion | 22.0 | -0.5 | — | — |
-| coercion | — | — | 4.2 | 0.0 |
-| fabrication | — | — | 0.5 | 1.0 |
-| overall refusal direction | 34.2 | 3.0 | 94.2 | 95.5 |
-| published refusal vector | 47.8 | 12.5 | 51.5 | 67.0 |
+| coercion | — | — | 0.0 | -1.0 |
+| fabrication | — | — | 0.0 | 2.5 |
+| overall refusal direction | 34.2 | 3.0 | 90.0 | 95.5 |
+| whole-prompt refusal vector | 47.8 | 12.5 | 49.0 | 67.0 |
 
 `[FIGURE 8]` **The paper's central figure.** Scatter with $\Delta$OR on $x$ and $\Delta$harm on
 $y$, one point per ablated direction, two panels (Llama, Qwen). Shade the random-null region.
@@ -498,7 +498,7 @@ the entire causal result for both models.
 
 **Reading.** Both models possess a frame-residual direction whose removal eliminates a large share
 of over-refusal at no measurable harm cost — Llama's weaponisation ($-38.2$ at $+0.5$), Qwen's
-exfiltration ($-60.2$ at $0.0$, roughly $40\times$ its random null). The literature refusal
+exfiltration ($-14.2$ at $0.0$, roughly $7\times$ its random null). The literature refusal
 direction removes more over-refusal on both but costs 12.5 and 67 points of genuine refusal
 respectively.
 
@@ -563,7 +563,7 @@ originals; compared against a **50-direction random null**.
 |---|--:|--:|--:|--:|
 | **weaponisation residual (Llama)** | +0.502 | **+0.556** | **+0.190** | **−0.057** |
 | $d_1$ shared | +2.948 | +0.735 | +0.429 | +2.198 |
-| published refusal vector | +2.259 | +0.524 | +0.281 | +1.731 |
+| whole-prompt refusal vector | +2.259 | +0.524 | +0.281 | +1.731 |
 
 The frame residual's ALARM effect is **8.6×** the random null ($0.190$ vs $0.022$); its REFUSAL
 effect lies **exactly at the null's 95th percentile**, i.e. indistinguishable from noise. Alarming
@@ -602,7 +602,7 @@ $t_{\text{post-inst}}$ throughout. Reading both:
 | | cosine |
 |---|--:|
 | harm@$t_{\text{inst}}$ ↔ harm@$t_{\text{post-inst}}$ | **+0.131** |
-| harm@$t_{\text{inst}}$ ↔ published refusal vector | **+0.073** |
+| harm@$t_{\text{inst}}$ ↔ whole-prompt refusal vector | **+0.073** |
 | frame residual ↔ harm@$t_{\text{inst}}$ | **+0.071** |
 
 We reproduce the separate-encoding result on our own corpus, and the effective direction is
@@ -653,7 +653,7 @@ so a refusal scores 0 and a fully convincing, fully specific compliance scores 1
 |---|---|--:|--:|
 | StrongREJECT (313) | baseline | 0.005 | — |
 | | frame residual | **0.005** | **−0.000** |
-| | published refusal vector | **0.026** | **+0.021** |
+| | whole-prompt refusal vector | **0.026** | **+0.021** |
 | XSTest unsafe (200) | baseline | 0.005 | — |
 | | frame residual | **0.003** | **−0.002** |
 
@@ -794,7 +794,7 @@ and the generating model is recorded per row.
    Llama; $+0.515$ vs $+0.563$ Qwen), against $\approx+0.09$/$+0.22$ for matched controls. Claim
    restricted to the measured axis.
 3. **The dominant axis is essentially harmfulness** ($\cos\approx0.78$ with both the
-   harmful-vs-harmless and the published refusal vector) and is reported as description rather
+   harmful-vs-harmless and the whole-prompt refusal vector) and is reported as description rather
    than finding.
 4. **Beyond it, directions exist whose ablation removes a quarter to a half of over-refusal at no
    measurable harm cost**, on both models, against a 12-direction random null and with degeneracy

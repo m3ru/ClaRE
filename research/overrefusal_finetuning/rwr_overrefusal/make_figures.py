@@ -135,8 +135,8 @@ def fig1(shards=6):
 # unpaired harmful/harmless prompts. The contrast a reader needs is overall vs frame-specific
 # and ours vs published. (It is NOT an "alarm" direction: the frame residuals are what load on
 # alarming wording, and only after d1 is removed.)
-NICE = {"d1_shared": "overall refusal direction", "atlas_rhat": "published refusal vector"}
-ROW_ORDER = ["overall refusal direction", "published refusal vector", "weaponization",
+NICE = {"d1_shared": "overall refusal direction", "atlas_rhat": "whole-prompt refusal vector"}
+ROW_ORDER = ["overall refusal direction", "whole-prompt refusal vector", "weaponization",
              "concealment", "exfiltration", "exploitation", "intrusion", "coercion",
              "fabrication"]
 
@@ -226,8 +226,8 @@ def fig3():
     fig.suptitle("A single direction removes over-refusal without costing safety",
                  x=0.012, ha="left", fontsize=13, fontweight="semibold", y=1.04)
     fig.text(0.012, 0.968, "\"Overall\" = the average difference between rewrites the model "
-             "refused and rewrites it did not. \"Published\" = the refusal vector from prior "
-             "work. The rest are\nthat same difference computed within one vocabulary group, "
+             "refused and rewrites it did not. \"Whole-prompt\" = the same contrast fitted on "
+             "whole prompts rather than on edits. The rest are\nthat same difference computed within one vocabulary group, "
              "with the overall direction removed. Both bars are DROPS: the model refuses "
              "less of both after ablation. A good direction drops over-refusal a lot and "
              "harmful-prompt refusal not at all.\nEach ablated alone, at every layer; held-out "
@@ -422,7 +422,7 @@ def fig4():
     # Plain-English panel titles matching fig3's row labels -- no internal shorthand on
     # the canvas; the formal definitions live in the caption.
     order = [("d4", "weaponization direction"), ("d1", "overall refusal direction"),
-             ("r_atlas", "published refusal vector")]
+             ("r_atlas", "whole-prompt refusal vector")]
     fig, axes = plt.subplots(1, 3, figsize=(11.4, 4.4))
     for ax, (key, title) in zip(axes, order):
         t = proj[key]

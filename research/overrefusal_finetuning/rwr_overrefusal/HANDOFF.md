@@ -359,7 +359,7 @@ reported measured on the **held-out half**.
   no further direction can be extracted from means alone.
   Empirically on Llama, movement along d₁ is **+2.88** for refused rewrites and **+0.54** for
   controls; the gap +2.33 *is* the definition.
-  **It is essentially a refusal direction:** cos **+0.780** with the published refusal vector and
+  **It is essentially a refusal direction:** cos **+0.780** with the whole-prompt refusal vector and
   **+0.776** with a harmful-vs-harmless direction; those three form one tight cluster. "Refused
   rewrites look more harmful to the model" is true but near-tautological — report as description,
   **not** as a finding.
@@ -435,12 +435,12 @@ less. Random null (95th pct of the over-refusal drop): **3.5 Llama, 1.5 Qwen**.
 | coercion (Qwen frame) | — | — | 0.0 | −1.0 |
 | fabrication (Qwen frame) | — | — | 0.0 | 2.5 |
 | overall refusal direction d₁ | 34.2 | 3.0 | 90.0 | **95.5** |
-| published refusal vector | 47.8 | **12.5** | 49.0 | **67.0** |
+| whole-prompt refusal vector | 47.8 | **12.5** | 49.0 | **67.0** |
 | random (×12) | ~0 | ~0 | −0.8 to +2.0 | ~0 |
 
 **Headline reading:** each model has a frame direction whose removal eliminates a large share of
 over-refusal at essentially no cost to harmful-prompt refusal — Llama's **weaponization (38.2 at
-0.5)**, Qwen's **exfiltration (14.2 at 0.0)**. The published refusal vector removes more
+0.5)**, Qwen's **exfiltration (14.2 at 0.0)**. The whole-prompt refusal vector removes more
 over-refusal on both but costs **12.5** (Llama) and **67.0** (Qwen) points of genuine refusal.
 
 ### Cumulative rank sweep (Llama)
@@ -480,7 +480,7 @@ cluster-bootstrapped over originals, against a **50-direction random null**.
 |---|--:|--:|--:|--:|--:|--:|
 | **weaponization residual** | +0.502 | **+0.556** | +0.309 | +0.369 | **+0.190** | **−0.057** |
 | overall direction d₁ | +2.948 | +0.735 | +2.504 | +0.321 | +0.429 | +2.198 |
-| published refusal vector | +2.259 | +0.524 | +1.974 | +0.247 | +0.281 | +1.731 |
+| whole-prompt refusal vector | +2.259 | +0.524 | +1.974 | +0.247 | +0.281 | +1.731 |
 
 Random null 95th pct: **ALARM 0.022, REFUSAL 0.057**.
 
@@ -515,8 +515,8 @@ Harmfulness is encoded at `t_inst` (last token of the user instruction); refusal
 | comparison | cosine |
 |---|--:|
 | harm@t_inst ↔ harm@t_post-inst | **+0.131** |
-| harm@t_inst ↔ published refusal vector | **+0.073** |
-| harm@t_post-inst ↔ published refusal vector | +0.778 |
+| harm@t_inst ↔ whole-prompt refusal vector | **+0.073** |
+| harm@t_post-inst ↔ whole-prompt refusal vector | +0.778 |
 | **weaponization residual ↔ harm@t_inst** | **+0.071** |
 
 Two results: we independently reproduce the separate-encoding finding on our own corpus, and the
@@ -537,7 +537,7 @@ not merely to a refusal-position proxy.
 | **OR-Bench Hard** (400) | auto-generated from toxic seeds | 77.8% | **59.8%** | 78.5% |
 
 On the GCG corpus — where `exploit` appears in **453 of our rewrites and 1 of their 1,220** — our
-direction beats the published refusal vector (**−53.8 vs −37.5** points) at a third of the safety
+direction beats the whole-prompt refusal vector (**−53.8 vs −37.5** points) at a third of the safety
 cost.
 
 **The mechanism with the confound reversed.** XSTest's unsafe prompts are *minimal edits* of its
@@ -569,13 +569,13 @@ Responses regenerated at 256 tokens and graded on the StrongREJECT rubric struct
 | StrongREJECT (313), Llama | baseline | 0.005 | — |
 | | **weaponization residual** | **0.005** | **−0.000** |
 | | overall direction d₁ | 0.004 | −0.001 |
-| | **published refusal vector** | **0.026** | **+0.021** |
+| | **whole-prompt refusal vector** | **0.026** | **+0.021** |
 | | random | 0.003 | −0.002 |
 | XSTest unsafe (200), Llama | baseline | 0.005 | — |
 | | weaponization residual | 0.003 | −0.002 |
 | StrongREJECT, Qwen | baseline | 0.000 | — |
 | | **exfiltration residual** | **0.001** | **+0.001** |
-| | published refusal vector | 0.004 | +0.004 |
+| | whole-prompt refusal vector | 0.004 | +0.004 |
 
 Removing the frame residual produces **no increase in the harmfulness of what the model says**, on
 either model, while the published vector raises it fivefold on Llama.
