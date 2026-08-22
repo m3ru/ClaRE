@@ -942,3 +942,53 @@ judge would reject. Judge-confirmed rates are the number that settles it.
 reward (Llama L12, Qwen L60), same held-out split and hyperparameters as the existing arms so the
 reward layer is the only variable. Pre-registered prediction: both lose, because L12/L60 rank
 behaviour worst. A loss is the finding — *causally necessary is not the same as good reward*.
+
+## 18.1 The abliterated-vector RWR experiment (2026-08-22) — result and a retraction
+
+**Llama result (complete, judged).** Training an RWR attacker on the ablation-selected
+direction (L12) as the OR reward makes the attacker *worse*, not better. Judge-confirmed
+over-refusal on 200 held-out originals x 4 rewrites:
+
+| reward signal | layer | chosen by | attacker | untrained base | gain |
+|---|--:|---|--:|--:|--:|
+| refusal vector | 17 | behavioural corr. | 3.25% (26/800) | 5.00% | -1.75 pp |
+| refusal vector | 31 | classification AUC | 3.62% (29/800) | 3.12% | +0.50 pp |
+| **refusal vector** | **12** | **abliteration** | **1.38% (11/800)** | 3.75% | **-2.38 pp** |
+| multi-layer probe | — | cross-val NNLS | 5.62% (45/800) | 4.88% | +0.75 pp |
+| **refusal-opener logit** | — | output space | **10.00% (80/800)** | 4.88% | **+5.12 pp, sig** |
+
+Only the logit reward beats its baseline. The three vector layers rank L31 > L17 > L12 by
+lift, exactly their ordering on Spearman with behavioural dP (0.291 / 0.261 / 0.058). So the
+correlational prediction transferred to training, and **causal necessity anti-correlates with
+reward usefulness**: L12 ablated takes harmful refusal 100% -> 4%, and is the worst reward.
+
+**RETRACTED: "Qwen's abliterated refusal direction is L60."** It is a refusal-*phrasing*
+direction, not a refusal direction, and the selection was an artifact of a start-anchored
+classifier. Evidence, all verified:
+
+- Ablating L60 leaves **53.1%** of harmful-prompt responses still containing refusal language
+  and only **3.9%** actually complying. The model still refuses; it stops *opening* with a
+  mined phrase, which the start-anchored `is_refusal()` scores as compliance (1.6%).
+  Llama's L12 by contrast yields **43.0%** genuine compliance and 8.6% residual refusal
+  language — a real abliteration.
+- `cos(d_L, u_refuse - u_comply)` from the unembedding rises monotonically over the collapse
+  region — L48 0.008, L52 0.061, L56 0.166, L57 0.180, **L60 0.192** — and correlates with
+  post-ablation refusal at Spearman **-0.65**. On Llama the same correlation is **+0.67** and
+  the selected L12 sits at **0.015**, near-orthogonal to output space. Qwen's selected
+  direction is **13x** more output-aligned than Llama's.
+- Qwen's sufficiency test was already dirty: 98.4% "refusal" at coef 2 on a model **84.4%
+  degenerate**, vs Llama's clean 99.2% at 0% degenerate.
+
+**Root cause, and it is general.** `is_refusal()` is start-anchored because it was built to
+detect over-refusal *onset* on benign rewrites. Reusing it to ask *does this model still
+refuse harmful prompts* is a different question, and it fails whenever a model refuses by
+moralising. Arditi's selection procedure inherits its classifier's blind spots; with a
+start-anchored one, argmin can walk to a near-output phrasing direction instead of the
+mechanism. **Diagnostic, cheap and general:** check `cos(d_L, u_refuse - u_comply)` and read
+the ablated responses for substance rather than opening phrase.
+
+**In flight:** `arditi_sweep_generate.py` + `arditi_sweep_judge.py` redo the sweep with a
+Sonnet judge asked whether the model complied or declined/deflected/moralised, explicitly
+independent of the opening phrase, with a GARBAGE label so an incoherent layer is
+disqualified rather than winning. Split into two phases because compute nodes have no
+internet. Run on **both** models, so Llama's L12 acts as a control on the instrument.

@@ -81,6 +81,8 @@ def arm_stats(rows):
 
 
 def eval_rows(name, arm):
+    if name not in man["datasets"] or arm not in man["datasets"][name]:
+        return []                            # arm not evaluated yet
     d = man["datasets"][name][arm]
     out = []
     for r in d:
@@ -98,7 +100,8 @@ def fmt(s):
 
 RESULT = {}
 LLAMA = ["eval_llama_vector", "eval_llama_probe", "eval_llama_logit",
-         "eval_llama_vector_L31", "eval_llama_logit_tune1_e6", "eval_llama_logit_tune2_f70"]
+         "eval_llama_vector_L31", "eval_llama_logit_tune1_e6", "eval_llama_logit_tune2_f70",
+         "eval_llama_vector_abl_L12"]      # abliteration-selected layer
 QWEN = ["eval_qwen_3sig_vector", "eval_qwen_3sig_probe", "eval_qwen_3sig_logit"]
 
 print("=" * 100)
@@ -106,11 +109,15 @@ print("A. 200-prompt behavioral evals  (800 rewrites per arm)")
 print("=" * 100)
 for name in LLAMA + QWEN:
     for arm in ("rwr", "base"):
+        if name not in man["datasets"]:          # arm not evaluated yet -- skip, do not crash
+            continue
         if arm not in man["datasets"][name]:
             continue
         s = arm_stats(eval_rows(name, arm))
         RESULT[(name, arm)] = s
         print(f"{name:32s} {arm:5s} {fmt(s)}")
+    if name not in man["datasets"]:          # arm not evaluated yet
+        continue
     o = man["datasets"][name].get("orig")
     if o:
         fl = sum(1 for r in o if r["refused"])
