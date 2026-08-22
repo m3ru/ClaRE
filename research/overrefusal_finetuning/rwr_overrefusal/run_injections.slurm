@@ -35,10 +35,11 @@ case "${TARGET}" in
           --out probe_or/results/injections_llama.json) ;;
   qwen)
     ARGS=(--base_model Qwen/Qwen3-32B --disable_thinking --batch_size 8
-          --out probe_or/results/injections_qwen.json) ;;
+          --out "${OUT:-probe_or/results/injections_qwen.json}") ;;
   *) echo "invalid TARGET=${TARGET}" >&2; exit 2 ;;
 esac
 
-echo "[cfg] TARGET=${TARGET} $(date)"
-python -u gen_injections.py "${ARGS[@]}"
+# INJ selects which injection set to generate for; OUT where the responses land.
+echo "[cfg] TARGET=${TARGET} INJ=${INJ:-default} $(date)"
+python -u gen_injections.py "${ARGS[@]}" ${INJ:+--injections "${INJ}"}
 echo "[done] ${TARGET} $(date)"

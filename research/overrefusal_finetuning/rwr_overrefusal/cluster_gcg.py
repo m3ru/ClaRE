@@ -100,8 +100,10 @@ def parse(t):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--corpus", default="llama_gcg")
+    ap.add_argument("--corpus", default="llama_gcg",
+                    choices=["llama_gcg", "qwen_gcg"])
     ap.add_argument("--llama", default="incoming/sonnet_filtered_strict.json")
+    ap.add_argument("--qwen", default="incoming/qwen_gcg_all.json")
     ap.add_argument("--or_filter", default="probe_or/results/or_filter_llama_gcg.json")
     ap.add_argument("--model", default="claude-sonnet-5")
     ap.add_argument("--poll_interval", type=int, default=20)
@@ -110,9 +112,16 @@ def main():
     a = ap.parse_args()
     ensure_key(a.key_file)
 
-    rows = [{"original": r["original"], "rewrite": r["rewrite"],
-             "rewrite_response": r.get("rewrite_response")}
-            for r in json.load(open(a.llama))["rows"]]
+    if a.corpus == "llama_gcg":
+        rows = [{"original": r["original"], "rewrite": r["rewrite"],
+                 "rewrite_response": r.get("rewrite_response")}
+                for r in json.load(open(a.llama))["rows"]]
+    else:
+        # or_loose only: or_strict has a median of one edit and a different character, so
+        # pooling the two would blur the span pools this feeds.
+        rows = [{"original": r["original"], "rewrite": r["rewrite"],
+                 "rewrite_response": r.get("rewrite_response")}
+                for r in json.load(open(a.qwen))["rows"] if r.get("arm") == "or_loose"]
     # carry the stage-A verdict alongside, reported but not used as a gate
     if os.path.exists(a.or_filter):
         f = {(r["original"], r["rewrite"]): r.get("is_or")
