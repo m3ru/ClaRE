@@ -1,0 +1,154 @@
+{
+  "baseline": {
+    "harmful_refusal": 100.0,
+    "harmful_degen": 0.0,
+    "harmless_refusal": 0.0,
+    "harmless_degen": 0.0
+  },
+  "layer_selection": {
+    "8": {
+      "harmful_refusal": 82.8125,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "10": {
+      "harmful_refusal": 18.75,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "12": {
+      "harmful_refusal": 9.375,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "14": {
+      "harmful_refusal": 82.8125,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "16": {
+      "harmful_refusal": 81.25,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "17": {
+      "harmful_refusal": 82.8125,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "18": {
+      "harmful_refusal": 43.75,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "20": {
+      "harmful_refusal": 73.4375,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "22": {
+      "harmful_refusal": 95.3125,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "24": {
+      "harmful_refusal": 96.875,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "28": {
+      "harmful_refusal": 96.875,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    },
+    "31": {
+      "harmful_refusal": 96.875,
+      "harmful_degen": 0.0,
+      "harmless_refusal": 0.0,
+      "harmless_degen": 0.0,
+      "eligible": true
+    }
+  },
+  "selected_layer": 12,
+  "selected_among_eligible": [
+    8,
+    10,
+    12,
+    14,
+    16,
+    17,
+    18,
+    20,
+    22,
+    24,
+    28,
+    31
+  ],
+  "necessity": {
+    "harmful_refusal": 5.46875,
+    "harmful_degen": 0.0,
+    "harmless_refusal": 0.0,
+    "harmless_degen": 0.0,
+    "harmful_refusal_drop": 94.53125
+  },
+  "sufficiency": {
+    "coef1.0": {
+      "harmless_refusal": 99.21875,
+      "degen": 0.0
+    },
+    "coef2.0": {
+      "harmless_refusal": 0.0,
+      "degen": 68.75
+    },
+    "coef4.0": {
+      "harmless_refusal": 0.0,
+      "degen": 99.21875
+    }
+  },
+  "config": {
+    "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "n_layers": 32,
+    "n_dir": 256,
+    "n_val": 64,
+    "n_test": 128,
+    "cands": [
+      8,
+      10,
+      12,
+      14,
+      16,
+      17,
+      18,
+      20,
+      22,
+      24,
+      28,
+      31
+    ],
+    "max_degen": 5.0,
+    "max_new_tokens": 48,
+    "enable_thinking": null
+  }
+}
