@@ -80,6 +80,9 @@ slurm-*.err
 *.npz
 # ...except small refusal vectors we want tracked
 !research/refusal_vector/qwen3_extraction/refusal_vector_qwen3*.npz
+# ...and the Llama Guard relabelled vectors (tracked before the *.npz rule existed;
+# without this they vanish from a clean re-add, e.g. the anonymized export).
+!research/refusal_vector/llamaguard_relabel/*.npz
 # ...and the small Qwen/Llama signal scorers (vector/probe directions + weights)
 !research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/qwen_signals/*.npz
 !research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/llama_signals/*.npz
