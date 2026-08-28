@@ -39,10 +39,10 @@ RESULTS_DIR = os.path.join(THIS_DIR, "prompt_iteration_results")
 
 
 # Each entry is (display_label, source_results_json, variant_name_in_that_json).
-# Reusing round 1 outputs for baseline_alec and imperative_procedural because the
+# Reusing round 1 outputs for baseline_manual and imperative_procedural because the
 # prompts didn't change; only minimal_changes uses fresh v2 outputs.
 VARIANT_SOURCES = [
-    ("baseline_alec",         "iterate_alpaca_results.json",        "baseline_alec"),
+    ("baseline_manual",         "iterate_alpaca_results.json",        "baseline_manual"),
     ("imperative_procedural", "iterate_alpaca_results.json",        "imperative_procedural"),
     ("minimal_changes_v2",    "minimal_changes_v2_results.json",    "minimal_changes"),
 ]

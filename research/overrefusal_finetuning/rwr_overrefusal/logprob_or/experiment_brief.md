@@ -1,6 +1,6 @@
 # Logprob-OR experiment — data generation, training, results
 
-Date: 2026-07-13. Cluster: rorqual (Compute Canada). Base model throughout:
+Date: 2026-07-13. Cluster: <cluster> (<HPC consortium>). Base model throughout:
 `meta-llama/Meta-Llama-3-8B-Instruct`.
 
 ## 1. The metric (logprob-OR)

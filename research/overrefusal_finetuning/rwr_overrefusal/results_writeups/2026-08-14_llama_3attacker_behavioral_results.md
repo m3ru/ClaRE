@@ -1,6 +1,6 @@
 # Llama 3-signal RWR attackers — behavioral results (genuine over-refusal)
 
-Date: 2026-08-14. Cluster: rorqual. Base model: Meta-Llama-3-8B-Instruct.
+Date: 2026-08-14. Cluster: <cluster>. Base model: Meta-Llama-3-8B-Instruct.
 Full apparatus + decisions: `../LLAMA_RETRAIN_PROGRESS.md`. This file is the
 results snapshot: the three corrected-signal attackers vs base, measured on
 **genuine over-refusal** rather than raw refusal rate.

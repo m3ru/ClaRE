@@ -35,7 +35,7 @@ generation blocked on ANTHROPIC_API_KEY. Analysis packages → separate venv (no
 | **logit** = teacher-forced Σ P(response begins with opener) | 5-opener set | 5-opener set | `opener_sets.json` (mined) |
 
 ### Signal-side findings (locked)
-- **Vector layers are causally validated.** Llama L17 (Alec's ablation: ablate→refusal
+- **Vector layers are causally validated.** Llama L17 (<collaborator>'s ablation: ablate→refusal
   99→83%, add→0→99%; L32 does neither). **Qwen L58**: clean sufficiency is decisive —
   adding L58 to benign prompts drives refusal **5%→93%** @coef2 on DISJOINT harmless
   prompts (`--test_offset 2000`), far above L32/L45/L63; first-run necessity (ablate L58

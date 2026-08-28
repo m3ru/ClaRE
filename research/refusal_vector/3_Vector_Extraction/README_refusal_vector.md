@@ -1,6 +1,6 @@
 ## Refusal vector (difference-in-means) pipeline
 
-This folder contains a reproducible PACE ICE workflow to extract hidden-state activations from Llama-3 8B Instruct on two datasets (benign and refusal prompts) and compute the refusal direction via difference-in-means.
+This folder contains a reproducible <cluster> workflow to extract hidden-state activations from Llama-3 8B Instruct on two datasets (benign and refusal prompts) and compute the refusal direction via difference-in-means.
 
 ### Files
 - `extract_activations_sharded.py`: shard-aware extractor that aggregates per-layer sums of hidden states over the last-k prompt tokens (no generation). Each shard writes an `.npz` with `sum_by_layer [L,H]` and `count_tokens`.
@@ -14,9 +14,9 @@ This folder contains a reproducible PACE ICE workflow to extract hidden-state ac
 ### Prereqs
 1) Put your Hugging Face token in the two `.slurm` files: set `HUGGING_FACE_HUB_TOKEN=`.
 2) Ensure the prompt CSVs exist on the cluster (default paths below). They can be the large `final_benign_prompts.csv` and `final_refusals_prompts.csv` from this folder copied to `$HOME/scratch/`.
-3) For EPO editing, copy `benign_seed_prompts.csv`, `epo_refusal_dream.py`, and `run_epo_refusal_dream.slurm` to your PACE home directory (or update the SLURM paths).
+3) For EPO editing, copy `benign_seed_prompts.csv`, `epo_refusal_dream.py`, and `run_epo_refusal_dream.slurm` to your <cluster> home directory (or update the SLURM paths).
 
-### Default paths on PACE
+### Default paths on <cluster>
 - Benign prompts: `$HOME/scratch/final_benign_prompts.csv`
 - Refusal prompts: `$HOME/scratch/final_refusals_prompts.csv`
 - Outputs: shard sums → `$HOME/scratch/acts_benign/*.npz` and `$HOME/scratch/acts_refusal/*.npz`
@@ -40,7 +40,7 @@ sbatch run_compute_refusal_vector.slurm
 ```bash
 sbatch run_epo_refusal_dream.slurm
 ```
-The job edits the four prompts in `benign_seed_prompts.csv`, writing the optimized prompts plus objective metrics to `$HOME/scratch/epo_refusal_prompts.csv`. Override knobs via Job Composer or environment variables (e.g. `FEATURE_WEIGHT`, `LAMBDA_MAX`, `SEEDS_CSV`).
+The job edits the four prompts in `benign_seed_prompts.csv`, writing the optimized prompts plus objective metrics to `$HOME/scratch/epo_refusal_prompts.csv`. Override knobs via the cluster job submission UI or environment variables (e.g. `FEATURE_WEIGHT`, `LAMBDA_MAX`, `SEEDS_CSV`).
 
 ### Notes
 - Layers: by default we aggregate all transformer layers (excluding embeddings). Override with `LAYERS="1,8,16,24"` or `LAYERS=all`.

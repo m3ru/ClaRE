@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=atlas-sig-llama
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/atlas_sig_llama_%j.out
 #SBATCH --error=logs/atlas_sig_llama_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 set -euo pipefail
@@ -19,13 +19,13 @@ mkdir -p logs refusal_atlas/results
 
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 echo "Refusal Atlas signal+behavior scoring (Llama-3-8B) at $(date)"
 echo "GPU: $(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader)"
 
-# Llama vector = L17: Alec's Arditi causal test (research/refusal_vector/causal_refusal_results.json)
+# Llama vector = L17: <collaborator>'s Arditi causal test (research/refusal_vector/causal_refusal_results.json)
 # shows ablating L17 drops refusal 99->83% and adding it induces 0->99%, while L32 does neither.
 # --probe_npz is refit (Qwen-style mass-mean + broad behavioral label); --best_layer pins the vector.
 python -u refusal_atlas/score_signals.py \

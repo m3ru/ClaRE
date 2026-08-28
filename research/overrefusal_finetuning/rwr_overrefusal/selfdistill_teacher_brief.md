@@ -78,7 +78,7 @@ tail RWR trains on. The `rwr_mean_vs_p90_alpaca.png` panels show the swap.
   train_loss 0.68 → 0.31 → 0.18; **val_loss 1.26 → 1.50 → 1.56** — an overfitting
   signature (same pattern the v1-dolly retrain flagged). Eval used the epoch-3 `final`
   checkpoint; **epoch_1 may score higher on held-out** (untested — checkpoints saved at
-  `~/scratch/rwr_llama_self_checkpoints/epoch_{1,2,3}` on PACE).
+  `~/scratch/rwr_llama_self_checkpoints/epoch_{1,2,3}` on <cluster>).
 
 ## Caveats
 
@@ -92,8 +92,8 @@ tail RWR trains on. The `rwr_mean_vs_p90_alpaca.png` panels show the swap.
 - `generate_claude_heldout.py` → raw-Claude rewrites of the held-out prompts (login node,
   needs `ANTHROPIC_API_KEY`); scored via `run_score_claude_pace.slurm`.
 - `generate_llama_selfdata.py` + `run_llama_selfdata_pace.slurm` → `llama_selfparaphrase_5k/`
-  shards (on PACE; ~40k pairs, regenerable from seed=42).
-- `run_train_llama_self_pace.slurm` → `~/scratch/rwr_llama_self_checkpoints/` (PACE scratch).
+  shards (on <cluster>; ~40k pairs, regenerable from seed=42).
+- `run_train_llama_self_pace.slurm` → `~/scratch/rwr_llama_self_checkpoints/` (<cluster> scratch).
 - `run_eval_llama_self_pace.slurm` → `prompt_iteration_results/held_out_eval_llama_self/`.
 - `merge_heldout_4way.py` → the combined table; `make_rwr_charts.py` → the three figures.
 - Scored result JSONs committed: `prompt_iteration_results/claude_heldout_alpaca.json`,

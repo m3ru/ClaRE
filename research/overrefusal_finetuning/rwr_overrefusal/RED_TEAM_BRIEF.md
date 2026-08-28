@@ -1,6 +1,6 @@
 # Red-team brief: does the abliterated refusal vector work as an RWR training signal?
 
-For Alec. Everything you need to attack the design; nothing else. Background detail is in
+For <collaborator>. Everything you need to attack the design; nothing else. Background detail is in
 `REVIEW_VERDICT.md`, don't read it unless a section here points you there.
 
 ## The claim we want to test

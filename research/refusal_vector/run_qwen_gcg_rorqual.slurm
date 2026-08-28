@@ -10,14 +10,14 @@
 #   sbatch --export=ALL,ARM=or_loose,OR_NPROMPTS=24 run_qwen_gcg_rorqual.slurm
 # Valid ARM values: or_loose, or_strict, jb_loose, jb_strict.
 #
-# Measured on a rorqual H100: ~386 s/prompt loose, ~334 s/prompt strict at
+# Measured on a <cluster> H100: ~386 s/prompt loose, ~334 s/prompt strict at
 # these search settings, and ~65 GB of the 80 GB card. prompt_rewrite_opt.py
 # writes its JSON only after the last prompt, so a shard that overruns its wall
 # clock loses the whole shard -- hence 80 prompts (~8.6 h) against a 12 h limit.
 # The OR arms therefore use the default 40 x 80 array; submit the jailbreak arms
 # with --array=0-7 (eight shards covering all 221 StrongREJECT prompts).
 #SBATCH --job-name=qwen-gcg
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -49,12 +49,12 @@ cd "${SLURM_SUBMIT_DIR}"
 mkdir -p logs
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 HF_HUB_DISABLE_XET=1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-ROOT=/home/meru/links/scratch/ClaRE
-RUN_ROOT=/home/meru/links/projects/def-vganesh/meru/qwen32b_gcg_v1
+ROOT=$REPO
+RUN_ROOT=$PROJECT/qwen32b_gcg_v1
 PAIR_ROOT="${ROOT}/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
 OPENER_JSON="${ROOT}/research/overrefusal_finetuning/rwr_overrefusal/refusal_atlas/opener_sets.json"
 HARMFUL_CSV="${RUN_ROOT}/data/strongreject_custom_direct.csv"

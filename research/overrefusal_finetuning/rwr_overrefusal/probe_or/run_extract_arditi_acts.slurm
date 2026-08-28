@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=arditi-extract
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/arditi_extract_%j.out
 #SBATCH --error=logs/arditi_extract_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # Per-layer last-token activations for the ARDITI-FAITHFUL class split:
@@ -18,7 +18,7 @@
 # eval-pair text). Feeds compare_directions.py, which asks which direction+layer
 # best ranks behaviorally-induced over-refusal on benign rewrites:
 #   ours   = mass-mean(refused - complied) on the Reddit/jailbreak split  -> L17
-#   arditi = mass-mean(harmful - harmless)                                -> L12 (Alec's)
+#   arditi = mass-mean(harmful - harmless)                                -> L12 (<collaborator>'s)
 # Reuses the SAME validated extractor as the ours-split acts (right-pad, last real
 # token, system="You are a helpful assistant.", add_generation_prompt) so the two
 # direction sets live in an identical activation space and are comparable.
@@ -30,7 +30,7 @@ mkdir -p logs probe_or/activations_arditi
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
 
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 export HF_TOKEN="$(cat "$HF_HOME/token" 2>/dev/null || true)"
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=test-claude-on-llama
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/test_claude_on_llama_%j.out
 #SBATCH --error=logs/test_claude_on_llama_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # Behavioral eval: feed each Claude rewrite to bare Llama-3-8B-Instruct (no
@@ -31,7 +31,7 @@ mkdir -p logs
 module load gcc arrow/23.0.1 cuda scipy-stack/2024b
 source ~/general/bin/activate
 
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1

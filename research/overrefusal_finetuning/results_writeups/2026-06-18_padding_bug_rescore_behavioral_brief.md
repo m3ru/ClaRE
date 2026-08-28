@@ -4,7 +4,7 @@ Date: 2026-06-18. Scope: a scoring bug found in the OR reward model, what change
 
 ## 1. The bug
 
-`ppo_or/reward_model.py` read the last-token hidden state as `activations[:, -1, :]` but never set `tokenizer.padding_side`, so it used Llama-3's default **right** padding. For any sequence shorter than the longest in its batch, position `-1` is a PAD token, so the refusal projection was read off a padding position. Originals were scored as a uniform unpadded batch and paraphrases as a padded mixed batch, so the error was systematic and length-dependent (it biased the original-vs-paraphrase delta, not just added noise). Fix (`1e498f0`, aharris345, 2026-06-08): set `padding_side = "left"` to match `extract_activations_sharded.py`.
+`ppo_or/reward_model.py` read the last-token hidden state as `activations[:, -1, :]` but never set `tokenizer.padding_side`, so it used Llama-3's default **right** padding. For any sequence shorter than the longest in its batch, position `-1` is a PAD token, so the refusal projection was read off a padding position. Originals were scored as a uniform unpadded batch and paraphrases as a padded mixed batch, so the error was systematic and length-dependent (it biased the original-vs-paraphrase delta, not just added noise). Fix (`1e498f0`, <collaborator>, 2026-06-08): set `padding_side = "left"` to match `extract_activations_sharded.py`.
 
 Why it wasn't caught earlier:
 - The published results doc `claude_training_results.md` and the eval JSONs it cites were committed 2026-06-01 (`01e6183`), 7 days before the fix, and were never regenerated afterward.

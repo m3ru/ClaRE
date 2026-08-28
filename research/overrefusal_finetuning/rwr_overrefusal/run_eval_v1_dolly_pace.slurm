@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J rwr_v1_dolly_eval
-#SBATCH -A coc
-#SBATCH -p ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH -A <ACCOUNT>
+#SBATCH -p <GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="gpu-h200|gpu-h100|gpu-a100"
 #SBATCH --cpus-per-task=16

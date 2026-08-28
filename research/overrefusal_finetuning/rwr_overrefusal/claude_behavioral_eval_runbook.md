@@ -27,7 +27,7 @@ To smoke-test: `--limit 100`.
 ## Step 2 — scp the JSONL to the laptop
 
 ```
-scp <user>@fir.alliancecan.ca:/scratch/meru/ClaRE/research/overrefusal_finetuning/rwr_overrefusal/prompt_iteration_results/llama_behavioral_eval/llama_responses.jsonl \
+scp <user>@<cluster>:$REPO/research/overrefusal_finetuning/rwr_overrefusal/prompt_iteration_results/llama_behavioral_eval/llama_responses.jsonl \
     prompt_iteration_results/llama_behavioral_eval/
 ```
 

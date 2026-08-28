@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=rwr-llama-logit-tune
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/rwr_llama_logit_tune_%j.out
 #SBATCH --error=logs/rwr_llama_logit_tune_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # Tuning variants of the WINNING logit-reward Llama attacker (see
@@ -33,7 +33,7 @@ BIN_EDGES="1e-4,1e-3,1e-2,1e-1"
 
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 echo "RWR-Llama logit tune ${TAG}: epochs=${EPOCHS} sim_floor=${FLOOR} at $(date)"

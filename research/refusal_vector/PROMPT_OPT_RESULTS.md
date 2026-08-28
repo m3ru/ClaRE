@@ -1,9 +1,9 @@
 # GCG / PEZ prompt optimization against the refusal signals — results
 
-Runs: PACE arrays `5577119` (unrestricted) and `5577125` (`--block_profanity`), 2026-08-14.
+Runs: <cluster> arrays `5577119` (unrestricted) and `5577125` (`--block_profanity`), 2026-08-14.
 Llama-3-8B-Instruct, universal 20-token suffix, 8 train / 60 held-out benign Alpaca prompts,
 250 steps. Refusal = start-of-response substring detector. Raw result JSONs live in
-`~/scratch/prompt_opt/` on PACE and are deliberately **not** committed: the optimized
+`~/scratch/prompt_opt/` on <cluster> and are deliberately **not** committed: the optimized
 suffixes are explicit requests for harmful content (see below).
 
 ## Headline numbers (held-out benign prompts)

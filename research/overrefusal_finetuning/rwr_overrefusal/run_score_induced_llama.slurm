@@ -12,7 +12,7 @@
 # Llama scores ONLY the five frames mined from Llama's own low-edit triggers
 # (analyze_frames.FRAMES). Qwen's fabrication arm is present in the inserted CSV and is
 # deliberately skipped here.
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --job-name=induced-llama
 #SBATCH --gpus-per-node=nvidia_h100_80gb_hbm3_3g.40gb:1
 #SBATCH --cpus-per-task=4
@@ -24,7 +24,7 @@ set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 echo "score induced llama start $(date)"
 python -u score_induced.py --model llama \

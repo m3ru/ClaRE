@@ -1,6 +1,6 @@
 # Refusal Atlas — in-progress update
 
-**Shareable figures:** https://claude.ai/code/artifact/4786500c-e632-48a3-98c2-5048b69dde1e
+**Shareable figures:** <internal-link-removed>
 
 ## Bottom line
 Both models are scored end-to-end against an **independent judge**. The behavioral map

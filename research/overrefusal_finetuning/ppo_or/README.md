@@ -47,7 +47,7 @@ The exponential similarity weighting ensures that only paraphrases with high sem
 | `top_paraphrases/top_*.jsonl` | Extracted top-K paraphrases per dataset |
 | `top_paraphrases/top_all_combined.jsonl` | Combined top paraphrases across all datasets |
 
-## How to Run (PACE)
+## How to Run (<cluster>)
 
 ### 1. Prepare datasets
 

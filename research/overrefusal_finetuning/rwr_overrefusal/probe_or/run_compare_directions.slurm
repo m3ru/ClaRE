@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=cmp-directions
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
@@ -9,7 +9,7 @@
 #SBATCH --output=logs/cmp_directions_%j.out
 #SBATCH --error=logs/cmp_directions_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # CPU-only. Decides two things from one labeled set (6000 pairs, behavioral dP):

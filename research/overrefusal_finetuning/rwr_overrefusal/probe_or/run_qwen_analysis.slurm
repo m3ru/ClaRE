@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=qwen-signals
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -9,7 +9,7 @@
 #SBATCH --output=logs/qwen_signals_%j.out
 #SBATCH --error=logs/qwen_signals_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 set -euo pipefail

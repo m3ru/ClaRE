@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=qwen-gen
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/qwen_gen_%j.out
 #SBATCH --error=logs/qwen_gen_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # Parameterized via env vars (pass with: sbatch --export=ALL,PAIRS=...,OUT=...,LIMIT=... run_qwen_gen.slurm)
@@ -27,7 +27,7 @@ mkdir -p logs "$(dirname "$OUT")"
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
 
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 echo "Qwen3-32B behavioral generation at $(date)  PAIRS=$PAIRS OUT=$OUT LIMIT=$LIMIT"

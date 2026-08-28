@@ -6,8 +6,8 @@ re-deriving it or repeating known mistakes. Read this first; then `PLAN.md` (ful
 design + decisions), `progress_update.md` (results narrative + figures), and
 `reading_list.md` (peer-reviewed lit + novelty gap).
 
-Paths below are relative to the repo root `/lustre10/scratch/meru/ClaRE`
-(also symlinked at `/home/meru/links/scratch/ClaRE`). The study lives in
+Paths below are relative to the repo root `$REPO`
+(also symlinked at `$REPO`). The study lives in
 `research/overrefusal_finetuning/rwr_overrefusal/`; the atlas is the `refusal_atlas/`
 subdir; the signal/probe apparatus is in the sibling `probe_or/`.
 
@@ -50,14 +50,14 @@ Schema (this is the interface — any new prompt set must match it):
 Built by `build_substrate.py`. `native_topic` = OR-10 category for orbench_hard; `"word:<w>"`
 for single-edit rewrites. `is_rewrite` is `"0"`/`"1"` strings; pairs link by `pair_id`.
 
-## 5. Infrastructure (rorqual / Compute Canada, account `def-vganesh`)
+## 5. Infrastructure (<cluster> / <HPC consortium>, account `<ACCOUNT>`)
 - **Login node has internet; compute nodes do NOT.** Stage downloads on login, run offline.
 - **Two venvs (both persistent, in the project dir, not the repo):**
   - `~/general` — GPU training/inference venv the SLURM scripts activate (torch 2.7.1,
     **transformers 4.57.6** pinned to 4.x on purpose). Jobs MUST `module load cuda`.
-  - `/home/meru/links/projects/def-vganesh/meru/atlas_env` — CPU venv for clustering/embedding
+  - `$PROJECT/atlas_env` — CPU venv for clustering/embedding
     (sklearn 1.8, sentence-transformers 5.7, torch cpu, umap). Cold import over lustre ~2 min.
-- **HF cache** `HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache`. Staged & offline-loadable:
+- **HF cache** `HF_HOME=$PROJECT/hf_cache`. Staged & offline-loadable:
   Llama-3-8B-Instruct, Qwen3-32B, BGE-large-en-v1.5, all-MiniLM-L6-v2. Offline flags:
   `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 HF_HUB_DISABLE_XET=1`.
 - **GPU line:** Qwen3-32B needs the full card `--gpus-per-node=h100:1` (80GB). Both scoring runs
@@ -68,7 +68,7 @@ for single-edit rewrites. `is_rewrite` is `"0"`/`"1"` strings; pairs link by `pa
   `n_samples=8, temp=0.7, max_new=128`.
 - **Anthropic batch API:** key expected in env `ANTHROPIC_API_KEY` (stored `~/.anthropic_key`,
   chmod 600). Helpers `submit_batches`/`poll_until_done` in `generate_or_sonnet.py` (repo root of
-  rwr_overrefusal). **NOTE: the current key was pasted into a chat transcript and should be rotated.**
+  rwr_overrefusal).
 
 ## 6. The apparatus — key scripts & how to run a new experiment
 Pipeline: **substrate → (extract acts, fit direction+probe, mine openers) → score_signals (GPU)
@@ -151,11 +151,10 @@ These are hard-won; each one changed a number or an interpretation.
   word-trigger effects (need the benign-intent filter, §7.2); the topic clustering map (unstable,
   §7.8); exact circularity magnitudes.
 
-## 9. Guardrails & conventions (from the project owner)
-- **Two clusters live in this repo. Only rorqual is ours.** Do **NOT** edit anything under
-  `research/refusal_vector/**` or any `*_pace.slurm` — those are Georgia Tech PACE (Alec's /
-  Sarvesh's), a different cluster. Ours are `#SBATCH --account=def-vganesh` + `source ~/general/…`.
+## 9. Guardrails & conventions
+- **Two clusters live in this repo.** Scripts under `research/refusal_vector/**` and any
+  `*_pace.slurm` target a second, unrelated cluster and are out of scope here. The scripts for
+  this cluster use `#SBATCH --account=<ACCOUNT>` + `source ~/general/…`.
 - **Show outputs before treating them as final; surface anything that looks off** rather than
   papering over it. Don't autonomously spend on API/GPU or make research-definition calls without
   surfacing them first. Accuracy over speed — this study feeds external claims.
-- The main working branch is `alec`. Git identity `m3ru`.

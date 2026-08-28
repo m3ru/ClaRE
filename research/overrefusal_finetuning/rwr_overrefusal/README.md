@@ -49,9 +49,9 @@ Key improvements in v3: lower similarity exponent (k=5.0), aggressive bin weight
 |------|-------------|
 | `eval_results.json` | Evaluation results comparing RWR model vs base model |
 | `eval_results_refusaldelta.json` | Evaluation with refusal_delta-only scoring |
-| `rwr_checkpoints/` | Saved LoRA adapters per epoch (on PACE) |
+| `rwr_checkpoints/` | Saved LoRA adapters per epoch (on <cluster>) |
 
-## How to Run (PACE)
+## How to Run (<cluster>)
 
 ### 1. Score candidates (if using API-generated data)
 

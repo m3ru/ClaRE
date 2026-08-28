@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=eval-rwr-llama
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/eval_rwr_llama_%j.out
 #SBATCH --error=logs/eval_rwr_llama_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # Behavioral eval of one corrected-signal Llama RWR attacker.
@@ -28,7 +28,7 @@ mkdir -p logs "probe_or/results/eval_llama_${SIGNAL}${TAG}"
 
 module load gcc arrow/23.0.1 cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 echo "Behavioral eval of RWR-Llama (${SIGNAL}${TAG} reward) at $(date)"

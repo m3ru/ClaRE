@@ -1,7 +1,7 @@
 # Llama RWR retrain on corrected refusal signals — progress & decisions
 
-Date opened: 2026-08-13. Cluster: rorqual (`def-vganesh`). Base model:
-`meta-llama/Meta-Llama-3-8B-Instruct`. Branch `alec`.
+Date opened: 2026-08-13. Cluster: <cluster> (`<ACCOUNT>`). Base model:
+`meta-llama/Meta-Llama-3-8B-Instruct`. Branch `main`.
 
 ## Why this exists
 
@@ -105,7 +105,7 @@ right-padding, last **real** prompt token (`attention_mask.sum(1)-1`), `add_spec
 
 ## Direction test — L12 vs L17 (job 18989152)
 
-Alec's Arditi replication selected **L12**; the atlas uses **L17**. These had never been
+<collaborator>'s Arditi replication selected **L12**; the atlas uses **L17**. These had never been
 compared: his sweep was **even layers only** (8,10,…,28), so L17 was never a candidate, and
 the two layers come from *different direction constructions*. His selection surface is also
 noisy at n_val=40 (L12=12.5%, L14=80%, L16=80%, L18=45%).
@@ -420,7 +420,7 @@ eval is the arbiter; it runs `final` and `epoch_2`, and epoch_1 is worth adding 
 if the trend suggests it.
 
 **Code review:** an adversarial Fable review passed the pipeline on interfaces, npz identity,
-held-out leak-freeness, SLURM/rorqual conventions and reward math; its one medium finding
+held-out leak-freeness, SLURM/<cluster> conventions and reward math; its one medium finding
 (the vector standardization) is fixed above.
 
 ## Next steps

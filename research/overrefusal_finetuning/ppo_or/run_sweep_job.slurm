@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J ppo_sweep
-#SBATCH -A coc
-#SBATCH -p ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH -A <ACCOUNT>
+#SBATCH -p <GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:h200:1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=96G

@@ -110,7 +110,7 @@ Outputs:
 | `refusal_vector.npz` | Full vector `[L, H]` across all layers + L2 magnitudes |
 | `refusal_vector.layer032.npz` | Single-layer vector (max L2) used by downstream scoring |
 
-Run (PACE):
+Run (<cluster>):
 ```bash
 # 1. Extract benign activations (array job across shards)
 sbatch --array=0-159%40 --export=DATASET=benign 3_Vector_Extraction/run_extract_activations.slurm

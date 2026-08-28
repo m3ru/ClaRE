@@ -3,7 +3,7 @@
 Compiled 2026-08-02. Prioritized 2024–2026 arXiv/ACL/NeurIPS/ICLR/EMNLP. Very recent
 2026 preprints (arXiv 26xx) are unreviewed and sometimes single-author — flagged inline.
 
-**Peer-review status (per meru's steer — anchor on reviewed work):** the operative,
+**Peer-review status (per <author>'s steer — anchor on reviewed work):** the operative,
 review-sorted anchor list lives in `PLAN.md` → "Related work". Down-weight the 2026
 preprints (2602.02132, 2512.01037, 2511.19009, 2604.18901) — verify their methodology before
 trusting. Curated field resource: **Awesome-Over-Refusal**

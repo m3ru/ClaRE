@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=qwen-gcg-smoke
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -17,14 +17,14 @@ cd "${SLURM_SUBMIT_DIR}"
 mkdir -p logs
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 HF_HUB_DISABLE_XET=1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-ROOT=/home/meru/links/scratch/ClaRE
+ROOT=$REPO
 PAIR_ROOT="${ROOT}/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
 OPENER_JSON="${ROOT}/research/overrefusal_finetuning/rwr_overrefusal/refusal_atlas/opener_sets.json"
-OUT=/home/meru/links/projects/def-vganesh/meru/qwen32b_gcg_v1/smoke
+OUT=$PROJECT/qwen32b_gcg_v1/smoke
 mkdir -p "${OUT}"
 
 COMMON=(

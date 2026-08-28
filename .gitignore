@@ -58,7 +58,7 @@ Thumbs.db
 # Logs
 *.log
 
-# PACE helper scripts and temp files
+# <cluster> helper scripts and temp files
 .pace/
 
 # Cursor IDE project settings
@@ -127,3 +127,18 @@ research/overrefusal_finetuning/rwr_overrefusal/probe_or/results/_retired/
 # Claude Code local state / worktrees
 .claude/
 *.py.bak
+
+# --- anonymity: never publish these ---
+# Personal working notes. CLAUDE.md is already ignored above; AGENTS.md is a
+# symlink to it and was NOT ignored, so `git add -A` would have committed it.
+AGENTS.md
+# Untracked working duplicate of research/overrefusal_finetuning/rwr_overrefusal/
+# used for figure generation. Also holds paper PDFs. Not part of the code release.
+claude_figures/
+# Paper sources and builds are submitted separately, not via the code repo.
+neurips_2026*.tex
+neurips_2026*.pdf
+ClaRE___NeurIPS*.pdf
+# Emacs autosave/backup files
+\#*\#
+*~

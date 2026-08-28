@@ -67,7 +67,7 @@ All variants use `Benign prompt:\n{prompt}` as the user message template.
 | variant | n | mean OR | median OR | p90 OR | mean Δ | p90 Δ | mean sim | %pos |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `imperative_procedural` | 42 | 0.025 | 0.006 | 0.134 | 2.765 | 9.305 | 0.698 | 78.6% |
-| `baseline_alec` | 42 | 0.020 | 0.006 | 0.059 | 4.141 | 9.859 | 0.563 | 90.5% |
+| `baseline_manual` | 42 | 0.020 | 0.006 | 0.059 | 4.141 | 9.859 | 0.563 | 90.5% |
 | `minimal_changes_v2` | 42 | 0.013 | 0.007 | 0.069 | 2.266 | 8.792 | 0.685 | 73.8% |
 
 ### Old RWR training data (`or_paraphrase_3k`, rescored at k=5.0 for apples-to-apples)

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Fix corrupted conda cache on PACE cluster
+# Fix corrupted conda cache on <cluster> cluster
 #
 # Run this if you see errors like:
 #   InvalidArchiveError

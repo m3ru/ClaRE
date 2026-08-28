@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Setup script to deploy PEZ optimization on PACE cluster
+# Setup script to deploy PEZ optimization on <cluster> cluster
 #
 # This copies the necessary files to your cluster home directory
 # and prepares everything for running PEZ jobs
@@ -9,7 +9,7 @@
 set -e
 
 echo "============================================================================"
-echo "Setting up PEZ Optimization on PACE Cluster"
+echo "Setting up PEZ Optimization on <cluster> Cluster"
 echo "============================================================================"
 echo ""
 

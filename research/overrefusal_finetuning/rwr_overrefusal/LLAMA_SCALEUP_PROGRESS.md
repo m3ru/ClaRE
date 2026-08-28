@@ -1,6 +1,6 @@
 # Llama scale-up: GOOD rewrite corpus from the logit attacker + refusal-boundary analysis
 
-Opened 2026-08-14, rorqual (`def-vganesh`), branch `alec`. Attacker =
+Opened 2026-08-14, <cluster> (`<ACCOUNT>`), branch `main`. Attacker =
 `probe_or/results/rwr_llama_ckpt_logit/final` (LoRA on meta-llama/Meta-Llama-3-8B-Instruct),
 the confirmed WINNING arm of the 3-signal retrain (15.0% raw / 7.06% genuine over-refusal,
 2.22× base; recipe confirmed optimal by the tuning sweep). Goal: generate a LARGE corpus of

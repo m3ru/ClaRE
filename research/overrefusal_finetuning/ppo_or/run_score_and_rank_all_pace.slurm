@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J or_score_rank_all
-#SBATCH -A coc
-#SBATCH -p ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH -A <ACCOUNT>
+#SBATCH -p <GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="gpu-h200|gpu-h100|gpu-l40s|gpu-a100"
 #SBATCH --cpus-per-task=16

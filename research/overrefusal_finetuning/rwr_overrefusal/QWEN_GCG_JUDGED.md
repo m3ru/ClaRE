@@ -67,7 +67,7 @@ The only arm put through the full two-judge chain.
 
 ## Owner verdict on the over-refusal arms
 
-On 2026-08-21 meru reviewed these examples and ruled that **none of the classified cases
+On 2026-08-21 <author> reviewed these examples and ruled that **none of the classified cases
 are really over-refusal** — including stratum D below, the 47 cases free of prohibition
 and injection wording. Every surviving rewrite still carries an artifact of the search,
 so the model is reacting to the perturbation rather than over-refusing a benign task. The
@@ -642,7 +642,7 @@ _n = 116. The search could not move these._
 ## Reproducing
 
 Raw shard outputs and verdicts live outside the repo, in
-`$PROJECT/meru/qwen32b_gcg_v1/` (`or_loose/qwen_or_s*.json`, `judged/`).
+`$PROJECT/<author>/qwen32b_gcg_v1/` (`or_loose/qwen_or_s*.json`, `judged/`).
 
 ```bash
 # 1. response-level judge: REFUSE / COMPLY / CLARIFY + was refusing justified

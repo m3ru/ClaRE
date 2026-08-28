@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Arditi-style refusal-direction layer selection, model-agnostic, degeneracy-guarded.
 
-Ports research/refusal_vector/arditi_direction_test.py (Llama-only, PACE) to rorqual and
+Ports research/refusal_vector/arditi_direction_test.py (Llama-only, <cluster>) to <cluster> and
 to Qwen3-32B. The method is Arditi et al. 2024: build a harmful-vs-harmless diff-of-means
 direction at each candidate layer, ablate it at EVERY layer, and pick the layer whose
 ablation most reduces refusal on held-out harmful prompts. Then check necessity (ablate on

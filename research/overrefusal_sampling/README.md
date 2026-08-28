@@ -49,7 +49,7 @@ python -m sampling.run_generate \
   --print_samples 1
 ```
 
-### 3) Large-scale sampling (PACE / Slurm)
+### 3) Large-scale sampling (<cluster> / Slurm)
 
 See `pace/run_sampling_pace.slurm`. It shards the benign CSV across an array job and writes JSONL shards to `outputs/`.
 

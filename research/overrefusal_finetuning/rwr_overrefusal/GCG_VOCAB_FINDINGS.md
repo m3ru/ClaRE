@@ -194,7 +194,7 @@ Nobody has counted how many confirmed cases fall into the unquantified three.
   `judge_overrefusal.py` (response-level). The v5 intent/harm judge was applied separately
   in [QWEN_GCG_JUDGED.md](QWEN_GCG_JUDGED.md) and is not part of this split.
 - The palette validator (`scripts/validate_palette.js`) needs node, which is not installed
-  on rorqual. The figures reuse the already-validated house palette from `make_figures.py`
+  on <cluster>. The figures reuse the already-validated house palette from `make_figures.py`
   and encode with a chromatic/achromatic pair; every bar is also direct-labelled.
 
 ## What was run, and what was not

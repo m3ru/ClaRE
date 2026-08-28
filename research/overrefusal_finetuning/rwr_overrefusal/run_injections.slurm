@@ -8,7 +8,7 @@
 # in the queue. Llama-3-8B needs well under an hour for 3,000 short generations; Qwen3-32B
 # is 65 GB of weights but plain generation is far cheaper than the GCG search was.
 #SBATCH --job-name=inject
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -25,7 +25,7 @@ mkdir -p logs probe_or/results
 
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 HF_HUB_DISABLE_XET=1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 

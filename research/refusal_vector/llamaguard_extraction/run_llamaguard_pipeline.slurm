@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J llamaguard_pipeline
-#SBATCH -A coc
-#SBATCH -p ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH -A <ACCOUNT>
+#SBATCH -p <GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="gpu-h200|gpu-h100|gpu-l40s|gpu-a100"
 #SBATCH --cpus-per-task=16
@@ -70,7 +70,7 @@ nvidia-smi | head -20 || true
 # ---- Paths ----
 PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
 # The vector-extraction dir was renamed 3_Vector_Extraction in the local repo
-# reorg, but older PACE checkouts still have the un-prefixed Vector_Extraction.
+# reorg, but older <cluster> checkouts still have the un-prefixed Vector_Extraction.
 # Auto-detect so this slurm runs against either layout.
 VEC_DIR=""
 for cand in "3_Vector_Extraction" "Vector_Extraction"; do

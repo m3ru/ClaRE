@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=eval-rwr-icannot
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/eval_rwr_icannot_%j.out
 #SBATCH --error=logs/eval_rwr_icannot_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 set -euo pipefail
@@ -20,7 +20,7 @@ mkdir -p logs prompt_iteration_results/eval_icannot
 module load gcc arrow/23.0.1 cuda scipy-stack/2024b   # arrow: sentence_transformers -> datasets -> pyarrow
 source ~/general/bin/activate
 
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 export HF_TOKEN="$(cat "$HF_HOME/token" 2>/dev/null || true)"
 

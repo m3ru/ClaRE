@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=rwr-qwen-vector
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/rwr_qwen_vector_%j.out
 #SBATCH --error=logs/rwr_qwen_vector_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # RWR-Qwen on the raw vector-projection-delta reward @ causal L58, k=18.4. Mirrors
@@ -25,7 +25,7 @@ BIN_EDGES="16.35,84.8,300.3"   # vector q35/q65/q85 from job 19020842 shard-buil
 
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 echo "RWR-Qwen (raw vector delta @ L58, k=18.4, QLoRA) at $(date)"

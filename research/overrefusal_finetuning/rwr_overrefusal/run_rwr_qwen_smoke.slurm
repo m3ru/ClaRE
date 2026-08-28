@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=rwr-qwen-smoke
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -16,7 +16,7 @@ cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 echo "SMOKE: QLoRA path validation (4-bit load -> backward -> save -> bf16 merge -> generate) $(date)"

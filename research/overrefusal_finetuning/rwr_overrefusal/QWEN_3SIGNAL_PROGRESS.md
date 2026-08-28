@@ -1,7 +1,7 @@
 # Qwen 3-signal RWR — mirror of the Llama retrain — progress & decisions
 
-Date opened: 2026-08-14. Cluster: rorqual (`def-vganesh`). Base model: `Qwen/Qwen3-32B`
-(QLoRA 4-bit NF4, one full 80GB H100). Branch `alec`. Mirrors `LLAMA_RETRAIN_PROGRESS.md`.
+Date opened: 2026-08-14. Cluster: <cluster> (`<ACCOUNT>`). Base model: `Qwen/Qwen3-32B`
+(QLoRA 4-bit NF4, one full 80GB H100). Branch `main`. Mirrors `LLAMA_RETRAIN_PROGRESS.md`.
 
 ## Goal
 

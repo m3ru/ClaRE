@@ -1,6 +1,6 @@
 # Refusal-probe OR signal — experiments and outcome
 
-Date: 2026-07-13. Cluster: rorqual (Compute Canada). Base model throughout:
+Date: 2026-07-13. Cluster: <cluster> (<HPC consortium>). Base model throughout:
 `meta-llama/Meta-Llama-3-8B-Instruct` (33 hidden states, layers 0–32).
 
 ## 1. Idea

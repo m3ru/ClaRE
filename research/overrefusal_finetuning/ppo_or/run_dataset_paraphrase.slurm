@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J or_gptoss
-#SBATCH -A coc
-#SBATCH -p coc-gpu
-#SBATCH --qos=coc-ice
+#SBATCH -A <ACCOUNT>
+#SBATCH -p <GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:l40s:2
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=96G

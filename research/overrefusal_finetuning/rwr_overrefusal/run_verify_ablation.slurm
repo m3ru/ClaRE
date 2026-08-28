@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --job-name=verify-abl
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=96G
@@ -17,7 +17,7 @@ cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 python -c "import torch, transformers, numpy; print('[pre-flight] imports OK')"
 

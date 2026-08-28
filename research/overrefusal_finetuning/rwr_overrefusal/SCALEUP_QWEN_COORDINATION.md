@@ -1,6 +1,6 @@
 # Scale-up (Llama) + Qwen 3-signal mirror — coordination
 
-Opened 2026-08-14, rorqual (`def-vganesh`), branch `alec`. This is the top-level tracker for
+Opened 2026-08-14, <cluster> (`<ACCOUNT>`), branch `main`. This is the top-level tracker for
 the two parallel tracks kicked off after the Llama retrain + tuning concluded (logit recipe
 confirmed optimal). Each track has its own detailed progress doc; this file is the map.
 
@@ -133,7 +133,7 @@ login node. No user input needed for the API path.
 - **Generate** from the logit adapter over the provably-disjoint pool = `remaining_prompts(ds)`
   shuffled `Random(43)` sliced `[6000:]` (~43,020 prompts; disjoint from the 6,000 Sonnet-pool
   originals, 599 held-out, all train/iter/eval seeds). First corpus target ~5–8k originals × 4.
-  New rorqual wrapper (the existing `run_gen_alpaca_or.slurm` is PACE — untouchable — and points
+  New <cluster> wrapper (the existing `run_gen_alpaca_or.slurm` is <cluster> — untouchable — and points
   at the old adapter).
 - **Substrate adapter** (NEW, model-agnostic): corpus CSV → refusal_atlas substrate schema
   (paired original/rewrite rows, `pair_id`, `is_rewrite`, `source=rwr_scaleup`, `gold_benign`).
@@ -170,7 +170,7 @@ Qwen agent was told to STOP after its raw corpus; the shared downstream is run a
 ## Cluster invariants (both tracks)
 
 `module load cuda scipy-stack/2024b`; `source ~/general/bin/activate`;
-`HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache`;
-`HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1`; `--account=def-vganesh`.
+`HF_HOME=$PROJECT/hf_cache`;
+`HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1`; `--account=<ACCOUNT>`.
 NEVER edit `*_pace.slurm` or `research/refusal_vector/**`. Compute nodes offline; API only on a
 login node. All new artifacts tagged so nothing existing is clobbered.

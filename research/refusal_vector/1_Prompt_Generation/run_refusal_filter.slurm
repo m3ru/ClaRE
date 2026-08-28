@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=refusal_filter
-#SBATCH --account=coc
-#SBATCH --qos=coc-ice
-#SBATCH --partition=ice-gpu
+#SBATCH --account=<ACCOUNT>
+#SBATCH --qos=<QOS>
+#SBATCH --partition=<GPU_PARTITION>
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
 #SBATCH --array=0-159%40
@@ -50,7 +50,7 @@ def ok(m):
     except Exception: return False
     return True
 
-# Torch CUDA 12.x wheels (works on many PACE images; adjust if needed)
+# Torch CUDA 12.x wheels (works on many <cluster> images; adjust if needed)
 if not ok("torch"):
     sh(sys.executable, "-m", "pip", "install", "--extra-index-url", "https://download.pytorch.org/whl/cu121", "torch")
 for pkg in ("transformers","accelerate","huggingface_hub"):

@@ -4,7 +4,7 @@
 #
 # This is NOT a SLURM job. It uses the Anthropic MESSAGE BATCHES API (Claude
 # Sonnet 5) and downloads the yahma/alpaca-cleaned dataset -- both need internet,
-# which rorqual COMPUTE nodes do NOT have. Run it on a LOGIN node:
+# which <cluster> COMPUTE nodes do NOT have. Run it on a LOGIN node:
 #
 #     export ANTHROPIC_API_KEY=sk-ant-...      # your key
 #     bash run_gen_or_sonnet.sh
@@ -36,7 +36,7 @@ source ~/general/bin/activate
 
 # --- HF cache: project-space cache. Login node HAS internet, so DO NOT set the
 #     HF offline flags -- we need to download alpaca-cleaned and reach the API. ---
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_DISABLE_XET=1
 
 # --- Anthropic key must be in the environment (same convention as the other

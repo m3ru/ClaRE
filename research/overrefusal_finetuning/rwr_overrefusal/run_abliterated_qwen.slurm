@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=abl-qwen-e2e
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -27,7 +27,7 @@ mkdir -p logs probe_or/results/qwen_scored_abl probe_or/results/eval_qwen_vector
 
 module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 SCORER=probe_or/results/qwen_signals/arditi_abliterated.npz

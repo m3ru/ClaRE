@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=claude-score
-#SBATCH --account=coc
-#SBATCH --qos=coc-ice
-#SBATCH --partition=ice-gpu
+#SBATCH --account=<ACCOUNT>
+#SBATCH --qos=<QOS>
+#SBATCH --partition=<GPU_PARTITION>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8

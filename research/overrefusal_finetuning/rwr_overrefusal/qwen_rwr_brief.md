@@ -1,6 +1,6 @@
 # Qwen3-32B RWR scale-up — training-stage brief
 
-Date: 2026-07-28. Cluster: rorqual. Signals-stage writeup: `probe_or/qwen_experiment_brief.md`.
+Date: 2026-07-28. Cluster: <cluster>. Signals-stage writeup: `probe_or/qwen_experiment_brief.md`.
 
 End-to-end move of the RWR over-refusal attacker from Llama-3-8B to Qwen3-32B:
 rebuild the activation OR signal on Qwen, rescore the Sonnet benign-rewrite pool

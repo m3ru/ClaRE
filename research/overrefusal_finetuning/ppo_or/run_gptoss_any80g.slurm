@@ -1,16 +1,16 @@
 #!/bin/bash
 #SBATCH -J or_gptoss
-#SBATCH -A coc
-#SBATCH -p ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH -A <ACCOUNT>
+#SBATCH -p <GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=96G
 #SBATCH -t 14:00:00
-#SBATCH --output=/home/hice1/aharris345/scratch/or_gptoss_%A_%a.out
-#SBATCH --error=/home/hice1/aharris345/scratch/or_gptoss_%A_%a.err
+#SBATCH --output=$HOME/scratch/or_gptoss_%A_%a.out
+#SBATCH --error=$HOME/scratch/or_gptoss_%A_%a.err
 #SBATCH --array=0-31
-#SBATCH --exclude=atl1-1-01-002-4-0,atl1-1-01-002-6-0,atl1-1-01-002-7-0,atl1-1-01-002-8-0,atl1-1-01-005-5-0,atl1-1-01-005-7-0,atl1-1-01-005-9-0,atl1-1-01-005-11-0,atl1-1-01-005-17-0,atl1-1-01-005-19-0,atl1-1-02-009-31-0,atl1-1-02-009-32-0,atl1-1-02-009-33-0,atl1-1-02-010-31-0,atl1-1-02-010-32-0,atl1-1-02-010-33-0,atl1-1-02-010-34-0,atl1-1-02-010-35-0,atl1-1-02-010-36-0,atl1-1-02-011-31-0,atl1-1-02-011-32-0
+#SBATCH --exclude=<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>,<compute-node>
 
 set -euo pipefail
 trap 'echo "[error] failed at line ${LINENO}" >&2' ERR

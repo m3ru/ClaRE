@@ -1,6 +1,6 @@
 # Qwen3-32B RWR attacker on the L58 probe signal — training + behavioral results
 
-Date: 2026-07-28. Cluster: rorqual. Model: `Qwen/Qwen3-32B`, QLoRA (4-bit NF4),
+Date: 2026-07-28. Cluster: <cluster>. Model: `Qwen/Qwen3-32B`, QLoRA (4-bit NF4),
 `enable_thinking=False`. Reward = Qwen-OR = `exp(k*(sim-0.75)) * probe_delta`, where
 `probe_delta` = the fitted L58 refusal-delta signal (see `qwen_experiment_brief.md`).
 

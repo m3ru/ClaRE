@@ -1,6 +1,6 @@
 # Qwen3-32B refusal signals — vector + probe ensemble
 
-Date: 2026-07-25. Cluster: rorqual (Compute Canada). Model: `Qwen/Qwen3-32B`
+Date: 2026-07-25. Cluster: <cluster> (<HPC consortium>). Model: `Qwen/Qwen3-32B`
 (64 layers, 65 hidden states, hidden=5120), run with `enable_thinking=False`.
 
 Scale-up of the two activation-based over-refusal (OR) signals from Llama-3-8B to

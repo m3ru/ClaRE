@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=eval-rwr-qwen-k18
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/eval_rwr_qwen_k18_%j.out
 #SBATCH --error=logs/eval_rwr_qwen_k18_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 set -euo pipefail
@@ -19,7 +19,7 @@ mkdir -p logs probe_or/results/eval_qwen_k18
 
 module load gcc arrow/23.0.1 cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 echo "Behavioral eval of RWR-Qwen k=18.4 at $(date)"

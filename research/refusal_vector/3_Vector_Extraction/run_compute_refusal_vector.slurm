@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J compute_refusal_vec
-#SBATCH -A coc
-#SBATCH -p ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH -A <ACCOUNT>
+#SBATCH -p <GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:0
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G

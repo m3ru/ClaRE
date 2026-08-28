@@ -37,7 +37,7 @@ own copy of the training code.
 
 Upstream inputs that live elsewhere (not moved): the per-pair Claude logprobs
 in `../prompt_iteration_results/icannot_vs_refusal/icannot_vs_refusal_pairs.csv`
-(produced by the PACE `icannot_vs_refusal_corr.py`), and the base pool
+(produced by the <cluster> `icannot_vs_refusal_corr.py`), and the base pool
 `../or_paraphrase_3k_deduped/`.
 
 ## Pipeline

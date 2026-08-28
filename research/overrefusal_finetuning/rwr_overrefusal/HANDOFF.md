@@ -913,7 +913,7 @@ list, and `enable_thinking=False` for Qwen. Results:
 | Llama-3-8B | **12** | 100% → 5.5% harmful refusal, harmless unmoved | 0 → **99.2%** at coef 1, clean |
 | Qwen3-32B | **60** | 91.4% → 1.6%, harmless unmoved | 32.8% at coef 1 (**14.8% degenerate**); 98.4% at coef 2 on a model **84.4% degenerate** |
 
-Llama's L12 independently reproduces the original PACE selection on a different instrument.
+Llama's L12 independently reproduces the original <cluster> selection on a different instrument.
 **Qwen passes necessity but not sufficiency** — worth stating if the paper calls either "the"
 refusal direction. Qwen's top is also a flat plateau (L56 4.7, L57 3.1, L60 0.0), so its argmin is
 within noise of the AUC layer already in use; Llama's surface is sharply non-monotonic instead.

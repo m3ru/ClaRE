@@ -3,8 +3,8 @@
 One-file narrative of every important decision and step, Llama first, then Qwen, with worked
 examples for every dataset and every trained model. Detailed per-stage docs it summarizes:
 `LLAMA_RETRAIN_PROGRESS.md`, `LOGIT_TUNING_EXPERIMENTS.md`, `LLAMA_SCALEUP_PROGRESS.md`,
-`QWEN_3SIGNAL_PROGRESS.md`, `SCALEUP_QWEN_COORDINATION.md`. Cluster: rorqual (`def-vganesh`).
-Base models: `meta-llama/Meta-Llama-3-8B-Instruct`, `Qwen/Qwen3-32B`. Branch `alec`. Dates 2026.
+`QWEN_3SIGNAL_PROGRESS.md`, `SCALEUP_QWEN_COORDINATION.md`. Cluster: <cluster> (`<ACCOUNT>`).
+Base models: `meta-llama/Meta-Llama-3-8B-Instruct`, `Qwen/Qwen3-32B`. Branch `main`. Dates 2026.
 
 ---
 

@@ -5,7 +5,7 @@ Compares, on one common labeled set, four candidate mass-mean directions:
 
   ours-raw    mass-mean(refused - complied)   Reddit/jailbreak split, 2500/class -> our L17
   ours-lda    covariance-corrected version of the above (Sigma^-1 (mu+ - mu-))
-  arditi-raw  mass-mean(harmful - harmless)   AdvBench vs alpaca-cleaned, 512/class -> Alec's L12
+  arditi-raw  mass-mean(harmful - harmless)   AdvBench vs alpaca-cleaned, 512/class -> <collaborator>'s L12
   arditi-lda  covariance-corrected version of the above
 
 Two questions, deliberately kept separate because they have different power:

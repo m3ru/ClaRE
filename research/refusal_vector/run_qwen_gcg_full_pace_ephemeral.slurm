@@ -1,21 +1,21 @@
 #!/bin/bash
-# One Qwen3-32B GCG shard per GPU. PACE's coc-ice QOS limits each job to
+# One Qwen3-32B GCG shard per GPU. <cluster>'s <QOS> QOS limits each job to
 # 960 GPU-minutes, so the 3,200-prompt OR arms use 40 x 80-prompt shards.
 # Jobs on the same physical node share an immutable /tmp Hugging Face cache.
 # Submit OR arms with the default array 0-39; submit jailbreak arms with
 # --array=0-7 (eight shards x up to 28 prompts).
 #SBATCH --job-name=qwen-gcg-full
-#SBATCH --account=coc
-#SBATCH --partition=ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH --account=<ACCOUNT>
+#SBATCH --partition=<GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="gpu-h200|gpu-h100"
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=96G
 #SBATCH --time=16:00:00
 #SBATCH --array=0-39
-#SBATCH --output=/home/hice1/aharris345/qwen32b_gcg_v1/logs/full_%A_%a.out
-#SBATCH --error=/home/hice1/aharris345/qwen32b_gcg_v1/logs/full_%A_%a.err
+#SBATCH --output=$HOME/qwen32b_gcg_v1/logs/full_%A_%a.out
+#SBATCH --error=$HOME/qwen32b_gcg_v1/logs/full_%A_%a.err
 
 set -euo pipefail
 : "${ARM:?submit with ARM=or_loose|or_strict|jb_loose|jb_strict}"

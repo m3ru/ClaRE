@@ -11,7 +11,7 @@ Two-phase pipeline:
     activation-based ORRewardModel, save to ``<output_name>``.
 
 Skip flags let you run either phase in isolation — useful because compute nodes
-on Compute Canada typically can't reach the Anthropic API, so generation happens
+on <HPC consortium> typically can't reach the Anthropic API, so generation happens
 on a login node and scoring on a slurm job:
 
     # On login node (has internet)

@@ -1,11 +1,11 @@
 #!/bin/bash
-# PACE fallback when the persistent 300-GB scratch quota cannot hold Qwen3-32B.
+# <cluster> fallback when the persistent 300-GB scratch quota cannot hold Qwen3-32B.
 # Downloads the model once to node-local /tmp, then runs loose and strict smoke
 # arms concurrently on two GPUs. The cache is removed automatically at job exit.
 #SBATCH --job-name=qwen-gcg-smoke
-#SBATCH --account=coc
-#SBATCH --partition=ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH --account=<ACCOUNT>
+#SBATCH --partition=<GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:2
 #SBATCH --constraint="gpu-h200|gpu-h100"
 #SBATCH --cpus-per-task=16

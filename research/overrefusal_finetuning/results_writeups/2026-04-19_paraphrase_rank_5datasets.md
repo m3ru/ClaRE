@@ -55,7 +55,7 @@ Raw layer-32 refusal-vector projections of original vs. paraphrased prompts.
 ## Compute
 
 - Phase 1: OpenAI Batch API (gpt-4o-mini), 5 parallel batches
-- Phase 2+3 (full-scale): PACE `ice-gpu`, 1× H100, 4h14m
-- Phase 2+3 (subset-500 hedge): PACE `ice-gpu`, 1× L40S, 25m
+- Phase 2+3 (full-scale): <cluster> `<GPU_PARTITION>`, 1× H100, 4h14m
+- Phase 2+3 (subset-500 hedge): <cluster> `<GPU_PARTITION>`, 1× L40S, 25m
 - Scoring model: `meta-llama/Meta-Llama-3-8B-Instruct`, layer 32, bf16
 - Refusal vector: `research/refusal_vector/3_Vector_Extraction/refusal_vector.layer032.npz`

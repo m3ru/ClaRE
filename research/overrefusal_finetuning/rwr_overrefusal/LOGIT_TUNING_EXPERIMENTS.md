@@ -1,6 +1,6 @@
 # Logit-reward RWR attacker — training-tuning experiments
 
-Opened 2026-08-14, rorqual (`def-vganesh`), branch `alec`. Base model
+Opened 2026-08-14, <cluster> (`<ACCOUNT>`), branch `main`. Base model
 `meta-llama/Meta-Llama-3-8B-Instruct`. All runs reuse the validated logit shard set
 `probe_or/results/llama_scored/llama_shards_logit` and the common held-out eval split
 `probe_or/results/llama_scored/heldout_originals.json` (200 prompts, identical to every

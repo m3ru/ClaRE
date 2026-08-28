@@ -71,7 +71,7 @@ where `k=5.0` (lowered from original 18.4 to prevent similarity from dominating 
 We replayed the **v1 recipe** (`k=18.4, c=0.5, d=100, weights=[1,2,4,8,16], floor=0.5`) against the new dolly paraphrase corpus produced by the OpenAI Batch API (gpt-4o-mini, n=20 paraphrases per prompt, scored against Llama-3-8B layer-32 refusal vector). Goal: see whether v1's "learn to copy" failure is a property of the original `or_paraphrase_3k` dataset or of the recipe itself.
 
 **Setup:**
-- PACE job 5090550, H100 80GB, 3h32m wall-clock
+- <cluster> job 5090550, H100 80GB, 3h32m wall-clock
 - 15,008 dolly prompts × ~20 paraphrases = 300,034 raw pairs
 - Filter `sim ≥ 0.5 ∧ Δ ≥ 0` → **201,938 pairs** (5 quantile bins of ~40k)
 - Train / val split by **unique original prompt**, seed=42 → 12,150 / 1,349 prompts (181,820 / 20,118 pairs)
@@ -172,7 +172,7 @@ The v1 recipe applied to the new dolly data **reproduces v1's copy-bot failure e
 
 ### Artifacts
 
-- Adapter (337 MB each): `~/scratch/rwr_v1_dolly_checkpoints/{epoch_1,epoch_2,epoch_3,final}/` on PACE — not committed (`.safetensors` gitignored, oversize for git).
+- Adapter (337 MB each): `~/scratch/rwr_v1_dolly_checkpoints/{epoch_1,epoch_2,epoch_3,final}/` on <cluster> — not committed (`.safetensors` gitignored, oversize for git).
 - Eval results JSON: `research/overrefusal_finetuning/rwr_overrefusal/eval_v1_dolly/{eval_dolly_val.json, eval_alpaca.json}`
 - Training driver: `run_rwr_v1_dolly_pace.slurm`; eval driver: `run_eval_v1_dolly_pace.slurm`; reusable eval script: `eval_v1_dolly.py`.
 

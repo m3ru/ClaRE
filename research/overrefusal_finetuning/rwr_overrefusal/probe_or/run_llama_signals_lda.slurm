@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=llama-signals-lda
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -9,7 +9,7 @@
 #SBATCH --output=logs/llama_signals_lda_%j.out
 #SBATCH --error=logs/llama_signals_lda_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # CPU-only. Fits the Llama delta VECTOR + PROBE with COVARIANCE-CORRECTED (LDA)

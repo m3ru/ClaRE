@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J rwr_claude
-#SBATCH -A coc
-#SBATCH -p ice-gpu
-#SBATCH --qos=coc-ice
+#SBATCH -A <ACCOUNT>
+#SBATCH -p <GPU_PARTITION>
+#SBATCH --qos=<QOS>
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="gpu-h200|gpu-h100|gpu-a100|gpu-l40s"
 #SBATCH --cpus-per-task=16
@@ -11,7 +11,7 @@
 #SBATCH --output=slurm-%j.out
 #SBATCH --error=slurm-%j.err
 
-# Reproduce the claude_rwr attacker on PACE: RWR-train Llama-3-8B-Instruct on the
+# Reproduce the claude_rwr attacker on <cluster>: RWR-train Llama-3-8B-Instruct on the
 # deduped Claude Haiku rewrites. Same recipe as run_rwr_claude_only.slurm
 # (BinningConfig defaults: k=5.0, c=0.75, d=100, bin_weights=[0,0,0,1,16] = top-40%).
 set -euo pipefail

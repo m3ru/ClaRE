@@ -1,4 +1,4 @@
-# How we choose the refusal vector (Llama & Qwen) — rationale for Alec
+# How we choose the refusal vector (Llama & Qwen) — rationale for <collaborator>
 
 Short version: **the four criteria you list measure different constructs and genuinely
 disagree, so "which is best" has no answer without naming the use case.** Below: what we

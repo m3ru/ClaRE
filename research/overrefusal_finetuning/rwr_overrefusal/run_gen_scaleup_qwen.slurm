@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=gen-scaleup-qwen
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=6
@@ -25,7 +25,7 @@ mkdir -p logs probe_or/results/gen_scaleup_qwen_logit
 
 module load cuda scipy-stack/2024b gcc arrow/23.0.1
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 echo "gen scale-up qwen shard ${SLURM_ARRAY_TASK_ID} at $(date)"

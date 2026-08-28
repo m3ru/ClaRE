@@ -1,13 +1,13 @@
 ---------------------------------------
 Begin Slurm Prolog: Jun-28-2026 14:02:45
 Job ID:    5442557
-User ID:   aharris345
-Account:   coc
+User ID:    <user>
+Account:    <ACCOUNT>
 Job name:  rwr_eval_bucketing_fixed
-Partition: ice-gpu
-QOS:       coc-ice
+Partition: <GPU_PARTITION>
+QOS:       <QOS>
 ---------------------------------------
-[stage] eval_bucketing_fixed on atl1-1-03-013-3-0.pace.gatech.edu at Sun Jun 28 14:02:45 EDT 2026
+[stage] eval_bucketing_fixed on <compute-node> at Sun Jun 28 14:02:45 EDT 2026
 [stage] python: Python 3.11.15
 Sun Jun 28 14:03:03 2026       
 +-----------------------------------------------------------------------------------------+
@@ -21,11 +21,11 @@ Sun Jun 28 14:03:03 2026
 | N/A   68C    P0             99W /  700W |       0MiB /  81559MiB |      0%      Default |
 |                                         |                        |             Disabled |
 +-----------------------------------------+------------------------+----------------------+
-[stage] models: baseline=baseline claude_rwr_fixed=/home/hice1/aharris345/scratch/rwr_claude_fixed_checkpoints/final claude_rwr_v1_fixed=/home/hice1/aharris345/scratch/rwr_claude_v1_fixed_checkpoints/final
+[stage] models: baseline=baseline claude_rwr_fixed=$HOME/scratch/rwr_claude_fixed_checkpoints/final claude_rwr_v1_fixed=$HOME/scratch/rwr_claude_v1_fixed_checkpoints/final
 [eval] models to evaluate (3):
   baseline              adapter_dir=baseline
-  claude_rwr_fixed      adapter_dir=/home/hice1/aharris345/scratch/rwr_claude_fixed_checkpoints/final
-  claude_rwr_v1_fixed   adapter_dir=/home/hice1/aharris345/scratch/rwr_claude_v1_fixed_checkpoints/final
+  claude_rwr_fixed      adapter_dir=$HOME/scratch/rwr_claude_fixed_checkpoints/final
+  claude_rwr_v1_fixed   adapter_dir=$HOME/scratch/rwr_claude_v1_fixed_checkpoints/final
 [heldout] reconstructing training + iteration indices to exclude...
 [heldout] excluding 2519 alpaca indices used for training/iteration
 [heldout] alpaca: selected 200 held-out prompts (eval_seed=99)
@@ -51,8 +51,8 @@ STAGE 1: GENERATION
   Generated 200/200 prompts
 [gen] baseline × dolly done in 153s
 
-[gen] loading model: claude_rwr_fixed (adapter=/home/hice1/aharris345/scratch/rwr_claude_fixed_checkpoints/final)
-[eval] Loading LoRA adapter from /home/hice1/aharris345/scratch/rwr_claude_fixed_checkpoints/final
+[gen] loading model: claude_rwr_fixed (adapter=$HOME/scratch/rwr_claude_fixed_checkpoints/final)
+[eval] Loading LoRA adapter from $HOME/scratch/rwr_claude_fixed_checkpoints/final
 [gen] 'claude_rwr_fixed' model loaded in 13s
 [gen] claude_rwr_fixed × alpaca: 200 prompts × 3
   Generated 50/200 prompts
@@ -67,8 +67,8 @@ STAGE 1: GENERATION
   Generated 200/200 prompts
 [gen] claude_rwr_fixed × dolly done in 122s
 
-[gen] loading model: claude_rwr_v1_fixed (adapter=/home/hice1/aharris345/scratch/rwr_claude_v1_fixed_checkpoints/final)
-[eval] Loading LoRA adapter from /home/hice1/aharris345/scratch/rwr_claude_v1_fixed_checkpoints/final
+[gen] loading model: claude_rwr_v1_fixed (adapter=$HOME/scratch/rwr_claude_v1_fixed_checkpoints/final)
+[eval] Loading LoRA adapter from $HOME/scratch/rwr_claude_v1_fixed_checkpoints/final
 [gen] 'claude_rwr_v1_fixed' model loaded in 11s
 [gen] claude_rwr_v1_fixed × alpaca: 200 prompts × 3
   Generated 50/200 prompts
@@ -263,12 +263,12 @@ RE-SCORED HELD-OUT EVAL SUMMARY (k=5.0, c=0.75, d=100)
 ---------------------------------------
 Begin Slurm Epilog: Jun-28-2026 14:21:02
 Job ID:        5442557
-User ID:       aharris345
-Account:       coc
+User ID:    <user>
+Account:    <ACCOUNT>
 Job name:      rwr_eval_bucketing_fixed
 Resources:     cpu=16,gres/gpu:h100=1,mem=96G,node=1
 Rsrc Used:     cput=04:52:32,vmem=0,walltime=00:18:17,mem=12160468K,energy_used=0
-Partition:     ice-gpu
-QOS:           coc-ice
-Nodes:         atl1-1-03-013-3-0
+Partition:     <GPU_PARTITION>
+QOS:           <QOS>
+Nodes:         <compute-node>
 ---------------------------------------

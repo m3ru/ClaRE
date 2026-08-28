@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=atlas-scaleup-llama
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -20,7 +20,7 @@ mkdir -p logs probe_or/results/scaleup_atlas_llama
 
 module load cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 S=$(printf "%02d" ${SLURM_ARRAY_TASK_ID})

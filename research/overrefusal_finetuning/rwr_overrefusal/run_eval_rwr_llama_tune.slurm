@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=eval-rwr-llama-tune
-#SBATCH --account=def-vganesh
+#SBATCH --account=<ACCOUNT>
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,7 +10,7 @@
 #SBATCH --output=logs/eval_rwr_llama_tune_%j.out
 #SBATCH --error=logs/eval_rwr_llama_tune_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=mgopalan6@gatech.edu
+#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # Behavioral eval of a logit tuning variant on the SAME held-out prompts as every
@@ -28,7 +28,7 @@ mkdir -p logs "probe_or/results/eval_llama_logit${TAG}"
 
 module load gcc arrow/23.0.1 cuda scipy-stack/2024b
 source ~/general/bin/activate
-export HF_HOME=/home/meru/links/projects/def-vganesh/meru/hf_cache
+export HF_HOME=$PROJECT/hf_cache
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 CKPT="probe_or/results/rwr_llama_ckpt_logit${TAG}"
