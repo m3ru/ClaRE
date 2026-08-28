@@ -56,10 +56,10 @@ stats restricted to gold_benign==1 (atlas §7).
 | Consolidate corpus | `scaleup_atlas_llama/corpus_scaleup_llama.csv` | login | **done** — 8,000 rows (similarity deferred to GPU; CPU MiniLM too slow on login) |
 | Substrate build (sharded ×4 by original) | `scaleup_atlas_llama/substrate_scaleup_shard0[0-3].csv` | login | **done** — ~2,450 uniq texts/shard, balanced |
 | Atlas 3-signal + behavioral | `scaleup_atlas_llama/signals+pairs+samples_scaleup_shard*` | 19022195 (array 0-3) | **submitted, PENDING** behind Qwen 19020842 |
-| Benign filter (check a) | `scaleup_atlas_llama/benign_scaleup.csv` | login batch `msgbatch_01Xi6X…` | **running** (8,000 reqs, parallel to atlas) |
+| Benign filter (check a) | `scaleup_atlas_llama/benign_scaleup.csv` | login batch `msgbatch_<redacted>…` | **running** (8,000 reqs, parallel to atlas) |
 | MiniLM similarity | corpus similarity col | GPU | deferred (not on atlas critical path; for fidelity analysis) |
-| Benign filter (check a) — DONE | `benign_scaleup.csv` | batch `msgbatch_01Xi6X…` | **done** — 7,877 BENIGN / 123 HARMFUL = **98.5% GOOD** |
-| Refusal judge (check b) | `judge_scaleup.csv` | batch `msgbatch_01NWwA…` | **done** — 9,757 succeeded; +54 refusals regex missed |
+| Benign filter (check a) — DONE | `benign_scaleup.csv` | batch `msgbatch_<redacted>…` | **done** — 7,877 BENIGN / 123 HARMFUL = **98.5% GOOD** |
+| Refusal judge (check b) | `judge_scaleup.csv` | batch `msgbatch_<redacted>…` | **done** — 9,757 succeeded; +54 refusals regex missed |
 | MiniLM similarity | corpus | GPU 19022438 | **done** — GOOD-refused 0.728 vs complied 0.797 (both ≫ base 0.63) |
 | Refusal-boundary analysis | below (FINAL section) | — | **DONE** — genuine-OR 16.84%, 732 originals, logit>probe>vector |
 
@@ -101,7 +101,7 @@ and both under the output-space logit — same conclusion, non-circular.
 
 ## FINAL refusal-boundary analysis (check-a benign ∧ check-b intent refusal)
 
-Both judges collected (check-b `msgbatch_01NWwA…`: 9,757 succeeded, 0 errored, 41 parse-drops).
+Both judges collected (check-b `msgbatch_<redacted>…`: 9,757 succeeded, 0 errored, 41 parse-drops).
 The intent judge disagrees with the regex on 130 / 9,716 texts, net **+54 refusals** the regex
 MISSED (92 FN vs 38 FP) — confirming the regex under-counts, so the clean label if anything
 raises the rate.
