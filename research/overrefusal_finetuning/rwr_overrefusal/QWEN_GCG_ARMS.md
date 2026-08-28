@@ -1,6 +1,6 @@
 # Qwen3-32B GCG — the four arms
 
-Launcher: `research/refusal_vector/run_qwen_gcg_rorqual.slurm`
+Launcher: `research/refusal_vector/run_qwen_gcg_clustera.slurm`
 Optimiser: `research/refusal_vector/prompt_rewrite_opt.py`
 Model: `Qwen/Qwen3-32B` (bf16, `--disable_thinking`, eager attention), one H100 per shard.
 

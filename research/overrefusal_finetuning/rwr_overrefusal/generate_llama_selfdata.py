@@ -20,7 +20,7 @@ the ONLY thing that changes vs those runs is the paraphrase generator (Llama its
   - Output: shards in the or_susceptibility_rankings_shard*.json schema that
     rwr_data.load_shards() consumes, so train_rwr.py runs unchanged.
 
-GPU job (no internet): see run_llama_selfdata_pace.slurm.
+GPU job (no internet): see run_llama_selfdata_clusterb.slurm.
 """
 import argparse
 import csv

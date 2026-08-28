@@ -67,7 +67,7 @@ Labels each prompt/response pair as refusal or benign using two independent sign
 
 | File | Purpose |
 |------|---------|
-| `classify_refusals_m3.py` | ML classification via ProtectAI `distilroberta-base-rejection-v1` (M3-optimized, chunked, resumable) |
+| `classify_refusals_local.py` | ML classification via ProtectAI `distilroberta-base-rejection-v1` (M3-optimized, chunked, resumable) |
 | `regex_refusals.py` | Regex pattern classifier (lightweight second signal) |
 | `classifier_final.py` | Combines both: final_refusals = ML-refusal; final_benign = ML and regex agree NOT refusal |
 | `requirements.txt` | Python deps for the classifier |
@@ -81,7 +81,7 @@ Labels each prompt/response pair as refusal or benign using two independent sign
 Pipeline:
 ```bash
 # 1. ML classification
-python classify_refusals_m3.py --input llama8b_outputs_filtered.csv --output classified_llama8b_outputs.csv
+python classify_refusals_local.py --input llama8b_outputs_filtered.csv --output classified_llama8b_outputs.csv
 
 # 2. Regex classification
 python regex_refusals.py --input llama8b_outputs_filtered.csv --output regexed_outputs.csv

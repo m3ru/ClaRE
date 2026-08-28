@@ -51,7 +51,7 @@ python -m sampling.run_generate \
 
 ### 3) Large-scale sampling (<cluster> / Slurm)
 
-See `pace/run_sampling_pace.slurm`. It shards the benign CSV across an array job and writes JSONL shards to `outputs/`.
+See `clusterb/run_sampling_clusterb.slurm`. It shards the benign CSV across an array job and writes JSONL shards to `outputs/`.
 
 ### 4) Select best candidates for SFT
 

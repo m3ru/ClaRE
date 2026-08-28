@@ -32,7 +32,7 @@ pip install mlx
 ### Basic Usage
 
 ```bash
-python classify_refusals_m3.py \
+python classify_refusals_local.py \
     --input prompts_completions.csv \
     --output classified_results.csv \
     --chunk_time_minutes 20 \
@@ -43,14 +43,14 @@ python classify_refusals_m3.py \
 
 ```bash
 # Resume from checkpoint
-python classify_refusals_m3.py \
+python classify_refusals_local.py \
     --input prompts_completions.csv \
     --output classified_results.csv \
     --resume_from_checkpoint \
     --continuous
 
 # Custom batch size and disable MLX
-python classify_refusals_m3.py \
+python classify_refusals_local.py \
     --input prompts_completions.csv \
     --output classified_results.csv \
     --batch_size 128 \
@@ -123,7 +123,7 @@ The script automatically saves checkpoints:
 ## Example Session
 
 ```bash
-$ python classify_refusals_m3.py --input data.csv --output results.csv
+$ python classify_refusals_local.py --input data.csv --output results.csv
 
 🔧 Initializing classifier on device: mlx
 ✅ MLX available - using Apple Silicon optimization
@@ -174,7 +174,7 @@ pip install --upgrade pip
 pip install mlx
 
 # Or disable MLX
-python classify_refusals_m3.py --disable_mlx ...
+python classify_refusals_local.py --disable_mlx ...
 ```
 
 ### Memory Issues
@@ -203,7 +203,7 @@ python classify_refusals_m3.py --disable_mlx ...
 
 ### File Structure
 ```
-├── classify_refusals_m3.py      # Main classifier script
+├── classify_refusals_local.py      # Main classifier script
 ├── refusal_classifier_example.py # Demo/example script  
 ├── requirements.txt              # Dependencies
 └── README_refusal_classifier.md  # This documentation

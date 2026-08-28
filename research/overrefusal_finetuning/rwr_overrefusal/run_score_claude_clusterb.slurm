@@ -14,7 +14,7 @@
 
 # Score phase for raw-Claude held-out generations (generate first with
 # generate_claude_heldout.py --skip_scoring on a node with internet+API key):
-#   sbatch --export=ALL,OUTPUT_NAME=claude_heldout_alpaca.json run_score_claude_pace.slurm
+#   sbatch --export=ALL,OUTPUT_NAME=claude_heldout_alpaca.json run_score_claude_clusterb.slurm
 
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"

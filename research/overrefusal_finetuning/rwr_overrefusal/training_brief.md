@@ -174,5 +174,5 @@ The v1 recipe applied to the new dolly data **reproduces v1's copy-bot failure e
 
 - Adapter (337 MB each): `~/scratch/rwr_v1_dolly_checkpoints/{epoch_1,epoch_2,epoch_3,final}/` on <cluster> — not committed (`.safetensors` gitignored, oversize for git).
 - Eval results JSON: `research/overrefusal_finetuning/rwr_overrefusal/eval_v1_dolly/{eval_dolly_val.json, eval_alpaca.json}`
-- Training driver: `run_rwr_v1_dolly_pace.slurm`; eval driver: `run_eval_v1_dolly_pace.slurm`; reusable eval script: `eval_v1_dolly.py`.
+- Training driver: `run_rwr_v1_dolly_clusterb.slurm`; eval driver: `run_eval_v1_dolly_clusterb.slurm`; reusable eval script: `eval_v1_dolly.py`.
 

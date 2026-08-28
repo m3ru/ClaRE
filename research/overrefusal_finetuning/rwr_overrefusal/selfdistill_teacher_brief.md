@@ -90,11 +90,11 @@ tail RWR trains on. The `rwr_mean_vs_p90_alpaca.png` panels show the swap.
 ## Artifacts & reproduction
 
 - `generate_claude_heldout.py` → raw-Claude rewrites of the held-out prompts (login node,
-  needs `ANTHROPIC_API_KEY`); scored via `run_score_claude_pace.slurm`.
-- `generate_llama_selfdata.py` + `run_llama_selfdata_pace.slurm` → `llama_selfparaphrase_5k/`
+  needs `ANTHROPIC_API_KEY`); scored via `run_score_claude_clusterb.slurm`.
+- `generate_llama_selfdata.py` + `run_llama_selfdata_clusterb.slurm` → `llama_selfparaphrase_5k/`
   shards (on <cluster>; ~40k pairs, regenerable from seed=42).
-- `run_train_llama_self_pace.slurm` → `~/scratch/rwr_llama_self_checkpoints/` (<cluster> scratch).
-- `run_eval_llama_self_pace.slurm` → `prompt_iteration_results/held_out_eval_llama_self/`.
+- `run_train_llama_self_clusterb.slurm` → `~/scratch/rwr_llama_self_checkpoints/` (<cluster> scratch).
+- `run_eval_llama_self_clusterb.slurm` → `prompt_iteration_results/held_out_eval_llama_self/`.
 - `merge_heldout_4way.py` → the combined table; `make_rwr_charts.py` → the three figures.
 - Scored result JSONs committed: `prompt_iteration_results/claude_heldout_alpaca.json`,
   `prompt_iteration_results/held_out_eval_llama_self/held_out_eval_results.json`.

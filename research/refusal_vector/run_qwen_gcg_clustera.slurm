@@ -1,13 +1,13 @@
 #!/bin/bash
 # Submit one array per arm, for example:
-#   sbatch --export=ALL,ARM=or_loose run_qwen_gcg_rorqual.slurm
-#   sbatch --export=ALL,ARM=jb_loose --array=0-7 run_qwen_gcg_rorqual.slurm
+#   sbatch --export=ALL,ARM=or_loose run_qwen_gcg_clustera.slurm
+#   sbatch --export=ALL,ARM=jb_loose --array=0-7 run_qwen_gcg_clustera.slurm
 #
 # OR_NPROMPTS sets the prompts per OR shard (default 80 => 3,200 total). Lower it
 # to trade statistical power for wall clock when the cluster is contended, e.g.
 # OR_NPROMPTS=24 gives 960 prompts per arm (+-3.2% vs +-1.7% at 95%) in ~2.7 h
 # per shard instead of ~9.1 h:
-#   sbatch --export=ALL,ARM=or_loose,OR_NPROMPTS=24 run_qwen_gcg_rorqual.slurm
+#   sbatch --export=ALL,ARM=or_loose,OR_NPROMPTS=24 run_qwen_gcg_clustera.slurm
 # Valid ARM values: or_loose, or_strict, jb_loose, jb_strict.
 #
 # Measured on a <cluster> H100: ~386 s/prompt loose, ~334 s/prompt strict at

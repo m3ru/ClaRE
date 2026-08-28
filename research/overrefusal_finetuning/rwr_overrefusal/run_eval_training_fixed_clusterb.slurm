@@ -11,7 +11,7 @@
 #SBATCH --output=slurm-%x-%j.out
 #SBATCH --error=slurm-%x-%j.err
 
-# In-distribution counterpart to run_eval_bucketing_fixed_pace.slurm: same models,
+# In-distribution counterpart to run_eval_bucketing_fixed_clusterb.slurm: same models,
 # same OR scorer (k=5.0), but evaluated on 200 prompts sampled FROM the training
 # seed sets (alpaca seed42 n2500, dolly seed42 n2500). Compare to the held-out
 # (OOD) numbers to read the overfitting gap. Then re-score at k=5.0 (no-op check).

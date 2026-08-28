@@ -91,7 +91,7 @@ def main():
     
     print(f"\n🚀 To run the classifier, use:")
     print(f"""
-python classify_refusals_m3.py \\
+python classify_refusals_local.py \\
     --input {sample_file} \\
     --output {output_file} \\
     --chunk_time_minutes 5 \\
