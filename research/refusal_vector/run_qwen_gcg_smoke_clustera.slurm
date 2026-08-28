@@ -12,6 +12,9 @@
 #SBATCH --error=logs/qwen_gcg_smoke_%A_%a.err
 #SBATCH --export=ALL
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+: "${REPO:?set REPO to the checkout root of this repository}"
+
 set -euo pipefail
 cd "${SLURM_SUBMIT_DIR}"
 mkdir -p logs

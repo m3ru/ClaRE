@@ -8,6 +8,8 @@
 #SBATCH --output=logs/abl_llama_eval_%j.out
 #SBATCH --error=logs/abl_llama_eval_%j.err
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 # Stage 4 only. Job 19410996 scored, built shards and TRAINED successfully, then died
 # importing sentence_transformers because pyarrow needs `gcc arrow/23.0.1` (CLAUDE.md).
 # The adapter is on disk, so only the eval needs re-running.

@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_claude_train_%j.out
 #SBATCH --error=logs/rwr_claude_train_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # RWR training on Claude-only deduped shards. Same hyperparameters that worked
 # for RWR v3 (BinningConfig defaults: k=5.0, c=0.75, d=100, bin_weights=[0,0,0,1,16]

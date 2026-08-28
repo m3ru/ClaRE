@@ -11,6 +11,8 @@
 #SBATCH --error=logs/abl_qwen_%j.err
 #SBATCH --export=ALL
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+
 # Qwen mirror of run_abliterated_llama.slurm. Does the ABLITERATED refusal vector make a
 # better RWR training signal?
 #

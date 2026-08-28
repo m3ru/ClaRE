@@ -10,8 +10,9 @@
 #SBATCH --output=logs/score_qwen_3sig_%j.out
 #SBATCH --error=logs/score_qwen_3sig_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Score the SAME Sonnet benign Qwen pool the probe-only run used, but with all THREE
 # corrected refusal signals (vector@L58 causal / delta-probe / multi-phrase opener logit)

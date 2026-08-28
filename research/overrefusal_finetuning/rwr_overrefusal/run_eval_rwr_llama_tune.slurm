@@ -10,8 +10,9 @@
 #SBATCH --output=logs/eval_rwr_llama_tune_%j.out
 #SBATCH --error=logs/eval_rwr_llama_tune_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Behavioral eval of a logit tuning variant on the SAME held-out prompts as every
 # prior arm. First checkpoint also runs the base-Llama-as-attacker arm (matched

@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_llama_probe_%j.out
 #SBATCH --error=logs/rwr_llama_probe_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # RWR Llama attacker on the delta-probe-ensemble reward (Aug-10 refit on broad
 # behavioral labels), k=18.4 similarity gate (Qwen-validated recipe).

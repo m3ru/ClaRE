@@ -11,6 +11,8 @@
 #SBATCH --error=logs/rwr_qwen_smoke_%j.err
 #SBATCH --export=ALL
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs

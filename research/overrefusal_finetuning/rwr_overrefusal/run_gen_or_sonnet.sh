@@ -1,4 +1,6 @@
 #!/bin/bash
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 # =============================================================================
 # run_gen_or_sonnet.sh -- LOGIN-NODE runner for generate_or_sonnet.py
 #

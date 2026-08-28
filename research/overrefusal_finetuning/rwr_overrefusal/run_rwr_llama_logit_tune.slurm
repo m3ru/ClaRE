@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_llama_logit_tune_%j.out
 #SBATCH --error=logs/rwr_llama_logit_tune_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Tuning variants of the WINNING logit-reward Llama attacker (see
 # LOGIT_TUNING_EXPERIMENTS.md). Identical to run_rwr_llama_logit.slurm except the

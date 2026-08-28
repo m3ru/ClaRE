@@ -8,6 +8,8 @@
 #SBATCH --array=0-15
 #SBATCH --output=logs/gen_b2_qwen_%A_%a.out
 #SBATCH --error=logs/gen_b2_qwen_%A_%a.err
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 module load cuda scipy-stack/2024b gcc arrow/23.0.1

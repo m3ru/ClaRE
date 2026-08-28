@@ -10,8 +10,9 @@
 #SBATCH --output=logs/eval_rwr_llama_%j.out
 #SBATCH --error=logs/eval_rwr_llama_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Behavioral eval of one corrected-signal Llama RWR attacker.
 # Usage: sbatch run_eval_rwr_llama.slurm <vector|probe|logit> [tag]

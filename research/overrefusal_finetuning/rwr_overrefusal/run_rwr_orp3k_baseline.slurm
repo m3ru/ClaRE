@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_orp3k_train_%j.out
 #SBATCH --error=logs/rwr_orp3k_train_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Baseline RWR training on or_paraphrase_3k_deduped (gpt-oss-120b blind paraphrases).
 # Same hyperparameters as the Claude-only run for a fair A/B comparison.

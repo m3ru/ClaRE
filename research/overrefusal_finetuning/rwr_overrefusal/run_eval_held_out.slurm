@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_eval_%j.out
 #SBATCH --error=logs/rwr_eval_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Plan B held-out eval: baseline Llama vs Claude-RWR vs RWR v3 on
 # held-out alpaca + held-out dolly. Submit with:

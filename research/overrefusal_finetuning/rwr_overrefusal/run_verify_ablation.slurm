@@ -8,6 +8,8 @@
 #SBATCH --output=logs/verify_abl_%j.out
 #SBATCH --error=logs/verify_abl_%j.err
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 # Re-measure the single-direction ablations KEEPING the response text, so the harmful column
 # can be judged instead of regex-matched. Same directions, same layer, same eval sets as the
 # runs that produced the numbers in the tables. Both models: Llama is the control whose

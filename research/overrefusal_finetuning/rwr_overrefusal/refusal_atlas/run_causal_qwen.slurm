@@ -10,8 +10,9 @@
 #SBATCH --output=logs/qwen_causal_%j.out
 #SBATCH --error=logs/qwen_causal_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Arditi causal test for Qwen3-32B: locate the causal refusal layer (ablation necessity +
 # addition sufficiency) to set the Qwen vector layer, and check whether it differs from the

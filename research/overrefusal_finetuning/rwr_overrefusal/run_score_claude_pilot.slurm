@@ -10,8 +10,9 @@
 #SBATCH --output=logs/claude_pilot_score_%j.out
 #SBATCH --error=logs/claude_pilot_score_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Score a Claude-generated dataset JSONL using the existing score_candidates.py
 # (which lives at the same level as this slurm script). Output is shard JSONs

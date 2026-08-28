@@ -10,8 +10,9 @@
 #SBATCH --output=logs/arditi_extract_%j.out
 #SBATCH --error=logs/arditi_extract_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Per-layer last-token activations for the ARDITI-FAITHFUL class split:
 # HARMFUL (AdvBench, 512) vs HARMLESS (alpaca-cleaned, 512, disjoint from every

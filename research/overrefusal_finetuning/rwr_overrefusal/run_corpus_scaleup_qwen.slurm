@@ -11,6 +11,8 @@
 #SBATCH --error=logs/corpus_scaleup_qwen_%j.err
 #SBATCH --export=ALL
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+
 # Consolidate the Qwen attacker rewrite shards -> flat corpus CSV with MiniLM similarity
 # (pair_id, orig_idx, original, rewrite, similarity). Model-agnostic build_scaleup_corpus.py,
 # same MiniLM metric the RWR reward/eval used. Disjointness guard excludes the Qwen held-out

@@ -22,6 +22,8 @@
 #SBATCH --time=1:00:00
 #SBATCH --output=logs/induced_qwen_%j.out
 #SBATCH --error=logs/induced_qwen_%j.err
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 module load cuda scipy-stack/2024b gcc arrow/23.0.1

@@ -10,8 +10,9 @@
 #SBATCH --output=logs/test_claude_on_llama_%j.out
 #SBATCH --error=logs/test_claude_on_llama_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Behavioral eval: feed each Claude rewrite to bare Llama-3-8B-Instruct (no
 # adapter, no RWR system prompt) and capture its response. Regex-classify

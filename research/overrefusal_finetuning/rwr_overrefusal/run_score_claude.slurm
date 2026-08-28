@@ -10,8 +10,9 @@
 #SBATCH --output=logs/claude_score_%j.out
 #SBATCH --error=logs/claude_score_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Score phase only. Generation must already have run on a login node:
 #   ANTHROPIC_API_KEY=sk-... python iterate_prompts_claude.py --skip_scoring --output_name <X>

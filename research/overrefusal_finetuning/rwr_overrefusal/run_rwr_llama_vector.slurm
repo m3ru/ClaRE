@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_llama_vector_%j.out
 #SBATCH --error=logs/rwr_llama_vector_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # RWR Llama attacker on the CORRECTED vector reward: delta projection at the causal
 # layer L17 (ablation 99->83, addition 0->99), k=18.4 similarity gate (Qwen-validated

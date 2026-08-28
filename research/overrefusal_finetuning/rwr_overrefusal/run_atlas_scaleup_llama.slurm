@@ -12,6 +12,8 @@
 #SBATCH --error=logs/atlas_scaleup_llama_%A_%a.err
 #SBATCH --export=ALL
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+
 # 3-signal (vector@L17 / probe / logit-openers) + behavioral scoring of the logit
 # attacker's scale-up rewrites. Sharded by pair; concat the per-prompt/pairs CSVs after.
 set -euo pipefail

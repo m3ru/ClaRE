@@ -10,8 +10,9 @@
 #SBATCH --output=logs/prompt_iter_%j.out
 #SBATCH --error=logs/prompt_iter_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"

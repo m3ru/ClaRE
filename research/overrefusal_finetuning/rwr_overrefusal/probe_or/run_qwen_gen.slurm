@@ -10,8 +10,9 @@
 #SBATCH --output=logs/qwen_gen_%j.out
 #SBATCH --error=logs/qwen_gen_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Parameterized via env vars (pass with: sbatch --export=ALL,PAIRS=...,OUT=...,LIMIT=... run_qwen_gen.slurm)
 #   PAIRS : pairs CSV (default probe_or/pairs_qwen.csv)

@@ -9,7 +9,6 @@
 #SBATCH --output=logs/cmp_directions_%j.out
 #SBATCH --error=logs/cmp_directions_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # CPU-only. Decides two things from one labeled set (6000 pairs, behavioral dP):

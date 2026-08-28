@@ -10,8 +10,9 @@
 #SBATCH --output=logs/score_gen_pool_%j.out
 #SBATCH --error=logs/score_gen_pool_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"          # submit from the rwr_overrefusal dir

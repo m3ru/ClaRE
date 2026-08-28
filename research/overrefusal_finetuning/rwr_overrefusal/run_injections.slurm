@@ -18,6 +18,8 @@
 #SBATCH --output=logs/inject_%j.out
 #SBATCH --error=logs/inject_%j.err
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+
 set -euo pipefail
 : "${TARGET:?submit with --export=ALL,TARGET=llama|qwen}"
 cd "${SLURM_SUBMIT_DIR}"

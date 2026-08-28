@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_eval_bucketing_%j.out
 #SBATCH --error=logs/rwr_eval_bucketing_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Head-to-head: baseline + claude_rwr (original) + claude_rwr_v1 (finer top bins)
 # on the same 200 held-out alpaca + 200 held-out dolly prompts.

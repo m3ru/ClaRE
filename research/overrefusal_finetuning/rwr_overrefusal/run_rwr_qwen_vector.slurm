@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_qwen_vector_%j.out
 #SBATCH --error=logs/rwr_qwen_vector_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # RWR-Qwen on the raw vector-projection-delta reward @ causal L58, k=18.4. Mirrors
 # run_rwr_llama_vector.slurm. Quantile bin edges (q35/q65/q85, weights 0,1,4,16) set from

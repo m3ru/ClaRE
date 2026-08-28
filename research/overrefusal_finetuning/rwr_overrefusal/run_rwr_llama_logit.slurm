@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_llama_logit_%j.out
 #SBATCH --error=logs/rwr_llama_logit_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # RWR Llama attacker on the multi-phrase refusal-onset logit reward: delta of the
 # teacher-forced P(reply begins with any of the 5 mined Llama openers), k=18.4

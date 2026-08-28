@@ -8,6 +8,8 @@
 #SBATCH --output=logs/arditi_gen_%j.out
 #SBATCH --error=logs/arditi_gen_%j.err
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 # Phase 1 of the judged Arditi sweep: generate only, classify nothing. Both models, so the
 # Llama selection is re-derived on the same instrument and the comparison is like-for-like.
 set -euo pipefail

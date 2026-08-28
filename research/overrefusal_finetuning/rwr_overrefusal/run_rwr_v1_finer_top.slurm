@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_claude_v1_train_%j.out
 #SBATCH --error=logs/rwr_claude_v1_train_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # V1: finer top bins. Same total dropped fraction (70%) as the original
 # claude_rwr (which used num_bins=5 + bin_weights=[0,0,0,1,16]), but split the

@@ -12,6 +12,8 @@
 #SBATCH --error=logs/gen_scaleup_llama_%A_%a.err
 #SBATCH --export=ALL
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+
 # Scale-up rewrite generation with the WINNING logit attacker
 # (probe_or/results/rwr_llama_ckpt_logit/final). Pool = the seed-43 shuffle of
 # remaining_prompts()[6000:] -> provably disjoint from the Sonnet training pool

@@ -10,8 +10,9 @@
 #SBATCH --output=logs/llama_behav_%j.out
 #SBATCH --error=logs/llama_behav_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Broad-behavioral refusal labels for the Llama probe REFIT (fixes the biased single-phrase
 # p_icannot label: 40/6000 induced -> broad classifier recovers "I apologize"/"Sorry"/etc).

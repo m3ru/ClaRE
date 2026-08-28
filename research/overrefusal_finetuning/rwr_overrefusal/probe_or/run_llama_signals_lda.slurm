@@ -9,7 +9,6 @@
 #SBATCH --output=logs/llama_signals_lda_%j.out
 #SBATCH --error=logs/llama_signals_lda_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 # CPU-only. Fits the Llama delta VECTOR + PROBE with COVARIANCE-CORRECTED (LDA)

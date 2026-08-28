@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_qwen_logit_%j.out
 #SBATCH --error=logs/rwr_qwen_logit_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # RWR-Qwen on the multi-phrase refusal-onset logit reward (delta of teacher-forced
 # P(reply begins with any qwen opener), k=18.4). Mirrors run_rwr_llama_logit.slurm.

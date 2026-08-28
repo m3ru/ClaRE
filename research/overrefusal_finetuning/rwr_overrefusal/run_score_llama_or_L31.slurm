@@ -10,8 +10,9 @@
 #SBATCH --output=logs/score_llama_L31_%j.out
 #SBATCH --error=logs/score_llama_L31_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # Re-score the SAME pool with the vector delta taken at L31 (the best-PREDICTOR layer,
 # Spearman 0.291) instead of the causal L17 (0.261), to test whether the vector reward's

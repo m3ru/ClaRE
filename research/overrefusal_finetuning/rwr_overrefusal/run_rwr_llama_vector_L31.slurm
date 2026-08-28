@@ -10,8 +10,9 @@
 #SBATCH --output=logs/rwr_llama_vecL31_%j.out
 #SBATCH --error=logs/rwr_llama_vecL31_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
+
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
 
 # RWR Llama attacker on the vector reward at the best-PREDICTOR layer L31 (Spearman 0.291
 # vs causal L17's 0.261). Companion to run_rwr_llama_vector.slurm (L17); identical recipe,

@@ -9,7 +9,6 @@
 #SBATCH --output=logs/qwen_signals_%j.out
 #SBATCH --error=logs/qwen_signals_%j.err
 #SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=<EMAIL>
 #SBATCH --export=ALL
 
 set -euo pipefail

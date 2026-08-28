@@ -12,6 +12,8 @@
 #SBATCH --error=logs/gen_scaleup_qwen_%A_%a.err
 #SBATCH --export=ALL
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+
 # Scale-up rewrite generation with the chosen Qwen attacker (rwr_qwen_ckpt_logit/final).
 # SAME disjoint prompt set as the Llama scale-up: seed-43 shuffle, skip_first 6000, 2000
 # prompts -> VERIFIED disjoint from the Qwen pool (5,998 originals == the Llama pool) and

@@ -28,6 +28,9 @@
 #SBATCH --output=logs/qwen_gcg_%A_%a.out
 #SBATCH --error=logs/qwen_gcg_%A_%a.err
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+: "${REPO:?set REPO to the checkout root of this repository}"
+
 set -euo pipefail
 : "${ARM:?submit with --export=ALL,ARM=or_loose|or_strict|jb_loose|jb_strict}"
 case "${ARM}" in

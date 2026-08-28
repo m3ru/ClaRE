@@ -11,6 +11,8 @@
 #SBATCH --error=logs/abl_llama_%j.err
 #SBATCH --export=ALL
 
+: "${PROJECT:?set PROJECT to the project directory holding hf_cache/ and the venvs}"
+
 # End-to-end: does the ABLITERATED refusal vector make a better RWR training signal?
 #
 # The vector is the Arditi harmful-vs-harmless diff-of-means at L12, the layer Arditi's own
