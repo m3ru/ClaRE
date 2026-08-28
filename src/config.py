@@ -1,5 +1,5 @@
 """
-Configuration settings for ClaRE data compilation.
+Configuration settings for anon-repo data compilation.
 """
 
 # Dataset URLs and sources

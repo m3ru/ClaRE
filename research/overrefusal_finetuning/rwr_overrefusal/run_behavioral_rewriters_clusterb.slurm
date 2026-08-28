@@ -30,7 +30,7 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 python -c "import torch,transformers,peft" || { echo "[error] env broken"; exit 3; }
 
-RWR_DIR="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal"
+RWR_DIR="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal"
 cd "${RWR_DIR}"
 TOP20="${SCRATCH_BASE}/rwr_binsweep/top20_only/final"
 [ -d "${TOP20}" ] || { echo "[error] missing ${TOP20}"; exit 2; }

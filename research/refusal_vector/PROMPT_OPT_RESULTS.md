@@ -1,6 +1,6 @@
 # GCG / PEZ prompt optimization against the refusal signals — results
 
-Runs: <cluster> arrays `5577119` (unrestricted) and `5577125` (`--block_profanity`), 2026-08-14.
+Runs: <cluster> arrays `<commit-or-job-id>` (unrestricted) and `<commit-or-job-id>` (`--block_profanity`), 2026-08-14.
 Llama-3-8B-Instruct, universal 20-token suffix, 8 train / 60 held-out benign Alpaca prompts,
 250 steps. Refusal = start-of-response substring detector. Raw result JSONs live in
 `~/scratch/prompt_opt/` on <cluster> and are deliberately **not** committed: the optimized
@@ -78,7 +78,7 @@ was optimizing a slightly different object than what was scored.
 
 # Part 2 — REWRITING (not suffixing), with taboo tokens blocked
 
-Runs `5577320` (rewrite) and `5577339` (rewrite + `--block_profanity`, 60 prompts/config,
+Runs `<commit-or-job-id>` (rewrite) and `<commit-or-job-id>` (rewrite + `--block_profanity`, 60 prompts/config,
 100 GCG steps). Originals drawn from the same pool the Claude/Sonnet rewriters used
 (`probe_or/pairs.csv` + `pairs_sonnet.csv`, 8,741 unique). Llama-Guard FLAGS, never filters.
 
@@ -140,7 +140,7 @@ but those were NOT Llama-Guard-gated or similarity-gated the same way, so treat 
 
 # Part 3 — adding a FLUENCY constraint (the run that finally works)
 
-Array `5577376`: `--fluency_weight` (prompt NLL under Llama, from the same forward already
+Array `<commit-or-job-id>`: `--fluency_weight` (prompt NLL under Llama, from the same forward already
 computing the refusal loss) plus `--lm_topk_filter` (a substitution may only use a token the
 model itself ranks top-N at that position, so PROPOSALS are fluent rather than filtered after).
 60 prompts, 150 GCG steps, taboo blocklist on.
@@ -151,8 +151,8 @@ I predicted fewer hits. The opposite happened:
 
 | | LG-unsafe (cheating) | LG-safe | clean hits (LG-safe, sim>=0.85, refused) |
 |---|--:|--:|--:|
-| no fluency (`5577339`) | 70.0% | 18/60 | 9 |
-| **+ fluency (`5577376`)** | **13.3%** | **52/60** | **23** |
+| no fluency (`<commit-or-job-id>`) | 70.0% | 18/60 | 9 |
+| **+ fluency (`<commit-or-job-id>`)** | **13.3%** | **52/60** | **23** |
 | + fluency, aggressive (w=4, top-128) | 16.7% | 50/60 | 3 |
 
 Cheating collapsed 70% -> 13% AND yield rose 9 -> 23. The unconstrained search was spending

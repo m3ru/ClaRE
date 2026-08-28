@@ -19,7 +19,7 @@ export TRANSFORMERS_CACHE="${HF_HUB_CACHE}" HF_HUB_OFFLINE=1 HF_HUB_DISABLE_XET=
 module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${JB_SCRATCH}/conda_envs/ppo-or-env"
-cd "${HOME}/ClaRE/research/refusal_vector"
+cd "${HOME}/anon-repo/research/refusal_vector"
 OUT="${JB_SCRATCH}/prompt_opt/jailbreak_flip_v1/smoke"
 DATA="${JB_SCRATCH}/prompt_opt/jailbreak_flip_v1/data/strongreject_custom_direct.csv"
 mkdir -p "${OUT}"

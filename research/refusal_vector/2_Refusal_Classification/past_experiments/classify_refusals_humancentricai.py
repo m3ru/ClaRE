@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-HumanCentricAI refusal classifier for M3 MacBook Air
+HumanCentricAI refusal classifier for Apple Silicon laptops
 Classifies 80k LLM outputs using Human-CentricAI/LLM-Refusal-Classifier with resumable 20-minute chunks
 Uses 5-class classification: normal, refusal_unethical, disclaimer_unethical, refusal_capability, disclaimer_capability
 """
@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 console = Console()
 
 class HumanCentricAIRefusalClassifier:
-    """HumanCentricAI refusal classifier for M3 MacBook Air"""
+    """HumanCentricAI refusal classifier for Apple Silicon laptops"""
 
     def __init__(
         self,
@@ -88,7 +88,7 @@ class HumanCentricAIRefusalClassifier:
             self._find_optimal_batch_size()
 
     def _get_optimal_device(self) -> str:
-        """Determine optimal device for M3 MacBook Air"""
+        """Determine optimal device for Apple Silicon laptops"""
         if self.use_mlx:
             try:
                 import mlx.core as mx
@@ -104,7 +104,7 @@ class HumanCentricAIRefusalClassifier:
             return "cpu"
 
     def _find_optimal_batch_size(self) -> int:
-        """Find optimal batch size for M3 through benchmarking - conservative for larger model"""
+        """Find optimal batch size through benchmarking - conservative for larger model"""
         console.print("[blue]Finding optimal batch size for larger model...[/blue]")
 
         test_texts = ["This is a test response for optimization"] * 500
@@ -297,7 +297,7 @@ def format_duration(seconds: float) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Classify LLM outputs for refusal using HumanCentricAI 5-class model (M3 Optimized)"
+        description="Classify LLM outputs for refusal using HumanCentricAI 5-class model (Apple Silicon optimized)"
     )
     parser.add_argument("--input", required=True, help="Input CSV file with 'prompt' and 'response' columns")
     parser.add_argument("--output", required=True, help="Output CSV file")

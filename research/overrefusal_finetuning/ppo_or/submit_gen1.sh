@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PPO_DIR="$HOME/ClaRE/research/overrefusal_finetuning/ppo_or"
+PPO_DIR="$HOME/anon-repo/research/overrefusal_finetuning/ppo_or"
 cd "$PPO_DIR"
 
 CONFIGS=(

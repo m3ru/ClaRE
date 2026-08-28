@@ -44,7 +44,7 @@ conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 echo "[stage] python: $(python --version)"
 nvidia-smi | head -12 || true
 
-PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
+PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/anon-repo}"
 SCORE_PY="${PROJECT_ROOT}/research/overrefusal_finetuning/ppo_or/score_and_rank_all.py"
 PARA_ROOT="${PROJECT_ROOT}/research/overrefusal_finetuning/paraphrases_api"
 VEC="${PROJECT_ROOT}/research/refusal_vector/llamaguard_relabel/refusal_vector_llamaguard_relabeled.layer030.npz"

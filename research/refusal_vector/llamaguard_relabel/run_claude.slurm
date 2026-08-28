@@ -18,10 +18,10 @@ export TRANSFORMERS_CACHE="${HF_HUB_CACHE}" HF_HUB_OFFLINE=1 HF_HUB_DISABLE_XET=
 export TMPDIR="${HOME}/tmp_relabel"; mkdir -p "${TMPDIR}"
 module load anaconda3; source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${HOME}/scratch/conda_envs/ppo-or-env"
-D="${HOME}/ClaRE/research/refusal_vector/llamaguard_relabel"
+D="${HOME}/anon-repo/research/refusal_vector/llamaguard_relabel"
 L3=""
 for c in Vector_Extraction 3_Vector_Extraction; do
-  p="${HOME}/ClaRE/research/refusal_vector/${c}/refusal_vector.layer032.npz"
+  p="${HOME}/anon-repo/research/refusal_vector/${c}/refusal_vector.layer032.npz"
   if [ -f "$p" ]; then L3="$p"; break; fi
 done
 [ -n "$L3" ] || { echo "[error] no llama3 vector"; exit 2; }

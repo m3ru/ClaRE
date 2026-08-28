@@ -45,7 +45,7 @@ echo "[stage] python: $(python --version)"
 nvidia-smi | head -20 || true
 
 # ---- Paths ----
-PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
+PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/anon-repo}"
 RWR_DIR="${PROJECT_ROOT}/research/overrefusal_finetuning/rwr_overrefusal"
 ADAPTER_DIR="${ADAPTER_DIR:-${SCRATCH_BASE}/rwr_v1_dolly_checkpoints/final}"
 SHARD_DIR="${SHARD_DIR:-${SCRATCH_BASE}/rwr_dolly_v1_data}"

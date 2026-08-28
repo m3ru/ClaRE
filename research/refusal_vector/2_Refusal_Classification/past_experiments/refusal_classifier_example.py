@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Example usage of the M3-optimized refusal classifier
+Example usage of the Apple Silicon-optimized refusal classifier
 Creates sample data and demonstrates the classifier functionality
 """
 
@@ -79,7 +79,7 @@ def create_sample_data(num_samples: int = 1000) -> str:
 def main():
     """Demonstrate the refusal classifier"""
     
-    print("🧪 M3 Refusal Classifier Demo")
+    print("🧪 Local Refusal Classifier Demo")
     print("=" * 40)
     
     # Create sample data

@@ -1,5 +1,5 @@
 """
-Utility functions for ClaRE data processing.
+Utility functions for anon-repo data processing.
 """
 
 import re

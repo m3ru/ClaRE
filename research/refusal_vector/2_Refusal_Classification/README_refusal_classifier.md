@@ -1,21 +1,21 @@
-# M3 Refusal Classifier
+# Local Refusal Classifier
 
-Optimized Python script for classifying 80k LLM outputs as refusals using the ProtectAI rejection classifier on an M3 MacBook Air, with resumable 20-minute chunks.
+Optimized Python script for classifying 80k LLM outputs as refusals using the ProtectAI rejection classifier on an Apple Silicon laptop, with resumable 20-minute chunks.
 
 ## Features
 
-- **M3 Optimization**: Native Apple Silicon support with MLX and MPS fallbacks
+- **Apple Silicon optimization**: Native Apple Silicon support with MLX and MPS fallbacks
 - **Chunked Processing**: Process data in configurable time windows (default: 20 minutes)
 - **Resumable**: Automatic checkpointing and resume functionality
 - **Auto-optimization**: Dynamic batch size optimization for your hardware
 - **Progress Tracking**: Rich terminal UI with real-time performance metrics
-- **Memory Efficient**: Smart memory management for M3's unified memory architecture
+- **Memory Efficient**: Smart memory management for the unified memory architecture
 
 ## Performance Targets
 
-- **Target**: 500-1000 classifications/second on M3
+- **Target**: 500-1000 classifications/second
 - **Completion Time**: 1.5-3 hours for 80k samples across multiple sessions
-- **Memory Usage**: Optimized for M3's 16-24GB unified memory
+- **Memory Usage**: Optimized for a laptop's unified memory
 
 ## Installation
 
@@ -23,7 +23,7 @@ Optimized Python script for classifying 80k LLM outputs as refusals using the Pr
 # Install dependencies
 pip install -r requirements.txt
 
-# Optional: Install MLX for maximum M3 performance
+# Optional: Install MLX for maximum Apple Silicon performance
 pip install mlx
 ```
 
@@ -100,7 +100,7 @@ prompt,generation,is_refusal,confidence_score
 ## Performance Optimization
 
 ### Device Selection Priority
-1. **MLX** (Apple Silicon native) - Best performance on M3
+1. **MLX** (Apple Silicon native) - Best performance on Apple Silicon
 2. **MPS** (Metal Performance Shaders) - Good fallback
 3. **CPU** - Last resort
 
@@ -110,7 +110,7 @@ The script benchmarks different batch sizes (16, 32, 64, 128, 256) and selects t
 ### Memory Management
 - Automatic memory cleanup between chunks
 - Gradient checkpointing for memory efficiency
-- Smart cache management for M3's unified memory
+- Smart cache management for unified memory
 
 ## Checkpoint System
 
@@ -195,10 +195,10 @@ python classify_refusals_local.py --disable_mlx ...
 - **Classes**: [normal, refusal]
 - **Input Length**: 512 tokens (configurable)
 
-### M3 Optimizations
+### Apple Silicon optimizations
 - **MLX**: Apple's ML framework for native Silicon performance
 - **MPS**: Metal Performance Shaders for GPU acceleration
-- **Unified Memory**: Efficient use of M3's shared memory architecture
+- **Unified Memory**: Efficient use of the shared memory architecture
 - **Batch Optimization**: Dynamic sizing based on hardware capabilities
 
 ### File Structure

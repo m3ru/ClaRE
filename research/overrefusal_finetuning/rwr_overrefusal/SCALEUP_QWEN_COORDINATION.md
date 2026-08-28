@@ -59,7 +59,7 @@ corpus: no Qwen arm beat base, so the causal over-refusal claim is WEAKER for Qw
 the corpus maps WHERE Qwen refuses on this distribution; do not present it as "the trained Qwen
 attacker beats baseline."**
 
-Corpus jobs (wait b81szuz9y): gen array `19027728` + dependent build `19027729` →
+Corpus jobs (wait b81szuz9y): gen array `<commit-or-job-id>` + dependent build `<commit-or-job-id>` →
 `probe_or/results/scaleup_corpus_qwen_logit.csv` (~8,000 rewrites, original,rewrite,similarity).
 Bug fixed en route: `generate_or_alpaca.py` was missing `enable_thinking=False` (would have
 injected `<think>` blocks into every Qwen rewrite; no-op for Llama, so the Llama corpus stands).
@@ -87,7 +87,7 @@ bucket-A. Strictness-independent load-bearing conclusions: 40× scale reproducti
 headline on unseen prompts, 0.5% floor, 37% breadth, robust signal ordering. Optional strict
 follow-up: a stricter automated benign filter → pulls toward ~7%.
 
-**Fidelity axis (job `19022438` done):** the attacker holds intent while inducing refusal —
+**Fidelity axis (job `<commit-or-job-id>` done):** the attacker holds intent while inducing refusal —
 GOOD-refused MiniLM similarity 0.728 vs GOOD-complied 0.797, both far above base-attacker 0.63.
 Overall GOOD-corpus similarity mean 0.784. **LLAMA SCALE-UP FULLY DONE — nothing open.**
 
@@ -99,18 +99,18 @@ writeup `LLAMA_SCALEUP_PROGRESS.md`. Model-agnostic tooling the Qwen corpus reus
 `build_scaleup_substrate.py`, `benign_intent_filter.py`, `run_gen_scaleup_llama.slurm`,
 `run_atlas_scaleup_llama.slurm`.
 
-**Progress log (2026-08-14):** Llama gen array `19020864` COMPLETED → 8,000 rewrites / 2,000
+**Progress log (2026-08-14):** Llama gen array `<commit-or-job-id>` COMPLETED → 8,000 rewrites / 2,000
 disjoint originals (`scaleup_atlas_llama/corpus_scaleup_llama.csv`). Agent decoupled MiniLM
 similarity (CPU login-node too slow, kept getting SIGTERM'd) off the atlas critical path; parent
-recomputes it on GPU (job `19022438`). Substrate sharded ×4 by original (−37% atlas compute).
-Atlas 3-signal array `19022195` COMPLETED (8k scored pairs). Benign-intent check(a) haiku batch:
+recomputes it on GPU (job `<commit-or-job-id>`). Substrate sharded ×4 by original (−37% atlas compute).
+Atlas 3-signal array `<commit-or-job-id>` COMPLETED (8k scored pairs). Benign-intent check(a) haiku batch:
 **98.5% GOOD** (7,877/8,000 benign). **Over-refusal on GOOD corpus 16.3% vs 0.32% floor** — the
 200-prompt eval's ~15% reproduced at 40× scale on unseen prompts. **Refusal-boundary signal
 ordering logit (AUC 0.998) > probe (0.976) > vector (0.960)** — converges with the atlas.
-Check(b) sonnet refusal judge batch `msgbatch_01NWwAmtvy85EXCSAjWjsEPf` (9,757 req) in flight
+Check(b) sonnet refusal judge batch `msgbatch_<redacted>` (9,757 req) in flight
 (wait b0vxm70hw) → on end, resume Llama agent for the honest genuine-over-refusal rate + fidelity.
 
-**Qwen scoring `19020842` COMPLETED (49 min).** 3-sig CSV + shards
+**Qwen scoring `<commit-or-job-id>` COMPLETED (49 min).** 3-sig CSV + shards
 (`qwen_scored/llama_shards_{vector,probe,logit}`, 32,268 pairs each) + common held-out (599, seed
 42). Two findings: **Spearman(d_vector,d_probe)=1.000** (probe ≡ vector for Qwen, both L58); and
 the standardization shift guts the probe pool — probe %pos 4.2% (1,210 trainable) vs vector 54.2%

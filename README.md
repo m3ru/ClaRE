@@ -1,6 +1,6 @@
-# ClaRE
+# Refusal Boundary Red-Teaming
 
-ClaRE (Classification of Harmful and Benign Prompts) is a research codebase for white-box automated red-teaming of large language models. The core idea is to use internal model representations, especially a learned refusal direction, to systematically surface jailbreaks and over-refusals and to study how safety behavior shows up in model activations.
+This is a research codebase for white-box automated red-teaming of large language models. The core idea is to use internal model representations, especially a learned refusal direction, to systematically surface jailbreaks and over-refusals and to study how safety behavior shows up in model activations.
 
 The project focuses on building practical tooling for safety evaluation pipelines while also exploring whether simple linear features in representation space can capture meaningful safety-related behavior.
 
@@ -45,7 +45,7 @@ The project aims to build tools for scalable automated discovery of model vulner
 ## Repository Layout
 
 ```
-ClaRE/
+anon-repo/
 ├── research/
 │   ├── refusal_vector/             # refusal direction extraction (difference-of-means)
 │   ├── overrefusal_finetuning/

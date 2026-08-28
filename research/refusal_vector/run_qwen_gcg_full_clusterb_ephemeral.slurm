@@ -28,7 +28,7 @@ module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${HOME}/scratch/conda_envs/ppo-or-env"
 
-ROOT="${HOME}/ClaRE"
+ROOT="${HOME}/anon-repo"
 PAIR_ROOT="${ROOT}/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
 OPENER_JSON="${ROOT}/research/overrefusal_finetuning/rwr_overrefusal/refusal_atlas/opener_sets.json"
 RUN_ROOT="${HOME}/qwen32b_gcg_v1"

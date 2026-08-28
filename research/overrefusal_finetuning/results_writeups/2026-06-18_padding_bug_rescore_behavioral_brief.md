@@ -4,10 +4,10 @@ Date: 2026-06-18. Scope: a scoring bug found in the OR reward model, what change
 
 ## 1. The bug
 
-`ppo_or/reward_model.py` read the last-token hidden state as `activations[:, -1, :]` but never set `tokenizer.padding_side`, so it used Llama-3's default **right** padding. For any sequence shorter than the longest in its batch, position `-1` is a PAD token, so the refusal projection was read off a padding position. Originals were scored as a uniform unpadded batch and paraphrases as a padded mixed batch, so the error was systematic and length-dependent (it biased the original-vs-paraphrase delta, not just added noise). Fix (`1e498f0`, <collaborator>, 2026-06-08): set `padding_side = "left"` to match `extract_activations_sharded.py`.
+`ppo_or/reward_model.py` read the last-token hidden state as `activations[:, -1, :]` but never set `tokenizer.padding_side`, so it used Llama-3's default **right** padding. For any sequence shorter than the longest in its batch, position `-1` is a PAD token, so the refusal projection was read off a padding position. Originals were scored as a uniform unpadded batch and paraphrases as a padded mixed batch, so the error was systematic and length-dependent (it biased the original-vs-paraphrase delta, not just added noise). Fix (`<commit-or-job-id>`, <collaborator>, 2026-06-08): set `padding_side = "left"` to match `extract_activations_sharded.py`.
 
 Why it wasn't caught earlier:
-- The published results doc `claude_training_results.md` and the eval JSONs it cites were committed 2026-06-01 (`01e6183`), 7 days before the fix, and were never regenerated afterward.
+- The published results doc `claude_training_results.md` and the eval JSONs it cites were committed 2026-06-01 (`<commit-or-job-id>`), 7 days before the fix, and were never regenerated afterward.
 - The follow-up writeup `2026-06-10_attacked_alpaca_word_analysis_and_haiku_rwr_or.md` read the student arm directly from the pre-fix `held_out_eval_results_k5.json`, so it reused the buggy numbers while only the teacher arm was freshly scored.
 - The bug produced plausible-looking values (no crash, no NaN), and similarity (MiniLM, unaffected) was unchanged, so outputs looked normal.
 
@@ -72,7 +72,7 @@ Across ~20,000 generations, real refusals are a handful in each arm (4 vs 6), wi
 
 ## Artifacts
 
-- `ppo_or/reward_model.py` (fix `1e498f0`)
+- `ppo_or/reward_model.py` (fix `<commit-or-job-id>`)
 - `prompt_iteration_results/held_out_eval/held_out_eval_results_k5_fixedscorer.json` — same-text re-score
 - `logs/rwr_eval_bucketing_44982600.out` — fixed-scorer head-to-head incl. claude_rwr_v1
 - `prompt_iteration_results/dataset_research_framing_full_shards_FIXED/` — Claude data, fixed scores

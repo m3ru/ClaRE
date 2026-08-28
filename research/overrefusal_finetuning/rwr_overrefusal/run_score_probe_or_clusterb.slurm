@@ -21,7 +21,7 @@ export TMPDIR="${HOME}/tmp_relabel"; mkdir -p "${TMPDIR}"
 module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
-RWR_DIR="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal"; cd "${RWR_DIR}"
+RWR_DIR="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal"; cd "${RWR_DIR}"
 python -c "import torch,transformers,scipy" || { echo "[error] env"; exit 3; }
 python -u score_probe_or.py \
   --benign_csv "${SCRATCH_BASE}/split_samples/split_benign_sample.csv" \

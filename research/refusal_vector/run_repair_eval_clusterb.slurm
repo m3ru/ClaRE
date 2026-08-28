@@ -23,7 +23,7 @@ export TMPDIR="${HOME}/tmp_repair_eval"; mkdir -p "${TMPDIR}"
 module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${REPAIR_SCRATCH}/conda_envs/ppo-or-env"
-DIR="${HOME}/ClaRE/research/refusal_vector"; cd "${DIR}"
+DIR="${HOME}/anon-repo/research/refusal_vector"; cd "${DIR}"
 IN="${REPAIR_SCRATCH}/prompt_opt/repair/grammatical_repairs.json"
 OUT="${REPAIR_SCRATCH}/prompt_opt/repair/eval"; mkdir -p "${OUT}"
 test -s "${IN}"

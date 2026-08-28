@@ -70,7 +70,7 @@ Possible outcomes:
 
 ## What to do next based on the result
 
-- **Big positive delta** → the data is doing what we hoped; the Llama-Guard 0.10-correlation finding from `7f12870` was specific to the Llama-Guard taxonomy, not behavioral refusal on the model the rewrites were optimized for. Strong validation for the project.
+- **Big positive delta** → the data is doing what we hoped; the Llama-Guard 0.10-correlation finding from `<commit-or-job-id>` was specific to the Llama-Guard taxonomy, not behavioral refusal on the model the rewrites were optimized for. Strong validation for the project.
 - **Near-zero delta** → the activation signal isn't translating to behavior. Consider (a) cross-tabulating refusal-rate by OR quantile to see if the proxy at least correlates in the tail, and (b) reconsidering the reward function for future RWR iterations.
 
 ## Files in this batch

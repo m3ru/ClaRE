@@ -8,14 +8,14 @@ with it, and train the Qwen attacker on the result with QLoRA.
 
 ## What was done
 
-1. **Refusal signals on Qwen3-32B** (commit `fdaa13b`; details in
+1. **Refusal signals on Qwen3-32B** (commit `<commit-or-job-id>`; details in
    `probe_or/qwen_experiment_brief.md`). Mass-mean refusal vector + per-layer probe
    ensemble rebuilt on Qwen against a behavioral target (dP = induced refusal rate
    measured by generation — the teacher-forced `P("I cannot")` logit signal was
    deferred because 93% of Qwen's refusal mass uses other phrasing). Raw mass-mean
    delta at L58: **Spearman 0.809 / AUC 0.976** vs dP; the NNLS ensemble puts weight
    1.0 on L58, so on Qwen the single vector ≡ the ensemble.
-2. **OR rescoring of the Sonnet pool** (commit `14dee44`).
+2. **OR rescoring of the Sonnet pool** (commit `<commit-or-job-id>`).
    `probe_or/score_qwen_or.py` scores the Sonnet benign-rewrite pool with the Qwen
    delta-probe: `qwen_or = exp(18.4·(sim−0.75)) · Δprobe` →
    `probe_or/results/qwen_scored/sonnet_benign_qwen_or.csv`.

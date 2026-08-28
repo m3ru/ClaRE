@@ -1,4 +1,4 @@
-# ClaRE RWR Training Results Brief
+# RWR Training Results Brief
 
 ## Summary
 

@@ -30,8 +30,8 @@ module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 
-RWR_DIR="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal"
-VEC="${HOME}/ClaRE/research/refusal_vector/Vector_Extraction/refusal_vector.layer032.npz"
+RWR_DIR="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal"
+VEC="${HOME}/anon-repo/research/refusal_vector/Vector_Extraction/refusal_vector.layer032.npz"
 GEN_DIR="${RWR_DIR}/gen_alpaca_or"
 cd "${RWR_DIR}"
 echo "[stage] gen shards present: $(ls ${GEN_DIR}/gen_alpaca_or_shard*.json 2>/dev/null | wc -l)"

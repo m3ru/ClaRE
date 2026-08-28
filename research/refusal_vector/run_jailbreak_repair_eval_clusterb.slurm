@@ -23,7 +23,7 @@ mkdir -p "${TMPDIR}"
 module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${JB_SCRATCH}/conda_envs/ppo-or-env"
-cd "${HOME}/ClaRE/research/refusal_vector"
+cd "${HOME}/anon-repo/research/refusal_vector"
 IN="${JB_SCRATCH}/prompt_opt/jailbreak_flip_v1/repair/grammatical_repairs.json"
 OUT="${JB_SCRATCH}/prompt_opt/jailbreak_flip_v1/repair/eval"
 mkdir -p "${OUT}"

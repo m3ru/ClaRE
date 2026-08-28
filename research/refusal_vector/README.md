@@ -67,11 +67,11 @@ Labels each prompt/response pair as refusal or benign using two independent sign
 
 | File | Purpose |
 |------|---------|
-| `classify_refusals_local.py` | ML classification via ProtectAI `distilroberta-base-rejection-v1` (M3-optimized, chunked, resumable) |
+| `classify_refusals_local.py` | ML classification via ProtectAI `distilroberta-base-rejection-v1` (Apple Silicon-optimized, chunked, resumable) |
 | `regex_refusals.py` | Regex pattern classifier (lightweight second signal) |
 | `classifier_final.py` | Combines both: final_refusals = ML-refusal; final_benign = ML and regex agree NOT refusal |
 | `requirements.txt` | Python deps for the classifier |
-| `README_refusal_classifier.md` | Detailed docs for the M3 classifier |
+| `README_refusal_classifier.md` | Detailed docs for the local classifier |
 | `classified_llama8b_outputs.csv` | ML-only classifications |
 | `regexed_outputs.csv` | Regex-only classifications |
 | `final_refusals.csv` | All ML-classified refusals (~53k) |

@@ -18,11 +18,11 @@ export TRANSFORMERS_CACHE="${HF_HUB_CACHE}" HF_HUB_OFFLINE=1 HF_HUB_DISABLE_XET=
 export TMPDIR="${HOME}/tmp_relabel"; mkdir -p "${TMPDIR}"
 module load anaconda3; source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${HOME}/scratch/conda_envs/ppo-or-env"
-D="${HOME}/ClaRE/research/refusal_vector/llamaguard_relabel"
+D="${HOME}/anon-repo/research/refusal_vector/llamaguard_relabel"
 cd "${D}"
 python -u validate_vector.py \
   --vector "${D}/refusal_vector_llamaguard_relabeled.layer030.npz" \
   --labels_csv "${D}/llamaguard_labels.csv" \
-  --dolly_paraphrases "${HOME}/ClaRE/research/overrefusal_finetuning/paraphrases_api/dolly/paraphrases.json" \
+  --dolly_paraphrases "${HOME}/anon-repo/research/overrefusal_finetuning/paraphrases_api/dolly/paraphrases.json" \
   --layer 30
 echo "[done] validation complete"

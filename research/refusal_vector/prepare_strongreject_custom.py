@@ -2,7 +2,7 @@
 """Prepare the original StrongREJECT prompts as a direct-harmful GCG substrate.
 
 Only rows whose source is ``custom`` are retained.  This excludes the 25 AdvBench
-rows because AdvBench was already used to fit ClaRE's harmful direction.
+rows because AdvBench was already used to fit anon-repo's harmful direction.
 """
 import argparse
 import csv

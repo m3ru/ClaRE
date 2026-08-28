@@ -45,7 +45,7 @@ conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 echo "[stage] python: $(python --version)"
 nvidia-smi | head -15 || true
 
-PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
+PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/anon-repo}"
 DIR="${PROJECT_ROOT}/research/refusal_vector/llamaguard_relabel"
 # unique_prompts.csv = prompt column extracted from llama8b_outputs_filtered.csv
 # (the exact original pool; small, ships with the relabel dir).

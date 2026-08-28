@@ -19,8 +19,8 @@ export HF_DATASETS_CACHE="${HF_HOME}/datasets"
 export TRANSFORMERS_CACHE="${HF_HUB_CACHE}" HF_HUB_OFFLINE=1 HF_HUB_DISABLE_XET=1 HF_XET_DISABLE=1
 export TMPDIR="${HOME}/tmp_relabel"; mkdir -p "${TMPDIR}"
 module load anaconda3; source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
-DIR="${HOME}/ClaRE/research/refusal_vector"; cd "${DIR}"
-OUT="${SCRATCH_BASE}/prompt_opt"; PAIRS="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
+DIR="${HOME}/anon-repo/research/refusal_vector"; cd "${DIR}"
+OUT="${SCRATCH_BASE}/prompt_opt"; PAIRS="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
 
 # ablation of the three new fluency knobs, all on the icannot objective
 WW=""; EX=0; MX=0.0

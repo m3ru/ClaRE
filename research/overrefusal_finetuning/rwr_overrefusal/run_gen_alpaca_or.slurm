@@ -31,7 +31,7 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 echo "[stage] python: $(python --version)"
 
-RWR_DIR="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal"
+RWR_DIR="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal"
 ADAPTER="${ADAPTER:-${SCRATCH_BASE}/rwr_claude_checkpoints/final}"
 OUT_DIR="${RWR_DIR}/gen_alpaca_or"
 [ -d "${ADAPTER}" ] || { echo "[error] missing adapter ${ADAPTER}"; exit 2; }

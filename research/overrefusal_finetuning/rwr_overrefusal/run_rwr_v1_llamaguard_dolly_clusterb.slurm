@@ -49,7 +49,7 @@ echo "[stage] python: $(python --version)"
 nvidia-smi | head -20 || true
 
 # ---- Paths ----
-PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
+PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/anon-repo}"
 RWR_DIR="${PROJECT_ROOT}/research/overrefusal_finetuning/rwr_overrefusal"
 # Defaults point at the FIXED re-score (relabeled vector + padding-fixed scorer).
 LG_RANKED="${LG_RANKED:-${PROJECT_ROOT}/research/overrefusal_finetuning/paraphrases_api/dolly/llamaguard_fixed/ranked.json}"

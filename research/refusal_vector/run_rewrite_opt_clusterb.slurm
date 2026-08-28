@@ -20,9 +20,9 @@ export HF_DATASETS_CACHE="${HF_HOME}/datasets"
 export TRANSFORMERS_CACHE="${HF_HUB_CACHE}" HF_HUB_OFFLINE=1 HF_HUB_DISABLE_XET=1 HF_XET_DISABLE=1
 export TMPDIR="${HOME}/tmp_relabel"; mkdir -p "${TMPDIR}"
 module load anaconda3; source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
-DIR="${HOME}/ClaRE/research/refusal_vector"; cd "${DIR}"
+DIR="${HOME}/anon-repo/research/refusal_vector"; cd "${DIR}"
 OUT="${SCRATCH_BASE}/prompt_opt"; mkdir -p "${OUT}"
-PAIRS="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
+PAIRS="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
 
 # FLU=1 turns on the fluency penalty + LM-constrained proposals
 FW=0; LMK=0; FSUF=""

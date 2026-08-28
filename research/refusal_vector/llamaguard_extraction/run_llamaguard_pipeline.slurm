@@ -68,7 +68,7 @@ echo "[stage] python: $(python --version)"
 nvidia-smi | head -20 || true
 
 # ---- Paths ----
-PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
+PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/anon-repo}"
 # The vector-extraction dir was renamed 3_Vector_Extraction in the local repo
 # reorg, but older <cluster> checkouts still have the un-prefixed Vector_Extraction.
 # Auto-detect so this slurm runs against either layout.

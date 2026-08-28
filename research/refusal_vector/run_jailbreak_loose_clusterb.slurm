@@ -25,7 +25,7 @@ module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${JB_SCRATCH}/conda_envs/ppo-or-env"
 
-DIR="${HOME}/ClaRE/research/refusal_vector"
+DIR="${HOME}/anon-repo/research/refusal_vector"
 OUT="${JB_SCRATCH}/prompt_opt/jailbreak_flip_v1/loose"
 DATA="${JB_SCRATCH}/prompt_opt/jailbreak_flip_v1/data/strongreject_custom_direct.csv"
 S=${SLURM_ARRAY_TASK_ID}

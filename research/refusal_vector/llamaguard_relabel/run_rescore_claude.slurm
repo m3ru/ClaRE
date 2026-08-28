@@ -18,7 +18,7 @@ export TRANSFORMERS_CACHE="${HF_HUB_CACHE}" HF_HUB_OFFLINE=1 HF_HUB_DISABLE_XET=
 export TMPDIR="${HOME}/tmp_relabel"; mkdir -p "${TMPDIR}"
 module load anaconda3; source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${HOME}/scratch/conda_envs/ppo-or-env"
-D="${HOME}/ClaRE/research/refusal_vector/llamaguard_relabel"
+D="${HOME}/anon-repo/research/refusal_vector/llamaguard_relabel"
 cd "${D}"
 python -u rescore_claude_dolly.py \
   --input "${D}/claude_dolly_rewrites.json" \

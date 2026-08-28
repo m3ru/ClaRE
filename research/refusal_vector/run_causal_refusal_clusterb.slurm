@@ -26,7 +26,7 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 python -c "import torch,transformers" || { echo "[error] env"; exit 3; }
 
-DIR="${HOME}/ClaRE/research/refusal_vector"
+DIR="${HOME}/anon-repo/research/refusal_vector"
 cd "${DIR}"
 python -u causal_refusal_test.py \
   --harmful_csv "${SCRATCH_BASE}/causal_refusal/harmful_behaviors.csv" \

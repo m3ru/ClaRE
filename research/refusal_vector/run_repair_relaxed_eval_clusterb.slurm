@@ -23,7 +23,7 @@ export TMPDIR="${HOME}/tmp_repair_relaxed_eval"; mkdir -p "${TMPDIR}"
 module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${RELAXED_SCRATCH}/conda_envs/ppo-or-env"
-DIR="${HOME}/ClaRE/research/refusal_vector"; cd "${DIR}"
+DIR="${HOME}/anon-repo/research/refusal_vector"; cd "${DIR}"
 IN="${RELAXED_SCRATCH}/prompt_opt/repair_relaxed_v1/grammatical_repairs_relaxed.json"
 OUT="${RELAXED_SCRATCH}/prompt_opt/repair_relaxed_v1/eval"; mkdir -p "${OUT}"
 test -s "${IN}"

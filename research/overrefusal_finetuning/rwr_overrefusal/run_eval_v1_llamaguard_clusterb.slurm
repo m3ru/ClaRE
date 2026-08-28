@@ -44,7 +44,7 @@ ENV_PREFIX="${SCRATCH_BASE}/conda_envs/ppo-or-env"
 conda activate "${ENV_PREFIX}"
 echo "[stage] python: $(python --version)"
 
-PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
+PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/anon-repo}"
 RWR_DIR="${PROJECT_ROOT}/research/overrefusal_finetuning/rwr_overrefusal"
 ADAPTER_DIR="${ADAPTER_DIR:-${SCRATCH_BASE}/rwr_v1_llamaguard_dolly_checkpoints/final}"
 SHARD_DIR="${SHARD_DIR:-${SCRATCH_BASE}/rwr_llamaguard_dolly_data}"

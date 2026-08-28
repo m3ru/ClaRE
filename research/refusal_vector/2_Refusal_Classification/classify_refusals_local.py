@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Optimized refusal classifier for M3 MacBook Air
+Optimized refusal classifier for Apple Silicon laptops
 Classifies 80k LLM outputs using ProtectAI rejection classifier with resumable 20-minute chunks
 """
 
@@ -33,8 +33,8 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 console = Console()
 
-class M3RefusalClassifier:
-    """Optimized refusal classifier for M3 MacBook Air"""
+class LocalRefusalClassifier:
+    """Optimized refusal classifier for Apple Silicon laptops"""
 
     def __init__(
         self,
@@ -73,7 +73,7 @@ class M3RefusalClassifier:
             self._find_optimal_batch_size()
     
     def _get_optimal_device(self) -> str:
-        """Determine optimal device for M3 MacBook Air"""
+        """Determine optimal device for Apple Silicon laptops"""
         if self.use_mlx:
             try:
                 import mlx.core as mx
@@ -93,7 +93,7 @@ class M3RefusalClassifier:
     
     
     def _find_optimal_batch_size(self) -> int:
-        """Find optimal batch size for M3 through benchmarking"""
+        """Find optimal batch size through benchmarking"""
         console.print("[blue]Finding optimal batch size...[/blue]")
         
         test_texts = ["This is a test response for optimization"] * 1000
@@ -274,7 +274,7 @@ def format_duration(seconds: float) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Classify LLM outputs for refusal using ProtectAI model (M3 Optimized)"
+        description="Classify LLM outputs for refusal using ProtectAI model (Apple Silicon optimized)"
     )
     parser.add_argument("--input", required=True, help="Input CSV file with 'prompt' and 'response' columns")
     parser.add_argument("--output", required=True, help="Output CSV file")
@@ -312,7 +312,7 @@ def main():
         if batch_size != "auto":
             batch_size = int(batch_size)
         
-        classifier = M3RefusalClassifier(
+        classifier = LocalRefusalClassifier(
             model_name=args.model_name,
             batch_size=batch_size,
             use_mlx=not args.disable_mlx,

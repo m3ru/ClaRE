@@ -51,7 +51,7 @@ move. This approximates an edit a person might plausibly make.
   `or_loose` is large and `or_strict` is ~0, the effect needs conspicuous text.
 - **`jb_loose`** — *The mirror direction: can the same machinery suppress refusal on
   genuinely harmful prompts?* Corpus: 221 custom StrongREJECT prompts (AdvBench rows
-  excluded, since AdvBench already fit ClaRE's harmful direction). 8 shards.
+  excluded, since AdvBench already fit this project's harmful direction). 8 shards.
 - **`jb_strict`** — *Does the jailbreak survive the same minimal-edit budget?*
 
 The pairing is the point. One shared mechanism pushed in opposite directions on the same

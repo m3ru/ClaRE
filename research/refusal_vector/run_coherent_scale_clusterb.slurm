@@ -25,9 +25,9 @@ module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 
-DIR="${HOME}/ClaRE/research/refusal_vector"
+DIR="${HOME}/anon-repo/research/refusal_vector"
 OUT="${SCRATCH_BASE}/prompt_opt/coherent_scale_v1"
-PAIRS="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
+PAIRS="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal/probe_or"
 S=${SLURM_ARRAY_TASK_ID}
 cd "${DIR}"
 mkdir -p "${OUT}"

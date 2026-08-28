@@ -31,7 +31,7 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 echo "[stage] python: $(python --version)"; nvidia-smi | head -12 || true
 
-RWR_DIR="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal"
+RWR_DIR="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal"
 SHARD_DIR="${SCRATCH_BASE}/rwr_claude_data"
 OUT_DIR="${SCRATCH_BASE}/rwr_claude_checkpoints"
 [ -d "${SHARD_DIR}" ] || { echo "[error] missing shards ${SHARD_DIR}"; exit 2; }

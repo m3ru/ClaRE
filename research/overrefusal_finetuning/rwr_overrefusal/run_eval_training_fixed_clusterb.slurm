@@ -33,7 +33,7 @@ conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
 python -c "import torch,transformers,peft,sentence_transformers" || { echo "[error] env broken"; exit 3; }
 echo "[stage] python: $(python --version)"; nvidia-smi | head -12 || true
 
-RWR_DIR="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal"
+RWR_DIR="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal"
 cd "${RWR_DIR}"
 
 EXP1="${SCRATCH_BASE}/rwr_claude_fixed_checkpoints/final"

@@ -48,7 +48,7 @@ conda activate "${ENV_PREFIX}"
 # ---- Paths ----
 SCRIPT_DIR="${SCRIPT_DIR:-${SLURM_SUBMIT_DIR}}"
 SCORE_SCRIPT="${SCRIPT_DIR}/score_and_rank_all.py"
-PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/scratch/ClaRE}"
+PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/scratch/anon-repo}"
 PARAPHRASES_ROOT="${PARAPHRASES_ROOT:-${PROJECT_ROOT}/research/overrefusal_finetuning/paraphrases_api}"
 REFUSAL_VECTOR_PATH="${REFUSAL_VECTOR_PATH:-${PROJECT_ROOT}/research/refusal_vector/3_Vector_Extraction/refusal_vector.layer032.npz}"
 

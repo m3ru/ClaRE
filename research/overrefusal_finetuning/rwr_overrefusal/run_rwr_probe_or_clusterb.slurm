@@ -21,7 +21,7 @@ export TMPDIR="${HOME}/tmp_relabel"; mkdir -p "${TMPDIR}"
 module load anaconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${SCRATCH_BASE}/conda_envs/ppo-or-env"
-RWR_DIR="${HOME}/ClaRE/research/overrefusal_finetuning/rwr_overrefusal"; cd "${RWR_DIR}"
+RWR_DIR="${HOME}/anon-repo/research/overrefusal_finetuning/rwr_overrefusal"; cd "${RWR_DIR}"
 python -c "import torch,transformers,peft" || { echo "[error] env"; exit 3; }
 python -u train_rwr.py \
   --shard_dir "${SCRATCH_BASE}/probe_or_shards" \

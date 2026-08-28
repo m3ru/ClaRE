@@ -47,7 +47,7 @@ echo "[stage] python: $(python --version)"
 nvidia-smi | head -20 || true
 
 # ---- Paths ----
-PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/ClaRE}"
+PROJECT_ROOT="${PROJECT_ROOT:-${HOME}/anon-repo}"
 QWEN_DIR="${PROJECT_ROOT}/research/refusal_vector/qwen3_extraction"
 EXTRACT_PY="${PROJECT_ROOT}/research/refusal_vector/Vector_Extraction/extract_activations_sharded.py"
 COMPUTE_PY="${PROJECT_ROOT}/research/refusal_vector/Vector_Extraction/compute_refusal_vector.py"
