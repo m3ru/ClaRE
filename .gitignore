@@ -145,3 +145,16 @@ neurips_2026*.pdf
 # Emacs autosave/backup files
 \#*\#
 *~
+# Paper sources and LaTeX build output. The code release is not the manuscript;
+# make_figures.py / make_paper_snippets.py regenerate the .tex snippets on demand.
+*.bib
+*.bbl
+*.aux
+*.blg
+*.synctex.gz
+tectonic.stdout
+tectonic.stderr
+research/overrefusal_finetuning/rwr_overrefusal/paper_section3.tex
+research/overrefusal_finetuning/rwr_overrefusal/figures/**/captions.tex
+research/overrefusal_finetuning/rwr_overrefusal/figures/captions.tex
+tables_rwr.tex
